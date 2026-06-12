@@ -17,6 +17,7 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
     
