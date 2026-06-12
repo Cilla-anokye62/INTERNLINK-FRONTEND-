@@ -18,5 +18,6 @@ export default function App() {
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    
   );
 }
