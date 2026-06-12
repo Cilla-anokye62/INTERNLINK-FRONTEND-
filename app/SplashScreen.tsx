@@ -11,34 +11,24 @@ export default function SplashScreen({ navigation }: any) {
   const shineAnimation = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 1) {
-          clearInterval(interval);
-          if (prev >= 1) {
-  clearInterval(interval);
-  navigation.navigate('WelcomeOnboarding');
-  return 1;
-}
-          return 1;
-        }
-        return prev + 0.05;
-      });
-    }, 100);
-    
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(shineAnimation, {
-          toValue: 1,
-          duration: 1800,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1200)
-      ])
-    ).start();
+  const interval = setInterval(() => {
+    setProgress(prev => {
+      if (prev >= 1) {
+        clearInterval(interval);
+        return 1;
+      }
+      return prev + 0.05;
+    });
+  }, 100);
 
-    return () => clearInterval(interval);
-  }, [shineAnimation]);
+  return () => clearInterval(interval);
+}, []);
+
+useEffect(() => {
+  if (progress >= 1) {
+    navigation.navigate('WelcomeOnboarding');
+  }
+}, [progress]);
 
   const translateX = shineAnimation.interpolate({
     inputRange: [-1, 1],
