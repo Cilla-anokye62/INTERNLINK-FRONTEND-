@@ -3,6 +3,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './app/SplashScreen';
 import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
+
+
 const Stack = createStackNavigator();
 
 export default function App() {
