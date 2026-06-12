@@ -41,12 +41,12 @@ import {
 // TypeScript uses "types" to describe the shape of data.
 // Here we define what a valid role string looks like.
 // This means selectedRole can only ever be one of these three values (or null).
-type Role = 'student' | 'employer' | 'university';
+type Role = 'I\'m a Student' | 'I\'m an Employer' | 'I\'m a University';
 
 // This describes the structure of each role card's data.
 // Think of it as a contract: every role object MUST have these fields.
 interface RoleOption {
-  id: Role;            // unique identifier, e.g. 'student'
+  id: Role;            // unique identifier, e.g. 'I\'m a Student'
   title: string;       // big bold text on the card
   description: string; // smaller text below the title
   icon: string;        // placeholder emoji — swap for a real icon later
@@ -59,21 +59,21 @@ interface RoleOption {
 // To add a 4th role later, just add an object here — no other changes needed.
 const ROLES: RoleOption[] = [
   {
-    id: 'student',
-    title: 'Student',
-    description: 'I\'m looking for internships and opportunities.',
+    id: 'I\'m a Student',
+    title: 'I\'m a Student',
+    description: 'Find internships that match your skills and goals.',
     icon: '🎓', // TODO: replace with <Ionicons name="swho are you?l-outline" />
   },
   {
-    id: 'employer',
-    title: 'Employer',
-    description: 'I\'m hiring interns and managing programs.',
+    id: 'I\'m an Employer',
+    title: 'I\'m an Employer',
+    description: 'Post internships and discover great talent..',
     icon: '🏢', // TODO: replace with <Ionicons name="business-outline" />
   },
   {
-    id: 'university',
-    title: 'University',
-    description: 'I\'m managing student placements and partner relations.',
+    id: 'I\'m a University',
+    title: 'I\'m a University',
+    description: 'Track placements and engage with employers.',
     icon: '🏛️', // TODO: replace with <Ionicons name="library-outline" />
   },
 ];
@@ -84,7 +84,7 @@ const ROLES: RoleOption[] = [
 // you change it in ONE place and it updates everywhere automatically.
 const COLORS = {
   background: '#D9F2EE', // light mint — the screen background
-  card:  '#FFFFFF', // dark teal — unselected card background
+  card: '#FFFFFF', // dark teal — unselected card background
   cardBorderIdle: 'transparent', // no border when card is not selected
   cardBorderActive: '#329891', // bright teal border when card IS selected
   iconCircle: 'rgba(46,196,182,0.18)', // dim circle behind icon (unselected)
@@ -141,11 +141,7 @@ export default function RoleSelectionScreen() {
         {/* A horizontal row: [back button]  [title + subtitle]  [spacer] */}
         <View style={styles.header}>
 
-          {/* Back button — white circle with a left arrow inside */}
-          {/* TODO: add onPress={() => navigation.goBack()} */}
-          <TouchableOpacity style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backArrowText}>‹</Text>
-          </TouchableOpacity>
+  
 
           {/* Title block — centred between the two circle-sized elements */}
           <View style={styles.headerCenter}>
@@ -153,9 +149,7 @@ export default function RoleSelectionScreen() {
             <Text style={styles.pageSubtitle}>Select your role to get started.</Text>
           </View>
 
-          {/* This invisible View has the same size as the back button.
-              It pushes the title block into the true visual centre of the row. */}
-          <View style={styles.backBtn} />
+
 
         </View>
         {/* ── END HEADER ──────────────────────────────────────── */}
@@ -276,40 +270,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',             // lay children left → right
     alignItems: 'center',             // vertically centre them
     marginBottom: 36,
-    marginTop: 36,
+    marginTop: 50,
   },
-  backBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,                 // exactly half of width/height = perfect circle
-    backgroundColor: COLORS.backButton,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Shadow (iOS uses these four properties)
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,                     // elevation is the Android equivalent of shadow
-  },
-  backArrowText: {
-    fontSize: 28,
-    color: COLORS.backArrow,
-    lineHeight: 32,
-    marginRight: 2,                   // tiny nudge so the chevron looks visually centred
-  },
+  
   headerCenter: {
     flex: 1,                          // fills the space between the two circle-sized elements
     alignItems: 'center',
   },
   pageTitle: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: '700',
     color: COLORS.titleText,
     letterSpacing: 0.2,
   },
   pageSubtitle: {
-    fontSize: 13,
+    fontSize: 17,
     color: COLORS.subtitleText,
     marginTop: 3,
   },
