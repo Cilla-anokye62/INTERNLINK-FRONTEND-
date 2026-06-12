@@ -5,9 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 
 export default function SplashScreen({ navigation }: any) {
-  
+
   const [progress, setProgress] = useState(0);
-  
+
   const shineAnimation = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
@@ -15,17 +15,17 @@ export default function SplashScreen({ navigation }: any) {
       setProgress(prev => {
         if (prev >= 1) {
           clearInterval(interval);
-          if (prev >= 1) {
-  clearInterval(interval);
-  navigation.navigate('WelcomeOnboarding');
-  return 1;
-}
-          return 1;
+          return 1; // just update state, nothing else
         }
         return prev + 0.05;
       });
     }, 100);
-    
+
+    // handle navigation separately — check progress in its own interval
+    const navTimer = setTimeout(() => {
+      navigation.navigate('WelcomeOnboarding');
+    }, 2200);
+
     Animated.loop(
       Animated.sequence([
         Animated.timing(shineAnimation, {
@@ -37,25 +37,28 @@ export default function SplashScreen({ navigation }: any) {
       ])
     ).start();
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(navTimer); // clean this up too
+    };
   }, [shineAnimation]);
 
   const translateX = shineAnimation.interpolate({
     inputRange: [-1, 1],
-    outputRange: [-250, 250], 
+    outputRange: [-250, 250],
   });
 
   return (
     <LinearGradient
-  colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={styles.container}
->
-      
+      colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+
       <View style={styles.logoContainer}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
-        
+
         <Animated.View
           style={[
             styles.shineWrapper,
@@ -65,12 +68,12 @@ export default function SplashScreen({ navigation }: any) {
           <LinearGradient
             colors={[
               'rgba(255, 255, 255, 0)',
-              'rgba(255, 255, 255, 0.1)', 
+              'rgba(255, 255, 255, 0.1)',
               'rgba(255, 255, 255, 0)'
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            locations={[0.3, 0.5, 0.7]} 
+            locations={[0.3, 0.5, 0.7]}
             style={StyleSheet.absoluteFillObject}
           />
         </Animated.View>
@@ -93,15 +96,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
- logoContainer: {
-  width: 130,
-  height: 130,
-  borderRadius: 28,
-  marginBottom: 50,
-  overflow: 'hidden',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
+  logoContainer: {
+    width: 130,
+    height: 130,
+    borderRadius: 28,
+    marginBottom: 50,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   logo: {
     width: '80%',
     height: '80%',
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
   },
   shineWrapper: {
     ...StyleSheet.absoluteFillObject,
-    width: '150%', 
+    width: '150%',
     height: '150%',
     top: '-25%',
   },
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
     color: '#024D60',
   },
   linkText: {
-     color: '#2CACAD',
+    color: '#2CACAD',
   },
   progressContainer: {
     position: 'absolute',
