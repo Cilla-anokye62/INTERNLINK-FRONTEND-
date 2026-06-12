@@ -6,13 +6,14 @@ import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
 import RoleSelectionScreen from './app/RoleSelectionScreen';
 
 
+
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="auto" />
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="RoleSelection">
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />

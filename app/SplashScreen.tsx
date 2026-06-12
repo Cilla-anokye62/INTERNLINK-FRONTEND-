@@ -3,7 +3,9 @@ import { LightColors } from '../constants/theme';
 import { useState, useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function SplashScreen() {
+
+export default function SplashScreen({ navigation }: any) {
+  
   const [progress, setProgress] = useState(0);
   
   const shineAnimation = useRef(new Animated.Value(-1)).current;
@@ -13,12 +15,17 @@ export default function SplashScreen() {
       setProgress(prev => {
         if (prev >= 1) {
           clearInterval(interval);
+          if (prev >= 1) {
+  clearInterval(interval);
+  navigation.navigate('WelcomeOnboarding');
+  return 1;
+}
           return 1;
         }
         return prev + 0.05;
       });
     }, 100);
-
+    
     Animated.loop(
       Animated.sequence([
         Animated.timing(shineAnimation, {
