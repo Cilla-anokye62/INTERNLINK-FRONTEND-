@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './app/SplashScreen';
 import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
 import RoleSelectionScreen from './app/RoleSelectionScreen';
+import LoginScreen from './app/LoginScreen';
 
 
 
@@ -17,7 +18,7 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
-
+        <Stack.Screen name="Login" component={LoginScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 
