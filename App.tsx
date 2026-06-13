@@ -7,6 +7,7 @@ import RoleSelectionScreen from './app/RoleSelectionScreen';
 import LoginScreen from './app/LoginScreen';
 import SignUpScreen from './app/SignUpScreen';
 import VerificationScreen from './app/VerificationScreen';
+import ForgotPasswordScreen from './app/ForgotPasswordScreen';
 
 
 
@@ -23,6 +24,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Verification" component={VerificationScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 
