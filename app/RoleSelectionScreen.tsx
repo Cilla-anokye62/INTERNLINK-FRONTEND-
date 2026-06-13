@@ -1,21 +1,4 @@
-/**
- * RoleSelectionScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * This is the "Who are you?" onboarding screen for InternLink.
- * It lets the user tap one of three role cards, highlights their
- * choice, and activates a Continue button.
- *
- * HOW TO USE THIS FILE:
- *  1. Drop it inside your screens/ folder.
- *  2. Register it in your navigator (e.g. Stack.Screen name="RoleSelection").
- *  3. Run the app — it works out of the box with no extra packages.
- * ─────────────────────────────────────────────────────────────────
- */
 
-// ─── 1. IMPORTS ──────────────────────────────────────────────────
-// React is needed for every React Native component.
-// useState is a "hook" that lets us remember a value (the chosen role)
-// while the screen is visible.
 import React, { useState } from 'react';
 
 // These are the built-in React Native building blocks:
@@ -41,12 +24,12 @@ import {
 // TypeScript uses "types" to describe the shape of data.
 // Here we define what a valid role string looks like.
 // This means selectedRole can only ever be one of these three values (or null).
-type Role = 'I\'m a Student' | 'I\'m an Employer' | 'I\'m a University';
+type Role = 'student' | 'employer' | 'university';
 
 // This describes the structure of each role card's data.
 // Think of it as a contract: every role object MUST have these fields.
 interface RoleOption {
-  id: Role;            // unique identifier, e.g. 'I\'m a Student'
+  id: Role;            // unique identifier, e.g. 'student'
   title: string;       // big bold text on the card
   description: string; // smaller text below the title
   icon: string;        // placeholder emoji — swap for a real icon later
@@ -59,21 +42,21 @@ interface RoleOption {
 // To add a 4th role later, just add an object here — no other changes needed.
 const ROLES: RoleOption[] = [
   {
-    id: 'I\'m a Student',
-    title: 'I\'m a Student',
-    description: 'Find internships that match your skills and goals.',
+    id: 'student',
+    title: ' I\'m a Student',
+    description: 'I\'m looking for internships and opportunities.',
     icon: '🎓', // TODO: replace with <Ionicons name="swho are you?l-outline" />
   },
   {
-    id: 'I\'m an Employer',
-    title: 'I\'m an Employer',
-    description: 'Post internships and discover great talent..',
+    id: 'employer',
+    title: ' I\'m an Employer',
+    description: 'I\'m hiring interns and managing programs.',
     icon: '🏢', // TODO: replace with <Ionicons name="business-outline" />
   },
   {
-    id: 'I\'m a University',
-    title: 'I\'m a University',
-    description: 'Track placements and engage with employers.',
+    id: 'university',
+    title: ' I\'m a University',
+    description: 'I\'m managing student placements and partner relations.',
     icon: '🏛️', // TODO: replace with <Ionicons name="library-outline" />
   },
 ];
@@ -84,7 +67,7 @@ const ROLES: RoleOption[] = [
 // you change it in ONE place and it updates everywhere automatically.
 const COLORS = {
   background: '#D9F2EE', // light mint — the screen background
-  card: '#FFFFFF', // dark teal — unselected card background
+  card:  '#FFFFFF', // dark teal — unselected card background
   cardBorderIdle: 'transparent', // no border when card is not selected
   cardBorderActive: '#329891', // bright teal border when card IS selected
   iconCircle: 'rgba(46,196,182,0.18)', // dim circle behind icon (unselected)
@@ -106,7 +89,7 @@ const COLORS = {
 // ─── 5. MAIN SCREEN COMPONENT ────────────────────────────────────
 // In React Native, a "component" is a function that returns UI.
 // export default means other files can import this screen.
-export default function RoleSelectionScreen() {
+export default function RoleSelectionScreen({ navigation }: any) {
 
   // useState gives us:
   //   selectedRole     → the current value (starts as null — nothing chosen)
@@ -119,7 +102,7 @@ export default function RoleSelectionScreen() {
   // Later: replace console.log with navigation.navigate('Home', { role: selectedRole })
   const handleContinue = () => {
     if (!selectedRole) return; // safety check — button should already be disabled
-    console.log('User chose role:', selectedRole);
+    navigation.navigate('SignUp');
     // TODO: navigation.navigate('Home', { role: selectedRole });
   };
 
@@ -141,7 +124,11 @@ export default function RoleSelectionScreen() {
         {/* A horizontal row: [back button]  [title + subtitle]  [spacer] */}
         <View style={styles.header}>
 
-  
+          {/* Back button — white circle with a left arrow inside */}
+          {/* TODO: add onPress={() => navigation.goBack()} */}
+          <TouchableOpacity style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backArrowText}>‹</Text>
+          </TouchableOpacity>
 
           {/* Title block — centred between the two circle-sized elements */}
           <View style={styles.headerCenter}>
@@ -149,7 +136,9 @@ export default function RoleSelectionScreen() {
             <Text style={styles.pageSubtitle}>Select your role to get started.</Text>
           </View>
 
-
+          {/* This invisible View has the same size as the back button.
+              It pushes the title block into the true visual centre of the row. */}
+          <View style={styles.backBtn} />
 
         </View>
         {/* ── END HEADER ──────────────────────────────────────── */}
@@ -270,21 +259,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',             // lay children left → right
     alignItems: 'center',             // vertically centre them
     marginBottom: 36,
-    marginTop: 50,
+    marginTop: 36,
   },
-  
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,                 // exactly half of width/height = perfect circle
+    backgroundColor: COLORS.backButton,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Shadow (iOS uses these four properties)
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,                     // elevation is the Android equivalent of shadow
+  },
+  backArrowText: {
+    fontSize: 28,
+    color: COLORS.backArrow,
+    lineHeight: 32,
+    marginRight: 2,                   // tiny nudge so the chevron looks visually centred
+  },
   headerCenter: {
     flex: 1,                          // fills the space between the two circle-sized elements
     alignItems: 'center',
   },
   pageTitle: {
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: '700',
     color: COLORS.titleText,
     letterSpacing: 0.2,
   },
   pageSubtitle: {
-    fontSize: 17,
+    fontSize: 13,
     color: COLORS.subtitleText,
     marginTop: 3,
   },

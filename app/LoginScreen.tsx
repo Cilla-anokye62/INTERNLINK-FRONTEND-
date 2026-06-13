@@ -225,7 +225,7 @@ export default function LoginScreen({ navigation }: any) {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity
-              onPress={() => console.log('Sign up tapped')}
+              onPress={() => navigation.navigate('SignUp')}
             // TODO: navigation.navigate('SignUp')
             >
               <Text style={styles.signUpText}>Sign Up</Text>
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   forgotText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.forgotPassword,
+    color: '#2CACAD',
   },
 
   // ── Login button ──────────────────────────────────────────────

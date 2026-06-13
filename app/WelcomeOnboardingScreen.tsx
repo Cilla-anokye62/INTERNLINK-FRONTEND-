@@ -27,14 +27,13 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
   const flatListRef = useRef<FlatList>(null);
 
   const handleNext = () => {
-  if (currentIndex < slides.length - 1) {
-    const nextIndex = currentIndex + 1;
-    flatListRef.current?.scrollToOffset({ offset: nextIndex * width, animated: true });
-    setCurrentIndex(nextIndex);
-  } else {
-    navigation.navigate('RoleSelection');
-  }
-};
+    if (currentIndex < slides.length - 1) {
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      navigation.navigate('RoleSelection');
+    }
+  };
 
  const renderSlide = ({ item }: any) => (
     <View style={styles.slide}>
@@ -79,7 +78,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
             {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'} →
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('RoleSelection')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginText}>I Already Have an Account</Text>
         </TouchableOpacity>
       </View>
@@ -90,12 +89,12 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D9F5F0',
+    backgroundColor: '#E1F6F4',
   },
   slide: {
     width: width,
     alignItems: 'center',
-    paddingTop: 80,
+    paddingTop: 300,
     paddingHorizontal: 32,
   },
   logoCard: {
