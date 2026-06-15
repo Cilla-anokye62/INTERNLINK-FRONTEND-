@@ -3,11 +3,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './app/SplashScreen';
 import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
-import RoleSelectionScreen from './app/RoleSelectionScreen';
-import LoginScreen from './app/LoginScreen';
-import SignUpScreen from './app/SignUpScreen';
-import VerificationScreen from './app/VerificationScreen';
-import ForgotPasswordScreen from './app/ForgotPasswordScreen';
+import RoleSelectionScreen from './app/AuthScreens/RoleSelectionScreen';
+import LoginScreen from './app/AuthScreens/LoginScreen';
+import SignUpScreen from './app/AuthScreens/SignUpScreen';
+import VerificationScreen from './app/AuthScreens/VerificationScreen';
+import ForgotPasswordScreen from './app/AuthScreens/ForgotPasswordScreen';
+import UniversityInfoScreen from './app/UniversityOnboarding/UniversityInfoScreen';
 
 
 
@@ -25,6 +26,7 @@ export default function App() {
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 

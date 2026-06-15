@@ -6,7 +6,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 
   return (
     <ImageBackground
-      source={require('../assets/padlock.png')}
+      source={require('../../assets/padlock.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -15,7 +15,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
         <Text style={styles.backArrow}>{'<'}</Text>
       </TouchableOpacity>
 
-     
+
 
       {/* Header */}
       <Text style={styles.title}>Reset password</Text>
@@ -66,10 +66,10 @@ const styles = StyleSheet.create({
     marginBottom: 180,
   },
   backArrow: {
-  fontSize: 18,
-  color: '#024D60',
-  fontWeight: 'bold',
-},
+    fontSize: 18,
+    color: '#024D60',
+    fontWeight: 'bold',
+  },
   iconContainer: {
     width: 70,
     height: 70,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     color: '#010506',
-    marginTop:100,
+    marginTop: 100,
     marginBottom: 10,
   },
   subtitle: {
