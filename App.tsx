@@ -9,7 +9,7 @@ import SignUpScreen from './app/AuthScreens/SignUpScreen';
 import VerificationScreen from './app/AuthScreens/VerificationScreen';
 import ForgotPasswordScreen from './app/AuthScreens/ForgotPasswordScreen';
 import UniversityInfoScreen from './app/UniversityOnboarding/UniversityInfoScreen';
-
+import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 
 
 const Stack = createStackNavigator();
@@ -27,6 +27,7 @@ export default function App() {
         <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
+        <Stack.Screen name="AcademicInfo" component={AcademicInfoScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 

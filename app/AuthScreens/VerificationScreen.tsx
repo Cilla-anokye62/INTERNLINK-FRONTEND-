@@ -68,7 +68,7 @@ export default function VerificationScreen({ navigation }: any) {
       </View>
 
       {/* Verify button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('UniversityInfo')}>
         <Text style={styles.buttonText}>Verify →</Text>
       </TouchableOpacity>
 
