@@ -1,5 +1,8 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { height } = Dimensions.get('window');
 
 export default function VerificationScreen({ navigation }: any) {
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -35,7 +38,7 @@ export default function VerificationScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={styles.backArrow}>{'<'}</Text>
@@ -55,7 +58,7 @@ export default function VerificationScreen({ navigation }: any) {
         {code.map((digit, index) => (
           <TextInput
             key={index}
-           ref={(ref: any) => inputs.current[index] = ref}
+            ref={(ref: any) => inputs.current[index] = ref}
             style={styles.codeInput}
             value={digit}
             onChangeText={text => handleChange(text, index)}
@@ -84,7 +87,7 @@ export default function VerificationScreen({ navigation }: any) {
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
         <Text style={styles.backToLogin}>← Back to login</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -93,7 +96,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#D9F5F0',
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: height * 0.03,    // relative instead of fixed 60
     alignItems: 'center',
   },
   backButton: {
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
+    marginBottom: height * 0.04,  // relative instead of fixed 32
   },
   backArrow: {
     fontSize: 18,
@@ -118,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#B2EDE8',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: height * 0.03,  // relative instead of fixed 24
   },
   icon: {
     fontSize: 36,
@@ -134,13 +137,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: height * 0.04,  // relative instead of fixed 32
   },
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 32,
+    marginBottom: height * 0.04,  // relative instead of fixed 32
   },
   codeInput: {
     width: 48,
@@ -159,7 +162,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: height * 0.025, // relative instead of fixed 20
   },
   buttonText: {
     color: '#FFFFFF',
@@ -169,7 +172,7 @@ const styles = StyleSheet.create({
   resendText: {
     fontSize: 13,
     color: '#64748B',
-    marginBottom: 20,
+    marginBottom: height * 0.025, // relative instead of fixed 20
   },
   resendLink: {
     color: '#2CACAD',

@@ -1,5 +1,8 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
 import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { height } = Dimensions.get('window');
 
 const UNIVERSITIES = [
   'Kwame Nkrumah University of Science and Technology (KNUST)',
@@ -96,105 +99,110 @@ export default function AcademicInfoScreen({ navigation }: any) {
   );
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Progress Bar */}
-      <View style={styles.progressRow}>
-        <Text style={styles.stepLabel}>STEP 1 OF 4</Text>
-        <Text style={styles.profileLabel}>Profile Setup</Text>
-      </View>
-      <View style={styles.progressBarBg}>
-        <View style={styles.progressBarFill} />
-      </View>
-
-      {/* Header */}
-      <Text style={styles.title}>Tell us about your studies</Text>
-      <Text style={styles.subtitle}>
-        Help us find the best internship opportunities tailored to your academic background.
-      </Text>
-
-      {/* Form Card */}
-      <View style={styles.card}>
-
-        {/* University */}
-        <Text style={styles.label}>University</Text>
-        <TouchableOpacity
-          style={styles.inputContainer}
-          onPress={() => setOpenDropdown('university')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.dropdownText, !university && styles.placeholder]}>
-            {university || 'Select your university'}
-          </Text>
-          <Text style={styles.chevron}>⌄</Text>
-        </TouchableOpacity>
-
-        {/* Programme */}
-        <Text style={styles.label}>Programme/Course of Study</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Bsc. Computer Science"
-            placeholderTextColor="#94A3B8"
-            value={programme}
-            onChangeText={setProgramme}
-          />
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Progress Bar */}
+        <View style={styles.progressRow}>
+          <Text style={styles.stepLabel}>STEP 1 OF 4</Text>
+          <Text style={styles.profileLabel}>Profile Setup</Text>
+        </View>
+        <View style={styles.progressBarBg}>
+          <View style={styles.progressBarFill} />
         </View>
 
-        {/* Academic Level */}
-        <Text style={styles.label}>Academic Level</Text>
-        <TouchableOpacity
-          style={styles.inputContainer}
-          onPress={() => setOpenDropdown('level')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.dropdownText, !level && styles.placeholder]}>
-            {level || 'Select level'}
-          </Text>
-          <Text style={styles.chevron}>⌄</Text>
+        {/* Header */}
+        <Text style={styles.title}>Tell us about your studies</Text>
+        <Text style={styles.subtitle}>
+          Help us find the best internship opportunities tailored to your academic background.
+        </Text>
+
+        {/* Form Card */}
+        <View style={styles.card}>
+
+          {/* University */}
+          <Text style={styles.label}>University</Text>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setOpenDropdown('university')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.dropdownText, !university && styles.placeholder]}>
+              {university || 'Select your university'}
+            </Text>
+            <Text style={styles.chevron}>⌄</Text>
+          </TouchableOpacity>
+
+          {/* Programme */}
+          <Text style={styles.label}>Programme/Course of Study</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Bsc. Computer Science"
+              placeholderTextColor="#94A3B8"
+              value={programme}
+              onChangeText={setProgramme}
+            />
+          </View>
+
+          {/* Academic Level */}
+          <Text style={styles.label}>Academic Level</Text>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setOpenDropdown('level')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.dropdownText, !level && styles.placeholder]}>
+              {level || 'Select level'}
+            </Text>
+            <Text style={styles.chevron}>⌄</Text>
+          </TouchableOpacity>
+
+          {/* Expected Graduation */}
+          <Text style={styles.label}>Expected Graduation</Text>
+          <TouchableOpacity
+            style={styles.inputContainer}
+            onPress={() => setOpenDropdown('year')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.dropdownText, !graduationYear && styles.placeholder]}>
+              {graduationYear || 'Select year'}
+            </Text>
+            <Text style={styles.chevron}>⌄</Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* Next Button */}
+        <TouchableOpacity style={styles.button} onPress={handleNext} activeOpacity={0.85}>
+          <Text style={styles.buttonText}>Next  →</Text>
         </TouchableOpacity>
 
-        {/* Expected Graduation */}
-        <Text style={styles.label}>Expected Graduation</Text>
-        <TouchableOpacity
-          style={styles.inputContainer}
-          onPress={() => setOpenDropdown('year')}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.dropdownText, !graduationYear && styles.placeholder]}>
-            {graduationYear || 'Select year'}
-          </Text>
-          <Text style={styles.chevron}>⌄</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      {/* Next Button */}
-      <TouchableOpacity style={styles.button} onPress={handleNext} activeOpacity={0.85}>
-        <Text style={styles.buttonText}>Next  →</Text>
-      </TouchableOpacity>
-
-      {/* Dropdown Modals */}
-      {renderDropdownModal('university', UNIVERSITIES, setUniversity)}
-      {renderDropdownModal('level', ACADEMIC_LEVELS, setLevel)}
-      {renderDropdownModal('year', GRADUATION_YEARS, setGraduationYear)}
-    </ScrollView>
+        {/* Dropdown Modals */}
+        {renderDropdownModal('university', UNIVERSITIES, setUniversity)}
+        {renderDropdownModal('level', ACADEMIC_LEVELS, setLevel)}
+        {renderDropdownModal('year', GRADUATION_YEARS, setGraduationYear)}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#EAF6F5',
   },
+  container: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingTop: height * 0.03,    // relative instead of fixed 60
+    paddingBottom: height * 0.05, // relative instead of fixed 40
   },
   progressRow: {
     flexDirection: 'row',
@@ -216,7 +224,7 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: '#C8E6E4',
     borderRadius: 3,
-    marginBottom: 32,
+    marginBottom: height * 0.04,  // relative instead of fixed 32
   },
   progressBarFill: {
     width: '25%',
@@ -236,20 +244,20 @@ const styles = StyleSheet.create({
     color: '#0e3038',
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 28,
+    marginBottom: height * 0.03,  // relative instead of fixed 28
     paddingHorizontal: 8,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 28,
+    marginBottom: height * 0.03,  // relative instead of fixed 28
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: '#024D60',
-    marginBottom: 25,
+    marginBottom: 8,              // fixed back to 8 — 25 was too large
     marginTop: 16,
   },
   inputContainer: {

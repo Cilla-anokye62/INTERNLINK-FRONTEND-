@@ -1,13 +1,13 @@
-import { View, StyleSheet, Image, Text, Animated } from 'react-native';
-import { LightColors } from '../constants/theme';
+import { View, StyleSheet, Image, Text, Animated, Dimensions } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+const { height } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }: any) {
   
   const [progress, setProgress] = useState(0);
-  
   const shineAnimation = useRef(new Animated.Value(-1)).current;
 
   useEffect(() => {
@@ -34,11 +34,12 @@ export default function SplashScreen({ navigation }: any) {
 
     return () => clearInterval(interval);
   }, [shineAnimation]);
+
   useEffect(() => {
-  if (progress >= 1) {
-    navigation.navigate('WelcomeOnboarding');
-  }
-}, [progress]);
+    if (progress >= 1) {
+      navigation.navigate('WelcomeOnboarding');
+    }
+  }, [progress]);
 
   const translateX = shineAnimation.interpolate({
     inputRange: [-1, 1],
@@ -47,42 +48,46 @@ export default function SplashScreen({ navigation }: any) {
 
   return (
     <LinearGradient
-  colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={styles.container}
->
-      
-      <View style={styles.logoContainer}>
-        <Image source={require('../assets/logo.png')} style={styles.logo} />
-        
-        <Animated.View
-          style={[
-            styles.shineWrapper,
-            { transform: [{ translateX }] }
-          ]}
-        >
-          <LinearGradient
-            colors={[
-              'rgba(255, 255, 255, 0)',
-              'rgba(255, 255, 255, 0.1)', 
-              'rgba(255, 255, 255, 0)'
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            locations={[0.3, 0.5, 0.7]} 
-            style={StyleSheet.absoluteFillObject}
-          />
-        </Animated.View>
-      </View>
+      colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
 
-      <Text style={styles.appName}>
-        <Text style={styles.internText}>Intern</Text>
-        <Text style={styles.linkText}>Link</Text>
-      </Text>
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-      </View>
+        {/* Center content */}
+        <View style={styles.centerContent}>
+          <View style={styles.logoContainer}>
+            <Image source={require('../assets/logo.png')} style={styles.logo} />
+            <Animated.View
+              style={[styles.shineWrapper, { transform: [{ translateX }] }]}
+            >
+              <LinearGradient
+                colors={[
+                  'rgba(255, 255, 255, 0)',
+                  'rgba(255, 255, 255, 0.1)', 
+                  'rgba(255, 255, 255, 0)'
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                locations={[0.3, 0.5, 0.7]} 
+                style={StyleSheet.absoluteFillObject}
+              />
+            </Animated.View>
+          </View>
+
+          <Text style={styles.appName}>
+            <Text style={styles.internText}>Intern</Text>
+            <Text style={styles.linkText}>Link</Text>
+          </Text>
+        </View>
+
+        {/* Progress bar pinned to bottom */}
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
+
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -90,22 +95,29 @@ export default function SplashScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',  // pushes progress bar to bottom
+  },
+  centerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',         // keeps logo + name centered
+  },
+  logoContainer: {
+    width: 130,
+    height: 130,
+    borderRadius: 28,
+    marginBottom: height * 0.04,      // relative instead of fixed 50
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
- logoContainer: {
-  width: 130,
-  height: 130,
-  borderRadius: 28,
-  marginBottom: 50,
-  overflow: 'hidden',
-  alignItems: 'center',
-  justifyContent: 'center',
-},
   logo: {
     width: '80%',
     height: '80%',
-    //resizeMode: 'contain',
     alignSelf: 'center',
   },
   shineWrapper: {
@@ -117,17 +129,16 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 40,
+    marginBottom: height * 0.04,      // relative instead of fixed 40
   },
   internText: {
     color: '#024D60',
   },
   linkText: {
-     color: '#2CACAD',
+    color: '#2CACAD',
   },
   progressContainer: {
-    position: 'absolute',
-    bottom: 80,
+    marginBottom: height * 0.06,      // relative instead of fixed bottom: 80
     width: 150,
     height: 4,
     backgroundColor: 'rgba(255,255,255,0.3)',

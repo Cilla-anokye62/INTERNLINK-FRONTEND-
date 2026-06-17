@@ -1,15 +1,3 @@
-/**
- * UniversityInfoScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — University Onboarding: Step 1 of 4
- * "University Information"
- *
- * Design: Mint background + white card containing all form content.
- * The progress header sits OUTSIDE the card (on the mint background).
- * Everything else (title, upload, fields, button) is INSIDE the card.
- * ─────────────────────────────────────────────────────────────────
- */
-
 import React, { useState } from 'react';
 import {
   View,
@@ -22,41 +10,40 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 
+const { height } = Dimensions.get('window');
 
-// ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background:       '#D9F2EE', // mint — full screen background
-  card:             '#FFFFFF', // white card behind form content
-  progressTrack:    '#B2DDD8', // unfilled part of progress bar
-  progressFill:     '#2EC4B6', // filled part of progress bar
-  stepLabel:        '#4A7C75', // "University Setup · Step 1 of 4"
-  stepPercent:      '#2EC4B6', // "25%" text
-  title:            '#0D3B47', // "University information"
-  subtitle:         '#4A7C75', // "Help students recognize..."
-  uploadCard:       '#F4FCFB', // slightly tinted upload box (sits inside white card)
-  uploadCardBorder: '#C5E8E3', // upload box border
-  uploadIconCircle: '#E8F8F5', // circle behind upload arrow
-  uploadIconBorder: '#2EC4B6', // dashed border on icon circle
-  uploadIcon:       '#2EC4B6', // the upload arrow icon
-  uploadTitle:      '#0D3B47', // "Upload university logo"
-  uploadSubtitle:   '#9BB8B4', // "PNG or SVG · max 2MB · square"
-  uploadBtn:        '#2EC4B6', // "Upload" pill button
+  background:       '#D9F2EE',
+  card:             '#FFFFFF',
+  progressTrack:    '#B2DDD8',
+  progressFill:     '#2EC4B6',
+  stepLabel:        '#4A7C75',
+  stepPercent:      '#2EC4B6',
+  title:            '#0D3B47',
+  subtitle:         '#4A7C75',
+  uploadCard:       '#F4FCFB',
+  uploadCardBorder: '#C5E8E3',
+  uploadIconCircle: '#E8F8F5',
+  uploadIconBorder: '#2EC4B6',
+  uploadIcon:       '#2EC4B6',
+  uploadTitle:      '#0D3B47',
+  uploadSubtitle:   '#9BB8B4',
+  uploadBtn:        '#2EC4B6',
   uploadBtnText:    '#FFFFFF',
-  label:            '#0D3B47', // field labels (ALL CAPS)
-  inputBg:          '#FFFFFF', // input box background
-  inputBorder:      '#C5E8E3', // idle border
-  inputBorderFocus: '#2EC4B6', // focused border
-  inputText:        '#0D3B47', // text user types
-  placeholder:      '#9BB8B4', // placeholder text
-  inputIcon:        '#9BB8B4', // icon inside input
-  nextBtn:          '#2EC4B6', // Next button
+  label:            '#0D3B47',
+  inputBg:          '#FFFFFF',
+  inputBorder:      '#C5E8E3',
+  inputBorderFocus: '#2EC4B6',
+  inputText:        '#0D3B47',
+  placeholder:      '#9BB8B4',
+  inputIcon:        '#9BB8B4',
+  nextBtn:          '#2EC4B6',
   nextBtnText:      '#FFFFFF',
 };
 
-
-// ─── FIELD DATA ──────────────────────────────────────────────────
 const FIELDS = [
   {
     id: 'name',
@@ -88,17 +75,10 @@ const FIELDS = [
   },
 ];
 
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function UniversityInfoScreen({ navigation }: any) {
-
   const [formValues, setFormValues] = useState<Record<string, string>>({
-    name: '',
-    email: '',
-    phone: '',
-    website: '',
+    name: '', email: '', phone: '', website: '',
   });
-
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [logoUploaded, setLogoUploaded] = useState(false);
 
@@ -111,7 +91,7 @@ export default function UniversityInfoScreen({ navigation }: any) {
     // TODO: navigation.navigate('UniversityStep2');
   };
 
-  const PROGRESS = 0.25; // step 1 of 4 = 25%
+  const PROGRESS = 0.25;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -126,79 +106,52 @@ export default function UniversityInfoScreen({ navigation }: any) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-
-          {/* ── PROGRESS HEADER — sits on mint background, outside the card ── */}
+          {/* Progress Header */}
           <View style={styles.stepRow}>
             <Text style={styles.stepLabel}>University Setup · Step 1 of 4</Text>
             <Text style={styles.stepPercent}>25%</Text>
           </View>
-
-          {/* Progress bar */}
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${PROGRESS * 100}%` }]} />
           </View>
-          {/* ── END PROGRESS HEADER ─────────────────────────── */}
 
-
-          {/* ── WHITE CARD — contains all form content ──────── */}
+          {/* White Card */}
           <View style={styles.card}>
 
-            {/* ── Title ───────────────────────────────────────── */}
+            {/* Title */}
             <Text style={styles.title}>University information</Text>
-            <Text style={styles.subtitle}>
-              Help students recognize your institution.
-            </Text>
+            <Text style={styles.subtitle}>Help students recognize your institution.</Text>
 
-            {/* ── Upload logo row ─────────────────────────────── */}
+            {/* Upload row */}
             <View style={styles.uploadCard}>
-
-              {/* Dashed circle icon */}
               <View style={styles.uploadIconCircle}>
-                {/* TODO: replace with <Ionicons name="cloud-upload-outline" size={22} color={COLORS.uploadIcon} /> */}
                 <Text style={styles.uploadIconText}>⬆</Text>
               </View>
-
-              {/* Title + subtitle */}
               <View style={styles.uploadTextBlock}>
                 <Text style={styles.uploadTitle}>Upload university logo</Text>
                 <Text style={styles.uploadSubtitle}>PNG or SVG · max 2MB · square</Text>
               </View>
-
-              {/* Upload pill button */}
               <TouchableOpacity
                 style={styles.uploadBtn}
-                onPress={() => {
-                  setLogoUploaded(true);
-                  console.log('Upload logo tapped');
-                  // TODO: open image picker with expo-image-picker
-                }}
+                onPress={() => setLogoUploaded(true)}
                 activeOpacity={0.85}
               >
                 <Text style={styles.uploadBtnText}>
                   {logoUploaded ? 'Change' : 'Upload'}
                 </Text>
               </TouchableOpacity>
-
             </View>
-            {/* ── End upload row ───────────────────────────────── */}
 
-
-            {/* ── Input fields ────────────────────────────────── */}
+            {/* Input fields */}
             <View style={styles.fieldsContainer}>
               {FIELDS.map((field) => (
                 <View key={field.id} style={styles.fieldGroup}>
-
-                  {/* ALL CAPS label */}
                   <Text style={styles.label}>{field.label}</Text>
-
-                  {/* Icon + TextInput row */}
                   <View style={[
                     styles.inputWrapper,
                     focusedInput === field.id && styles.inputWrapperFocused,
                   ]}>
-                    {/* TODO: swap emoji for <Ionicons /> later */}
                     <Text style={styles.inputIcon}>{field.icon}</Text>
-
                     <TextInput
                       style={styles.input}
                       placeholder={field.placeholder}
@@ -211,56 +164,37 @@ export default function UniversityInfoScreen({ navigation }: any) {
                       onBlur={() => setFocusedInput(null)}
                     />
                   </View>
-
                 </View>
               ))}
             </View>
-            {/* ── End input fields ─────────────────────────────── */}
 
-
-            {/* ── Next button ─────────────────────────────────── */}
-            <TouchableOpacity
-              style={styles.nextBtn}
-              onPress={handleNext}
-              activeOpacity={0.85}
-            >
+            {/* Next button */}
+            <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
               <Text style={styles.nextBtnText}>Next  →</Text>
             </TouchableOpacity>
 
           </View>
-          {/* ── END WHITE CARD ──────────────────────────────── */}
-
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-
   flex: {
     flex: 1,
   },
-
-  // Full mint background
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-
-  // ScrollView keeps mint background all the way to edges
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
+    paddingTop: height * 0.03,    // relative instead of fixed 20
+    paddingBottom: height * 0.05, // relative instead of fixed 40
     backgroundColor: COLORS.background,
   },
-
-  // ── Progress header (outside card, on mint) ───────────────────
   stepRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -283,7 +217,7 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: COLORS.progressTrack,
     borderRadius: 3,
-    marginBottom: 20,   // space between progress bar and the white card
+    marginBottom: height * 0.025, // relative instead of fixed 20
     overflow: 'hidden',
   },
   progressFill: {
@@ -291,22 +225,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.progressFill,
     borderRadius: 3,
   },
-
-  // ── White card ────────────────────────────────────────────────
-  // This wraps the title, upload row, fields, and button
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 24,
     padding: 24,
-    // Shadow so it lifts off the mint background
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
-
-  // ── Title (inside card) ───────────────────────────────────────
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -317,10 +245,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.subtitle,
     lineHeight: 20,
-    marginBottom: 22,
+    marginBottom: height * 0.025, // relative instead of fixed 22
   },
-
-  // ── Upload row (inside card) ──────────────────────────────────
   uploadCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -329,7 +255,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.uploadCardBorder,
     padding: 14,
-    marginBottom: 24,
+    marginBottom: height * 0.03,  // relative instead of fixed 24
   },
   uploadIconCircle: {
     width: 50,
@@ -373,10 +299,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.uploadBtnText,
   },
-
-  // ── Input fields (inside card) ────────────────────────────────
   fieldsContainer: {
-    marginBottom: 24,
+    marginBottom: height * 0.03,  // relative instead of fixed 24
   },
   fieldGroup: {
     marginBottom: 16,
@@ -398,7 +322,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.inputBorder,
     paddingHorizontal: 14,
     height: 52,
-    // Subtle shadow on each input box
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -418,8 +341,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.inputText,
   },
-
-  // ── Next button (inside card) ─────────────────────────────────
   nextBtn: {
     backgroundColor: COLORS.nextBtn,
     borderRadius: 50,
@@ -437,5 +358,4 @@ const styles = StyleSheet.create({
     color: COLORS.nextBtnText,
     letterSpacing: 0.5,
   },
-
 });
