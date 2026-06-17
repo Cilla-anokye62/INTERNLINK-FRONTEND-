@@ -15,6 +15,7 @@ import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServices
 import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
+import CompanyInformationScreen from './app/Company Onboarding screens/CompanyInformation'; 
 
 const Stack = createStackNavigator();
 
@@ -47,6 +48,9 @@ export default function App() {
         <Stack.Screen name="InstitutionDetails"     component={InstitutionDetailsScreen} />
         <Stack.Screen name="CareerServicesSetup"    component={CareerServicesSetupScreen} />
         <Stack.Screen name="ReviewComplete"         component={ReviewCompleteScreen} />
+
+        {/* Company onboarding */}
+        <Stack.Screen name="CompanyInformation"     component={CompanyInformationScreen} />
 
         {/* Employer onboarding — add when CompanyInfoScreen is ready */}
         {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
