@@ -10,6 +10,9 @@ import VerificationScreen from './app/AuthScreens/VerificationScreen';
 import ForgotPasswordScreen from './app/AuthScreens/ForgotPasswordScreen';
 import UniversityInfoScreen from './app/UniversityOnboarding/UniversityInfoScreen';
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
+import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
+import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServicesSetupScreen';
+import InstitutionDetailsScreen from './app/UniversityOnboarding/InstitutionDetailsScreen';
 
 
 const Stack = createStackNavigator();
@@ -28,6 +31,9 @@ export default function App() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
         <Stack.Screen name="AcademicInfo" component={AcademicInfoScreen} />
+        <Stack.Screen name="InstitutionDetails" component={InstitutionDetailsScreen} />
+        <Stack.Screen name="CareerServicesSetup" component={CareerServicesSetupScreen} />
+        <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
       </Stack.Navigator>
     </NavigationContainer>
 
