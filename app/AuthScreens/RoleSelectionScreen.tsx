@@ -64,10 +64,10 @@ const { width, height } = Dimensions.get('window');
 export default function RoleSelectionScreen({ navigation }: any) {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  const handleContinue = () => {
-    if (!selectedRole) return;
-    navigation.navigate('SignUp');
-  };
+ const handleContinue = () => {
+  if (!selectedRole) return;
+  navigation.navigate('SignUp', { role: selectedRole });
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>

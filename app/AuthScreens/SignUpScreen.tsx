@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { height } = Dimensions.get('window');
 
-export default function SignUpScreen({ navigation }: any) {
+export default function SignUpScreen({ navigation , route}: any) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -106,7 +106,7 @@ export default function SignUpScreen({ navigation }: any) {
         </TouchableOpacity>
 
         {/* Button */}
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Verification')}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Verification',{ role: route.params?.role })}>
           <Text style={styles.buttonText}>Create Account →</Text>
         </TouchableOpacity>
 

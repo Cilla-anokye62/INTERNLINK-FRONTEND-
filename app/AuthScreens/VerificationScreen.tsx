@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { height } = Dimensions.get('window');
 
-export default function VerificationScreen({ navigation }: any) {
+export default function VerificationScreen({ navigation,route }: any) {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(59);
   const inputs = useRef<(TextInput | null)[]>([]);
@@ -71,7 +71,7 @@ export default function VerificationScreen({ navigation }: any) {
       </View>
 
       {/* Verify button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('UniversityInfo')}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Onboarding', { role: route.params?.role })}>
         <Text style={styles.buttonText}>Verify →</Text>
       </TouchableOpacity>
 
