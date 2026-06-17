@@ -8,7 +8,7 @@ export default function OnboardingRouter({ navigation, route }: any) {
     if (role === 'student') {
       navigation.replace('AcademicInfo');
     } else if (role === 'employer') {
-      navigation.replace('CompanyInfo');
+      navigation.replace('CompanyInformation');
     } else if (role === 'university') {
       navigation.replace('UniversityInfo');
     }
