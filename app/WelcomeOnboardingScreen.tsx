@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useState, useRef } from 'react';
 import { FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -35,7 +36,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
     }
   };
 
- const renderSlide = ({ item }: any) => (
+  const renderSlide = ({ item }: any) => (
     <View style={styles.slide}>
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
@@ -43,7 +44,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={slides}
@@ -82,7 +83,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
           <Text style={styles.loginText}>I Already Have an Account</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -93,37 +94,11 @@ const styles = StyleSheet.create({
   },
   slide: {
     width: width,
+    flex: 1,
     alignItems: 'center',
-    paddingTop: 300,
+    justifyContent: 'center',       // centers content vertically instead of fixed paddingTop
     paddingHorizontal: 32,
-  },
-  logoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 48,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    resizeMode: 'contain',
-  },
-  logoText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  internText: {
-    color: '#050315',
-  },
-  linkText: {
-    color: '#2CACAD',
+    paddingBottom: height * 0.05,   // relative bottom padding
   },
   title: {
     fontSize: 28,
@@ -156,7 +131,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   wave: {
-    height: 60,
+    height: height * 0.07,          // relative height instead of fixed 60
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
@@ -164,7 +139,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 32,
-    paddingBottom: 40,
+    paddingBottom: height * 0.04,   // relative instead of fixed 40
     alignItems: 'center',
   },
   button: {
