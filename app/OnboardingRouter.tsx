@@ -12,7 +12,7 @@ export default function OnboardingRouter({ navigation, route }: any) {
     } else if (role === 'university') {
       navigation.replace('UniversityInfo');
     }
-  }, []);git 
+  }, []);
 
   return <View />;
 }
