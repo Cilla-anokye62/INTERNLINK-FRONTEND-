@@ -95,6 +95,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
   };
 
   const handleFinish = () => {
+    navigation.navigate('ProfileCompletion');
     // navigation.navigate('HomeScreen');
   };
 

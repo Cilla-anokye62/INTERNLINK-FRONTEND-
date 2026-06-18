@@ -30,7 +30,7 @@ export default function CareerInterestsScreen({ navigation }: any) {
       alert('Please select at least 2 interests.');
       return;
     }
-    navigation.navigate('PreferredLocationScreen');
+    navigation.navigate('PreferredLocation');
   };
 
   const CARD_SIZE = (width - 24 * 2 - 12) / 2;
