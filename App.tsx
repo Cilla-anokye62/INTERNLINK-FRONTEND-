@@ -15,11 +15,12 @@ import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServices
 import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
-import CompanyInformationScreen from './app/Company Onboarding screens/CompanyInformation'; 
+import CompanyInformation from './app/Company Onboarding screens/CompanyInformation'; 
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
+import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -59,7 +60,8 @@ export default function App() {
         <Stack.Screen name="ReviewComplete"         component={ReviewCompleteScreen} />
 
         {/* Company onboarding */}
-        <Stack.Screen name="CompanyInformation"     component={CompanyInformationScreen} />
+        <Stack.Screen name="CompanyInformation"     component={CompanyDetails} />
+        <Stack.Screen name="CompanyDetails"     component={CompanyDetails} />
 
         {/* Employer onboarding — add when CompanyInfoScreen is ready */}
         {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
