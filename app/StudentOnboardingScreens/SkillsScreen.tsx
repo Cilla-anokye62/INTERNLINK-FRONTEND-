@@ -38,7 +38,7 @@ export default function SkillsScreen({ navigation }: any) {
       alert('Please select at least 3 skills.');
       return;
     }
-    // navigation.navigate('NextScreen');
+    navigation.navigate('CareerInterests');
   };
 
   return (

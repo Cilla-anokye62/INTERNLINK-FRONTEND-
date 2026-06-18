@@ -16,7 +16,8 @@ import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScree
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
 import CompanyInformationScreen from './app/Company Onboarding screens/CompanyInformation'; 
-
+import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
+import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -42,6 +43,8 @@ export default function App() {
         {/* Student onboarding */}
         <Stack.Screen name="AcademicInfo"      component={AcademicInfoScreen} />
         <Stack.Screen name="Skills"            component={SkillsScreen} />
+        <Stack.Screen name="CareerInterests" component={CareerInterestsScreen} />
+        <Stack.Screen name="PreferredLocation" component={PreferredLocationScreen} />
 
         {/* University onboarding */}
         <Stack.Screen name="UniversityInfo"         component={UniversityInfoScreen} />

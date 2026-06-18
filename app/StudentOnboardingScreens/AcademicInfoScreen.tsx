@@ -58,7 +58,7 @@ export default function AcademicInfoScreen({ navigation }: any) {
       alert('Please fill in all fields before continuing.');
       return;
     }
-    // navigation.navigate('NextScreen');
+    navigation.navigate('Skills');
   };
 
   const renderDropdownModal = (
