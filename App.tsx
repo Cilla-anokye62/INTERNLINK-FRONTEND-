@@ -15,11 +15,11 @@ import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServices
 import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
-import CompanyInformation from './app/Company Onboarding screens/CompanyInformation'; 
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
+import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
 import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
 const Stack = createStackNavigator();
 
