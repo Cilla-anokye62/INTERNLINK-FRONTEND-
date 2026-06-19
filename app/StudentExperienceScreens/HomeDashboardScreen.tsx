@@ -15,7 +15,7 @@ const ACTIVITY = [
   { id: '3', icon: '💬', title: 'New message',          subtitle: 'Sarah from Airbnb HR',          time: '3d', dot: '#10B981' },
 ];
 
-export default function HomeDashboardScreen() {
+export default function HomeDashboardScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -31,7 +31,13 @@ export default function HomeDashboardScreen() {
             <Text style={styles.greeting}>Hi, Alex 👋</Text>
             <Text style={styles.greetingSub}>Let's find your perfect role</Text>
           </View>
-          <TouchableOpacity style={styles.bellButton}>
+
+          {/* Bell button — navigates to Notifications */}
+          <TouchableOpacity
+            style={styles.bellButton}
+            onPress={() => navigation.navigate('Notifications')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.bellIcon}>🔔</Text>
           </TouchableOpacity>
         </View>
@@ -57,7 +63,6 @@ export default function HomeDashboardScreen() {
               <Text style={styles.viewMatchesBtnText}>View matches →</Text>
             </TouchableOpacity>
           </View>
-          {/* Decorative circles */}
           <View style={styles.bannerCircle1} />
           <View style={styles.bannerCircle2} />
         </View>
@@ -77,21 +82,14 @@ export default function HomeDashboardScreen() {
         >
           {RECOMMENDED.map(item => (
             <TouchableOpacity key={item.id} style={styles.recommendCard} activeOpacity={0.85}>
-              {/* Company avatar */}
               <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
                 <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
               </View>
-
-              {/* Match badge */}
               <View style={styles.matchBadge}>
                 <Text style={styles.matchBadgeText}>{item.match}% match</Text>
               </View>
-
-              {/* Info */}
               <Text style={styles.recommendTitle}>{item.title}</Text>
               <Text style={styles.recommendCompany}>{item.company} · {item.location}</Text>
-
-              {/* Footer */}
               <View style={styles.recommendFooter}>
                 <Text style={styles.recommendPay}>{item.pay}</Text>
                 <Text style={styles.recommendDot}> · </Text>
@@ -142,8 +140,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 24,
   },
-
-  // Top bar
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,8 +182,6 @@ const styles = StyleSheet.create({
   bellIcon: {
     fontSize: 18,
   },
-
-  // Search
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,8 +203,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#024D60',
   },
-
-  // AI Banner
   aiBanner: {
     backgroundColor: '#024D60',
     borderRadius: 20,
@@ -272,8 +264,6 @@ const styles = StyleSheet.create({
     bottom: -20,
     right: 60,
   },
-
-  // Section header
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -291,8 +281,6 @@ const styles = StyleSheet.create({
     color: '#2CACAD',
     fontWeight: '600',
   },
-
-  // Recommended cards
   horizontalScroll: {
     paddingRight: 24,
     marginBottom: 24,
@@ -363,8 +351,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
   },
-
-  // Activity
   activityCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,

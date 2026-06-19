@@ -31,6 +31,8 @@ import ReportsScreen from './app/UniversityExperience/ReportsScreen';
 import SettingsScreen from './app/UniversityExperience/SettingsScreen';
 import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
 import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CpmpanyReviewCompleteScreen';
+import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
+import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -63,6 +65,8 @@ export default function App() {
 
           {/* Student Experience screens */}
           <Stack.Screen name="HomeDashboard" component={StudentTabs} />
+          <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
+          <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />

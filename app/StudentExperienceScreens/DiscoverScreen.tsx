@@ -91,7 +91,7 @@ export default function DiscoverScreen({ navigation }: any) {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('InternshipDetails', { internship: item })}>
             {/* Left: company avatar */}
             <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
               <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
