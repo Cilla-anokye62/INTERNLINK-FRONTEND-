@@ -1,3 +1,4 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -21,52 +22,64 @@ import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompl
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
 import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
 import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
+import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
+import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
+import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
 
-        {/* Entry screens */}
-        <Stack.Screen name="Splash"            component={SplashScreen} />
-        <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
+          {/* Entry screens */}
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
 
-        {/* Auth screens */}
-        <Stack.Screen name="RoleSelection"     component={RoleSelectionScreen} />
-        <Stack.Screen name="Login"             component={LoginScreen} />
-        <Stack.Screen name="SignUp"            component={SignUpScreen} />
-        <Stack.Screen name="Verification"      component={VerificationScreen} />
-        <Stack.Screen name="ForgotPassword"    component={ForgotPasswordScreen} />
+          {/* Auth screens */}
+          <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="Verification" component={VerificationScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
 
-        {/* Router — decides which onboarding to go to */}
-        <Stack.Screen name="Onboarding"        component={OnboardingRouter} />
+          {/* Router — decides which onboarding to go to */}
+          <Stack.Screen name="Onboarding" component={OnboardingRouter} />
 
-        {/* Student onboarding */}
-        <Stack.Screen name="AcademicInfo"      component={AcademicInfoScreen} />
-        <Stack.Screen name="Skills"            component={SkillsScreen} />
-        <Stack.Screen name="CareerInterests" component={CareerInterestsScreen} />
-        <Stack.Screen name="PreferredLocation" component={PreferredLocationScreen} />
-        <Stack.Screen name="ProfileCompletion" component={ProfileCompletionScreen} />
+          {/* Student onboarding */}
+          <Stack.Screen name="AcademicInfo" component={AcademicInfoScreen} />
+          <Stack.Screen name="Skills" component={SkillsScreen} />
+          <Stack.Screen name="CareerInterests" component={CareerInterestsScreen} />
+          <Stack.Screen name="PreferredLocation" component={PreferredLocationScreen} />
+          <Stack.Screen name="ProfileCompletion" component={ProfileCompletionScreen} />
 
-        {/* Student Experience screens */}
-        <Stack.Screen name="HomeDashboard" component={StudentTabs} />
+          {/* Student Experience screens */}
+          <Stack.Screen name="HomeDashboard" component={StudentTabs} />
 
-        {/* University onboarding */}
-        <Stack.Screen name="UniversityInfo"         component={UniversityInfoScreen} />
-        <Stack.Screen name="InstitutionDetails"     component={InstitutionDetailsScreen} />
-        <Stack.Screen name="CareerServicesSetup"    component={CareerServicesSetupScreen} />
-        <Stack.Screen name="ReviewComplete"         component={ReviewCompleteScreen} />
+          {/* University onboarding */}
+          <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
+          <Stack.Screen name="InstitutionDetails" component={InstitutionDetailsScreen} />
+          <Stack.Screen name="CareerServicesSetup" component={CareerServicesSetupScreen} />
+          <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
 
-        {/* Company onboarding */}
-        <Stack.Screen name="CompanyInformation"     component={CompanyDetails} />
-        <Stack.Screen name="CompanyDetails"     component={CompanyDetails} />
+          {/* University experience screens */}
+          <Stack.Screen name="UniversityDashboard" component={UniversityDashboardScreen} />
+          <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
+          <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
 
-        {/* Employer onboarding — add when CompanyInfoScreen is ready */}
-        {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
 
-      </Stack.Navigator>
-    </NavigationContainer>
+          {/* Company onboarding */}
+          <Stack.Screen name="CompanyInformation" component={CompanyDetails} />
+          <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
+
+
+          {/* Employer onboarding — add when CompanyInfoScreen is ready */}
+          {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
+
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

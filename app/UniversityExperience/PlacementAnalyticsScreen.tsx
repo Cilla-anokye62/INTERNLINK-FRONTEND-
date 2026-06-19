@@ -1,0 +1,554 @@
+/**
+ * PlacementAnalyticsScreen.tsx
+ * ─────────────────────────────────────────────────────────────────
+ * InternLink — Placement Analytics (Analytics tab for university users)
+ *
+ * Content (from design):
+ *  - Header: "Analytics" title + "Real-time insights" subtitle + "···" menu
+ *  - "Offers accepted" card: big number, "+18%" green pill, and a filled
+ *    line chart trending upward
+ *  - Two small side-by-side cards: "Top skill in demand" (React) and
+ *    "Hottest sector" (FinTech)
+ *  - "Top hiring partners" card: 4 rows, each with a company name,
+ *    a count, and a horizontal progress bar
+ *  - Bottom tab bar with "Analytics" highlighted as active
+ *
+ * REQUIRED PACKAGE FOR THE CHART:
+ *  This screen uses a real line chart (not a placeholder box) since the
+ *  curve shape is the focal point of the design. Install these first:
+ *
+ *    npx expo install react-native-svg
+ *    npm install react-native-chart-kit
+ *
+ * HOW TO USE:
+ *  1. Drop inside your screens/ or app/ folder
+ *  2. Add to App.tsx:
+ *     import PlacementAnalyticsScreen from './app/PlacementAnalyticsScreen';
+ *     <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+// ─── IMPORTS ─────────────────────────────────────────────────────
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { LineChart } from 'react-native-chart-kit'; // renders the filled trend line
+
+
+// ─── COLOR PALETTE ───────────────────────────────────────────────
+const COLORS = {
+  background:        '#D9F2EE', // mint — full screen background
+  headerTitle:       '#0D3B47', // "Analytics"
+  headerSubtitle:    '#4A7C75', // "Real-time insights"
+  menuBtnBg:         '#FFFFFF', // "···" circle background
+  menuBtnIcon:        '#0D3B47',
+
+  // Offers accepted card
+  offersCardBg:      '#FFFFFF',
+  offersLabel:       '#9BB8B4',
+  offersValue:       '#0D3B47',
+  growthPillBg:      '#D6F2E3', // light green pill behind "+18%"
+  growthPillText:    '#1E8E5A', // green text inside the pill
+  chartLine:         '#2EC4B6', // the teal line itself
+  chartFillTop:      'rgba(46,196,182,0.35)', // gradient fill, darker near the line
+  chartFillBottom:   'rgba(46,196,182,0.0)',  // fades to transparent at the bottom
+
+  // Small side-by-side cards
+  smallCardBg:       '#FFFFFF',
+  smallCardLabel:    '#9BB8B4',
+  smallCardValue:    '#0D3B47',
+  smallCardDetail:   '#9BB8B4',
+
+  // Top hiring partners card
+  sectionCardBg:     '#FFFFFF',
+  sectionTitle:      '#0D3B47',
+  partnerName:       '#0D3B47',
+  partnerCount:      '#4A7C75',
+  barTrack:          '#E5F2F0',
+  barFill:           '#2EC4B6',
+
+  // Bottom tab bar
+  tabBarBg:          '#FFFFFF',
+  tabActive:         '#2EC4B6',
+  tabInactive:       '#9BB8B4',
+};
+
+
+// ─── DATA ─────────────────────────────────────────────────────────
+
+// The trend line's data points. In the real app these would come from
+// your backend (e.g. monthly offers-accepted counts). Values are just
+// relative numbers used to draw the curve shape from the design —
+// only the overall upward trend matters here, not exact figures.
+const OFFERS_TREND_DATA = [40, 48, 60, 65, 72, 70, 85, 95, 100];
+
+// The two small side-by-side insight cards.
+// Storing them in an array keeps the JSX below simple (one .map() instead
+// of writing each card out by hand).
+const INSIGHT_CARDS = [
+  {
+    id: 'topSkill',
+    label: 'Top skill in demand',
+    value: 'React',
+    detail: '182 openings',
+  },
+  {
+    id: 'hottestSector',
+    label: 'Hottest sector',
+    value: 'FinTech',
+    detail: '+34% growth',
+  },
+];
+
+// "Top hiring partners" — each row shows a company name, a count, and
+// a progress bar. barPercent controls how full each bar appears relative
+// to the highest count (Google's 48 = 100% in this example).
+const HIRING_PARTNERS = [
+  { id: 'google', name: 'Google', count: 48, barPercent: 100 },
+  { id: 'meta', name: 'Meta', count: 32, barPercent: 67 },
+  { id: 'stripe', name: 'Stripe', count: 21, barPercent: 44 },
+  { id: 'openai', name: 'OpenAI', count: 16, barPercent: 33 },
+];
+
+// Bottom tab bar items — same set used across all university screens
+const TAB_ITEMS = [
+  { id: 'overview', icon: '🏠', label: 'Overview' },
+  { id: 'students', icon: '🎓', label: 'Students' },
+  { id: 'analytics', icon: '📊', label: 'Analytics' },
+  { id: 'reports', icon: '📄', label: 'Reports' },
+  { id: 'settings', icon: '⚙️', label: 'Settings' },
+];
+
+// Screen width, used to size the chart so it fills the card correctly
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+
+// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
+export default function PlacementAnalyticsScreen({ navigation }: any) {
+
+  // This screen lives on the "Analytics" tab, so it starts active
+  const [activeTab, setActiveTab] = useState('analytics');
+
+  // Placeholder data for the Offers Accepted card.
+  // Later this will likely come from your backend/API.
+  const offersAccepted = {
+    total: 412,
+    growthPercent: '+18%',
+  };
+
+  const handleMenuPress = () => {
+    console.log('Menu (···) tapped');
+    // TODO: open an options menu/sheet
+  };
+
+  const handleTabPress = (tabId: string) => {
+    setActiveTab(tabId);
+    console.log('Switched to tab:', tabId);
+    // TODO: navigation.navigate(...) to the matching screen
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+
+      {/* Main scrollable content sits above the fixed bottom tab bar */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* ── HEADER ROW: title/subtitle + menu button ────────────── */}
+        <View style={styles.header}>
+          <View style={styles.headerTextBlock}>
+            <Text style={styles.headerTitle}>Analytics</Text>
+            <Text style={styles.headerSubtitle}>Real-time insights</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.menuBtn}
+            onPress={handleMenuPress}
+            activeOpacity={0.7}
+          >
+            {/* TODO: swap for <Ionicons name="ellipsis-horizontal" size={18} /> */}
+            <Text style={styles.menuBtnText}>···</Text>
+          </TouchableOpacity>
+        </View>
+        {/* ── END HEADER ──────────────────────────────────────────── */}
+
+
+        {/* ── OFFERS ACCEPTED CARD (with line chart) ──────────────── */}
+        <View style={styles.offersCard}>
+
+          {/* Top row: label + big number on the left, green pill on the right */}
+          <View style={styles.offersTopRow}>
+            <View>
+              <Text style={styles.offersLabel}>Offers accepted</Text>
+              <Text style={styles.offersValue}>{offersAccepted.total}</Text>
+            </View>
+
+            {/* Green growth pill */}
+            <View style={styles.growthPill}>
+              <Text style={styles.growthPillText}>
+                {offersAccepted.growthPercent}
+              </Text>
+            </View>
+          </View>
+
+          {/*
+            LineChart from react-native-chart-kit draws the filled curve.
+            - withDots/withVerticalLabels/etc are all turned off so it
+              renders as a clean curve with no axis clutter, matching
+              the minimal look in the design.
+            - The "fillShadowGradient" props create the teal fade-to-
+              transparent fill underneath the line.
+          */}
+          <LineChart
+            data={{
+              // labels are required by the library but we hide them
+              // visually below, so empty strings work fine here
+              labels: OFFERS_TREND_DATA.map(() => ''),
+              datasets: [{ data: OFFERS_TREND_DATA }],
+            }}
+            width={SCREEN_WIDTH - 76} // accounts for card padding + screen padding
+            height={120}
+            withDots={false}
+            withInnerLines={false}
+            withOuterLines={false}
+            withVerticalLabels={false}
+            withHorizontalLabels={false}
+            withShadow={false}
+            bezier // smooths the line into curves instead of sharp angles
+            chartConfig={{
+              backgroundColor: COLORS.offersCardBg,
+              backgroundGradientFrom: COLORS.offersCardBg,
+              backgroundGradientTo: COLORS.offersCardBg,
+              decimalPlaces: 0,
+              color: () => COLORS.chartLine, // line + fill color
+              fillShadowGradient: COLORS.chartLine,
+              fillShadowGradientOpacity: 0.25,
+              propsForBackgroundLines: {
+                stroke: 'transparent', // hides the default grid lines
+              },
+            }}
+            style={styles.chart}
+          />
+
+        </View>
+        {/* ── END OFFERS ACCEPTED CARD ────────────────────────────── */}
+
+
+        {/* ── TWO SMALL INSIGHT CARDS SIDE BY SIDE ─────────────────── */}
+        <View style={styles.insightsRow}>
+          {/*
+            .map() loops over INSIGHT_CARDS so both small cards come
+            from one block of JSX instead of being written out twice.
+          */}
+          {INSIGHT_CARDS.map((card) => (
+            <View key={card.id} style={styles.insightCard}>
+              <Text style={styles.smallCardLabel}>{card.label}</Text>
+              <Text style={styles.smallCardValue}>{card.value}</Text>
+              <Text style={styles.smallCardDetail}>{card.detail}</Text>
+            </View>
+          ))}
+        </View>
+        {/* ── END INSIGHT CARDS ───────────────────────────────────── */}
+
+
+        {/* ── "TOP HIRING PARTNERS" CARD ──────────────────────────── */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Top hiring partners</Text>
+
+          {/*
+            .map() loops over HIRING_PARTNERS and renders one row per
+            company: name + count on top, progress bar underneath.
+          */}
+          {HIRING_PARTNERS.map((partner, index) => (
+            <View
+              key={partner.id}
+              style={[
+                styles.partnerRow,
+                // Remove bottom margin on the last row for even spacing
+                index === HIRING_PARTNERS.length - 1 && styles.partnerRowLast,
+              ]}
+            >
+              {/* Name on the left, count on the right */}
+              <View style={styles.partnerLabelRow}>
+                <Text style={styles.partnerName}>{partner.name}</Text>
+                <Text style={styles.partnerCount}>{partner.count}</Text>
+              </View>
+
+              {/* Progress bar — fill width matches barPercent exactly */}
+              <View style={styles.barTrack}>
+                <View
+                  style={[
+                    styles.barFill,
+                    { width: `${partner.barPercent}%` },
+                  ]}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+        {/* ── END "TOP HIRING PARTNERS" CARD ──────────────────────── */}
+
+      </ScrollView>
+
+
+      {/* ── BOTTOM TAB BAR ─────────────────────────────────────────
+          Sits outside the ScrollView so it stays fixed at the bottom
+          while the content above scrolls underneath it.
+      */}
+      <View style={styles.tabBar}>
+        {TAB_ITEMS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={styles.tabItem}
+              onPress={() => handleTabPress(tab.id)}
+              activeOpacity={0.7}
+            >
+              {/* TODO: swap emoji for matching <Ionicons /> per tab */}
+              <Text style={[
+                styles.tabIcon,
+                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
+              ]}>
+                {tab.icon}
+              </Text>
+              <Text style={[
+                styles.tabLabel,
+                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {/* ── END BOTTOM TAB BAR ──────────────────────────────────────── */}
+
+    </SafeAreaView>
+  );
+}
+
+
+// ─── STYLES ──────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+
+  // Scrollable content — leaves room at the bottom so the tab bar
+  // doesn't cover the last items
+  scrollContent: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 100, // extra space so content isn't hidden behind tab bar
+  },
+
+  // ── Header ────────────────────────────────────────────────────
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 18,
+  },
+  headerTextBlock: {
+    flex: 1, // fills space to the left of the menu button
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.headerTitle,
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: COLORS.headerSubtitle,
+  },
+  menuBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: COLORS.menuBtnBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  menuBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.menuBtnIcon,
+  },
+
+  // ── Offers accepted card ──────────────────────────────────────
+  offersCard: {
+    backgroundColor: COLORS.offersCardBg,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  offersTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  offersLabel: {
+    fontSize: 13,
+    color: COLORS.offersLabel,
+    marginBottom: 4,
+  },
+  offersValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: COLORS.offersValue,
+  },
+  growthPill: {
+    backgroundColor: COLORS.growthPillBg,
+    borderRadius: 50,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  growthPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.growthPillText,
+  },
+  // The chart itself — negative left margin trims react-native-chart-kit's
+  // default internal left padding so the curve sits flush with the card
+  chart: {
+    marginLeft: -16,
+    marginTop: 8,
+  },
+
+  // ── Insight cards (side by side) ──────────────────────────────
+  insightsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  insightCard: {
+    width: '48%', // two cards side by side with a small gap between them
+    backgroundColor: COLORS.smallCardBg,
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  smallCardLabel: {
+    fontSize: 11,
+    color: COLORS.smallCardLabel,
+    marginBottom: 6,
+  },
+  smallCardValue: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.smallCardValue,
+    marginBottom: 4,
+  },
+  smallCardDetail: {
+    fontSize: 11,
+    color: COLORS.smallCardDetail,
+  },
+
+  // ── "Top hiring partners" card ─────────────────────────────────
+  sectionCard: {
+    backgroundColor: COLORS.sectionCardBg,
+    borderRadius: 18,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.sectionTitle,
+    marginBottom: 16,
+  },
+  partnerRow: {
+    marginBottom: 16, // space between each partner's row
+  },
+  partnerRowLast: {
+    marginBottom: 0, // no extra space after the final row
+  },
+  partnerLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  partnerName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.partnerName,
+  },
+  partnerCount: {
+    fontSize: 13,
+    color: COLORS.partnerCount,
+  },
+  barTrack: {
+    width: '100%',
+    height: 7,
+    backgroundColor: COLORS.barTrack,
+    borderRadius: 4,
+    overflow: 'hidden', // clips the fill's corners to match the track
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: COLORS.barFill,
+    borderRadius: 4,
+  },
+
+  // ── Bottom tab bar (identical to other university screens) ────────
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.tabBarBg,
+    paddingTop: 10,
+    paddingBottom: 18, // extra padding accounts for the phone's home indicator area
+    borderTopWidth: 1,
+    borderTopColor: '#EAF5F3',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
+  },
+  tabItem: {
+    flex: 1, // each of the 5 tabs takes equal width
+    alignItems: 'center',
+  },
+  tabIcon: {
+    fontSize: 18,
+    marginBottom: 3,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+});
