@@ -25,6 +25,10 @@ import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
 import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
+import StudentMonitoringScreen from './app/UniversityExperience/StudentMonitoringScreen';
+import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
+import ReportsScreen from './app/UniversityExperience/ReportsScreen';
+import SettingsScreen from './app/UniversityExperience/SettingsScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -68,7 +72,10 @@ export default function App() {
           <Stack.Screen name="UniversityDashboard" component={UniversityDashboardScreen} />
           <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
-
+          <Stack.Screen name="StudentMonitoring" component={StudentMonitoringScreen} />
+          <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
+          <Stack.Screen name="Reports" component={ReportsScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
 
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyDetails} />

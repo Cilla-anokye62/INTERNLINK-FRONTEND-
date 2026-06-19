@@ -1,0 +1,410 @@
+/**
+ * ReportsScreen.tsx
+ * ─────────────────────────────────────────────────────────────────
+ * InternLink — Reports (Reports tab for university users)
+ *
+ * Content (from design):
+ *  - Header: "Reports" title + "Generate & export" subtitle
+ *    + circular teal "+" button on the right (to generate a new report)
+ *  - List of report rows, each with: file-type icon, title (can wrap
+ *    onto 2 lines), detail line (format · status/info), and a download
+ *    icon on the right
+ *  - One report ("Spring 2026 placement summary") has a small teal dot
+ *    next to the download icon — likely indicating it's new/unread
+ *  - Bottom tab bar with "Reports" highlighted as active
+ *
+ * HOW TO USE:
+ *  1. Drop inside your screens/ or app/ folder
+ *  2. Add to App.tsx:
+ *     import ReportsScreen from './app/ReportsScreen';
+ *     <Stack.Screen name="Reports" component={ReportsScreen} />
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+// ─── IMPORTS ─────────────────────────────────────────────────────
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+
+
+// ─── COLOR PALETTE ───────────────────────────────────────────────
+const COLORS = {
+  background: '#D9F2EE', // mint — full screen background
+  headerTitle: '#0D3B47', // "Reports"
+  headerSubtitle: '#4A7C75', // "Generate & export"
+  addBtnBg: '#2EC4B6', // circular "+" button
+  addBtnIcon: '#FFFFFF',
+
+  // Report rows
+  rowBg: '#FFFFFF',
+  iconCircleBg: '#E8F8F5', // light teal circle behind the file icon
+  fileIcon: '#2EC4B6',
+  reportTitle: '#0D3B47',
+  reportDetail: '#9BB8B4',
+  downloadIcon: '#2EC4B6',
+  newDot: '#2EC4B6', // small dot indicating a new/unread report
+
+  // Bottom tab bar
+  tabBarBg: '#FFFFFF',
+  tabActive: '#2EC4B6',
+  tabInactive: '#9BB8B4',
+};
+
+
+// ─── DATA ─────────────────────────────────────────────────────────
+
+// The list of available reports. In the real app this would come from
+// your backend — for now it's hardcoded to match the design.
+// "isNew" controls whether the small teal dot shows next to the
+// download icon (only the first report has it in the design).
+const REPORTS = [
+  {
+    id: 'springSummary',
+    title: 'Spring 2026 placement summary',
+    detail: 'PDF · Generated 2d ago',
+    isNew: true,
+  },
+  {
+    id: 'departmentBreakdown',
+    title: 'Department-level breakdown',
+    detail: 'XLSX · 12 sheets',
+    isNew: false,
+  },
+  {
+    id: 'topHiringPartnersQ1',
+    title: 'Top hiring partners — Q1',
+    detail: 'PDF · 4 pages',
+    isNew: false,
+  },
+  {
+    id: 'diversityMetrics',
+    title: 'Diversity metrics report',
+    detail: 'PDF · Confidential',
+    isNew: false,
+  },
+  {
+    id: 'studentOutcomes2025',
+    title: 'Student outcomes — Class of 2025',
+    detail: 'XLSX · Final',
+    isNew: false,
+  },
+];
+
+// Bottom tab bar items — same set used across all university screens.
+// "reports" stays highlighted since this screen IS that tab.
+const TAB_ITEMS = [
+  { id: 'overview', icon: '🏠', label: 'Overview' },
+  { id: 'students', icon: '🎓', label: 'Students' },
+  { id: 'analytics', icon: '📊', label: 'Analytics' },
+  { id: 'reports', icon: '📄', label: 'Reports' },
+  { id: 'settings', icon: '⚙️', label: 'Settings' },
+];
+
+
+// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
+export default function ReportsScreen({ navigation }: any) {
+
+  // This screen lives on the "Reports" tab, so it starts active
+  const [activeTab, setActiveTab] = useState('reports');
+
+  // Called when the circular "+" button is tapped
+  const handleGenerateReport = () => {
+    console.log('Generate new report tapped');
+    // TODO: open a "create report" modal/sheet, or navigate to a
+    // report-builder screen, e.g. navigation.navigate('GenerateReport');
+  };
+
+  // Called when a report row is tapped (opens/previews the report)
+  const handleReportPress = (reportId: string) => {
+    console.log('Opening report:', reportId);
+    // TODO: navigation.navigate('ReportDetail', { id: reportId });
+  };
+
+  // Called when the download icon on a report row is tapped specifically
+  const handleDownloadPress = (reportId: string) => {
+    console.log('Downloading report:', reportId);
+    // TODO: trigger the actual file download/export here, e.g. using
+    // expo-file-system or a signed URL from your backend
+  };
+
+  const handleTabPress = (tabId: string) => {
+    setActiveTab(tabId);
+    console.log('Switched to tab:', tabId);
+    // TODO: navigation.navigate(...) to the matching screen
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+
+      {/* Main scrollable content sits above the fixed bottom tab bar */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* ── HEADER ROW: title/subtitle + "+" button ─────────────── */}
+        <View style={styles.header}>
+          <View style={styles.headerTextBlock}>
+            <Text style={styles.headerTitle}>Reports</Text>
+            <Text style={styles.headerSubtitle}>Generate & export</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={handleGenerateReport}
+            activeOpacity={0.85}
+          >
+            {/* TODO: swap for <Ionicons name="add" size={22} color="#FFFFFF" /> */}
+            <Text style={styles.addBtnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        {/* ── END HEADER ──────────────────────────────────────────── */}
+
+
+        {/* ── REPORT LIST ──────────────────────────────────────────── */}
+        {/*
+          .map() loops over REPORTS and renders one row per report:
+          file icon circle | title + detail | download icon (+ optional dot)
+        */}
+        {REPORTS.map((report) => (
+          <TouchableOpacity
+            key={report.id}
+            style={styles.reportRow}
+            onPress={() => handleReportPress(report.id)}
+            activeOpacity={0.85}
+          >
+
+            {/* Left: file icon inside a light teal circle */}
+            <View style={styles.iconCircle}>
+              {/* TODO: swap for <Ionicons name="document-text-outline" size={20} /> */}
+              <Text style={styles.fileIconText}>📄</Text>
+            </View>
+
+            {/* Middle: title + detail line, fills remaining space.
+                Title can wrap onto 2 lines for longer report names
+                (e.g. "Student outcomes — Class of 2025"). */}
+            <View style={styles.reportTextBlock}>
+              <Text style={styles.reportTitle}>{report.title}</Text>
+              <Text style={styles.reportDetail}>{report.detail}</Text>
+            </View>
+
+            {/* Right: download icon, with an optional small "new" dot
+                rendered above-left of it for unread/new reports */}
+            <View style={styles.downloadColumn}>
+              {report.isNew && <View style={styles.newDot} />}
+
+              <TouchableOpacity
+                onPress={() => handleDownloadPress(report.id)}
+                activeOpacity={0.7}
+                style={styles.downloadBtn}
+              >
+                {/* TODO: swap for <Ionicons name="download-outline" size={18} /> */}
+                <Text style={styles.downloadIconText}>⬇</Text>
+              </TouchableOpacity>
+            </View>
+
+          </TouchableOpacity>
+        ))}
+        {/* ── END REPORT LIST ─────────────────────────────────────── */}
+
+      </ScrollView>
+
+
+      {/* ── BOTTOM TAB BAR ─────────────────────────────────────────
+          Sits outside the ScrollView so it stays fixed at the bottom
+          while the content above scrolls underneath it.
+      */}
+      <View style={styles.tabBar}>
+        {TAB_ITEMS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={styles.tabItem}
+              onPress={() => handleTabPress(tab.id)}
+              activeOpacity={0.7}
+            >
+              {/* TODO: swap emoji for matching <Ionicons /> per tab */}
+              <Text style={[
+                styles.tabIcon,
+                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
+              ]}>
+                {tab.icon}
+              </Text>
+              <Text style={[
+                styles.tabLabel,
+                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {/* ── END BOTTOM TAB BAR ──────────────────────────────────────── */}
+
+    </SafeAreaView>
+  );
+}
+
+
+// ─── STYLES ──────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+
+  // Scrollable content — leaves room at the bottom so the tab bar
+  // doesn't cover the last items
+  scrollContent: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 100, // extra space so content isn't hidden behind tab bar
+  },
+
+  // ── Header ────────────────────────────────────────────────────
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerTextBlock: {
+    flex: 1, // fills space to the left of the "+" button
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.headerTitle,
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: COLORS.headerSubtitle,
+  },
+  addBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.addBtnBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Teal glow shadow to make this primary action stand out
+    shadowColor: COLORS.addBtnBg,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  addBtnText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: COLORS.addBtnIcon,
+    // Nudge the "+" glyph up slightly so it looks vertically centred
+    marginTop: -2,
+  },
+
+  // ── Report rows ───────────────────────────────────────────────
+  reportRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.rowBg,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12, // space between each report's row
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.iconCircleBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  fileIconText: {
+    fontSize: 17,
+    color: COLORS.fileIcon,
+  },
+  // Title + detail column — flex: 1 fills the space between icon and download button
+  reportTextBlock: {
+    flex: 1,
+    marginRight: 10, // keeps text from running right up against the download icon
+  },
+  reportTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.reportTitle,
+    marginBottom: 3,
+    // No numberOfLines limit — title is allowed to wrap onto 2 lines
+    // naturally for longer report names, matching the design.
+  },
+  reportDetail: {
+    fontSize: 12,
+    color: COLORS.reportDetail,
+  },
+
+  // ── Download icon + optional "new" dot ─────────────────────────
+  // This column holds the small dot (top) and the download button (below)
+  downloadColumn: {
+    alignItems: 'center',
+  },
+  // Small teal dot shown above the download icon for new/unread reports
+  newDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.newDot,
+    marginBottom: 6,
+  },
+  downloadBtn: {
+    padding: 2, // slightly larger tap target than the icon's visual size
+  },
+  downloadIconText: {
+    fontSize: 16,
+    color: COLORS.downloadIcon,
+  },
+
+  // ── Bottom tab bar (identical to other university screens) ────────
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.tabBarBg,
+    paddingTop: 10,
+    paddingBottom: 18, // extra padding accounts for the phone's home indicator area
+    borderTopWidth: 1,
+    borderTopColor: '#EAF5F3',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
+  },
+  tabItem: {
+    flex: 1, // each of the 5 tabs takes equal width
+    alignItems: 'center',
+  },
+  tabIcon: {
+    fontSize: 18,
+    marginBottom: 3,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+});
