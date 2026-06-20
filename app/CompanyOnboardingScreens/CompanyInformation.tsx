@@ -9,6 +9,8 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
 
 interface FormField {
   label: string;

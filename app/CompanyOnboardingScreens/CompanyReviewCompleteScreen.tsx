@@ -41,7 +41,7 @@ const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit }) => {
 };
 
 // ---------- Main Screen ----------
-const ReviewCompleteScreen: React.FC = () => {
+const CompanyReviewCompleteScreen: React.FC = () => {
   const summaryRows: SummaryRow[] = [
     {
       icon: '🏢',
@@ -373,4 +373,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ReviewCompleteScreen;
+export default CompanyReviewCompleteScreen;

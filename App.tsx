@@ -20,8 +20,8 @@ import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterest
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
-import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
-import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
+import CompanyInformation from './app/CompanyOnboardingScreens/CompanyInformation';
+import CompanyDetails from './app/CompanyOnboardingScreens/CompanyDetails';
 import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
@@ -29,11 +29,12 @@ import StudentMonitoringScreen from './app/UniversityExperience/StudentMonitorin
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
 import ReportsScreen from './app/UniversityExperience/ReportsScreen';
 import SettingsScreen from './app/UniversityExperience/SettingsScreen';
-import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
-import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CpmpanyReviewCompleteScreen';
+import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
 import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
 import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentEditProfileScreen from './app/StudentExperienceScreens/StudentEditProfileScreen';
+import StudentSettingsScreen from './app/StudentExperienceScreens/StudentSettingsScreen';
+import CompanyReviewCompleteScreen from './app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
 
 const Stack = createStackNavigator();
 
@@ -70,6 +71,8 @@ export default function App() {
           <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
           <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
           <Stack.Screen name="StudentEditProfile" component={StudentEditProfileScreen} />
+          <Stack.Screen name="StudentSettings" component={StudentSettingsScreen} />
+          
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
