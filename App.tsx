@@ -31,8 +31,8 @@ import ReportsScreen from './app/UniversityExperience/ReportsScreen';
 import SettingsScreen from './app/UniversityExperience/SettingsScreen';
 import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
 import CompanyProfileCompletion from './app/Company Onboarding screens/CompanyProfileCompletion';
-
-
+import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
+import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,7 +41,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="CompanyProfileCompletion">
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
 
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -66,6 +66,8 @@ export default function App() {
 
           {/* Student Experience screens */}
           <Stack.Screen name="HomeDashboard" component={StudentTabs} />
+          <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
+          <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
@@ -83,15 +85,11 @@ export default function App() {
           <Stack.Screen name="Settings" component={SettingsScreen} />
 
           {/* Company onboarding */}
-          <Stack.Screen name="CompanyInformation" component={CompanyDetails} />
+          <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
           <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
           <Stack.Screen name="CompanyProfileCompletion" component={CompanyProfileCompletion} />
-         
-
-
-          {/* Employer onboarding — add when CompanyInfoScreen is ready */}
-          {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
+        
 
         </Stack.Navigator>
       </NavigationContainer>
