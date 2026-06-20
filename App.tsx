@@ -2,49 +2,39 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-
 import SplashScreen from './app/SplashScreen';
 import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
-
 import RoleSelectionScreen from './app/AuthScreens/RoleSelectionScreen';
 import LoginScreen from './app/AuthScreens/LoginScreen';
 import SignUpScreen from './app/AuthScreens/SignUpScreen';
 import VerificationScreen from './app/AuthScreens/VerificationScreen';
 import ForgotPasswordScreen from './app/AuthScreens/ForgotPasswordScreen';
-
 import OnboardingRouter from './app/OnboardingRouter';
-
 import UniversityInfoScreen from './app/UniversityOnboarding/UniversityInfoScreen';
 import InstitutionDetailsScreen from './app/UniversityOnboarding/InstitutionDetailsScreen';
 import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServicesSetupScreen';
 import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
-
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
-
-import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
-import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
-
-// Company onboarding screens
 import CompanyInformation from './app/CompanyOnboardingScreens/CompanyInformation';
 import CompanyDetails from './app/CompanyOnboardingScreens/CompanyDetails';
-import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
-import CompanyProfileCompletion from './app/CompanyOnboardingScreens/CompanyProfileCompletion';
-// import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CompanyReviewCompleteScreen';
-// ^ commented out — file doesn't exist yet, uncomment once it's built and pushed
-
-// University experience — using the Bottom Tab Navigator (UniversityTabs)
-// instead of importing each university screen individually here.
-// UniversityTabs.tsx internally imports UniversityDashboardScreen,
-// StudentMonitoringScreen, PlacementAnalyticsScreen, ReportsScreen,
-// and SettingsScreen as its 5 tabs — see that file for those screens.
-import UniversityTabs from './app/UniversityExperience/UniversityTabs';
+import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
+import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
+import StudentMonitoringScreen from './app/UniversityExperience/StudentMonitoringScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
+import ReportsScreen from './app/UniversityExperience/ReportsScreen';
+import SettingsScreen from './app/UniversityExperience/SettingsScreen';
+import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
+import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
+import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
+import StudentEditProfileScreen from './app/StudentExperienceScreens/StudentEditProfileScreen';
+import StudentSettingsScreen from './app/StudentExperienceScreens/StudentSettingsScreen';
+import CompanyReviewCompleteScreen from './app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
 
 const Stack = createStackNavigator();
 
@@ -53,7 +43,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="UniversityTabs">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
 
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -80,6 +70,9 @@ export default function App() {
           <Stack.Screen name="HomeDashboard" component={StudentTabs} />
           <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
           <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
+          <Stack.Screen name="StudentEditProfile" component={StudentEditProfileScreen} />
+          <Stack.Screen name="StudentSettings" component={StudentSettingsScreen} />
+          
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
@@ -88,16 +81,20 @@ export default function App() {
           <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
 
           {/* University experience screens */}
-          <Stack.Screen name="UniversityTabs" component={UniversityTabs} />
+          <Stack.Screen name="UniversityDashboard" component={UniversityDashboardScreen} />
+          <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
+          <Stack.Screen name="StudentMonitoring" component={StudentMonitoringScreen} />
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
+          <Stack.Screen name="Reports" component={ReportsScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
 
           {/* Company onboarding */}
-          <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
+          <Stack.Screen name="CompanyInformation" component={CompanyDetails} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
           <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
-          <Stack.Screen name="CompanyProfileCompletion" component={CompanyProfileCompletion} />
-          {/* <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} /> */}
+          <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} />
+
 
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
