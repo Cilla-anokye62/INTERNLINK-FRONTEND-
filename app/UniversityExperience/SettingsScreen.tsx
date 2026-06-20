@@ -105,20 +105,14 @@ const SETTINGS_SECTIONS = [
 
 // Bottom tab bar items — same set used across all university screens.
 // "settings" stays highlighted since this screen IS that tab.
-const TAB_ITEMS = [
-  { id: 'overview', icon: '🏠', label: 'Overview' },
-  { id: 'students', icon: '🎓', label: 'Students' },
-  { id: 'analytics', icon: '📊', label: 'Analytics' },
-  { id: 'reports', icon: '📄', label: 'Reports' },
-  { id: 'settings', icon: '⚙️', label: 'Settings' },
-];
+
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function SettingsScreen({ navigation }: any) {
 
   // This screen lives on the "Settings" tab, so it starts active
-  const [activeTab, setActiveTab] = useState('settings');
+  const [setActiveTab] = useState('settings');
 
   // Placeholder profile data — later this would come from your
   // logged-in user's data (auth context, backend, etc.)
@@ -156,11 +150,6 @@ export default function SettingsScreen({ navigation }: any) {
     // navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
 
-  const handleTabPress = (tabId: string) => {
-    setActiveTab(tabId);
-    console.log('Switched to tab:', tabId);
-    // TODO: navigation.navigate(...) to the matching screen
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -264,34 +253,6 @@ export default function SettingsScreen({ navigation }: any) {
           Sits outside the ScrollView so it stays fixed at the bottom
           while the content above scrolls underneath it.
       */}
-      <View style={styles.tabBar}>
-        {TAB_ITEMS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              style={styles.tabItem}
-              onPress={() => handleTabPress(tab.id)}
-              activeOpacity={0.7}
-            >
-              {/* TODO: swap emoji for matching <Ionicons /> per tab */}
-              <Text style={[
-                styles.tabIcon,
-                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
-              ]}>
-                {tab.icon}
-              </Text>
-              <Text style={[
-                styles.tabLabel,
-                { color: isActive ? COLORS.tabActive : COLORS.tabInactive },
-              ]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      {/* ── END BOTTOM TAB BAR ──────────────────────────────────────── */}
 
     </SafeAreaView>
   );
@@ -445,33 +406,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: COLORS.signOutText,
-  },
-
-  // ── Bottom tab bar (identical to other university screens) ────────
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.tabBarBg,
-    paddingTop: 10,
-    paddingBottom: 18, // extra padding accounts for the phone's home indicator area
-    borderTopWidth: 1,
-    borderTopColor: '#EAF5F3',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 8,
-  },
-  tabItem: {
-    flex: 1, // each of the 5 tabs takes equal width
-    alignItems: 'center',
-  },
-  tabIcon: {
-    fontSize: 18,
-    marginBottom: 3,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
   },
 
 });

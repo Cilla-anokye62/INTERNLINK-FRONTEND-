@@ -2,33 +2,37 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+
 import SplashScreen from './app/SplashScreen';
 import WelcomeOnboardingScreen from './app/WelcomeOnboardingScreen';
+
 import RoleSelectionScreen from './app/AuthScreens/RoleSelectionScreen';
 import LoginScreen from './app/AuthScreens/LoginScreen';
 import SignUpScreen from './app/AuthScreens/SignUpScreen';
 import VerificationScreen from './app/AuthScreens/VerificationScreen';
 import ForgotPasswordScreen from './app/AuthScreens/ForgotPasswordScreen';
+
 import OnboardingRouter from './app/OnboardingRouter';
+
 import UniversityInfoScreen from './app/UniversityOnboarding/UniversityInfoScreen';
 import InstitutionDetailsScreen from './app/UniversityOnboarding/InstitutionDetailsScreen';
 import CareerServicesSetupScreen from './app/UniversityOnboarding/CareerServicesSetupScreen';
 import ReviewCompleteScreen from './app/UniversityOnboarding/ReviewCompleteScreen';
+
 import AcademicInfoScreen from './app/StudentOnboardingScreens/AcademicInfoScreen';
 import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
+
 import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
 import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
-import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
+
+import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
-import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
-import StudentMonitoringScreen from './app/UniversityExperience/StudentMonitoringScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
-import ReportsScreen from './app/UniversityExperience/ReportsScreen';
-import SettingsScreen from './app/UniversityExperience/SettingsScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -36,7 +40,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="CompanyEngagement">
 
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -69,13 +73,10 @@ export default function App() {
           <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
 
           {/* University experience screens */}
-          <Stack.Screen name="UniversityDashboard" component={UniversityDashboardScreen} />
-          <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
+          <Stack.Screen name="UniversityTabs" component={UniversityTabs} />
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
-          <Stack.Screen name="StudentMonitoring" component={StudentMonitoringScreen} />
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
-          <Stack.Screen name="Reports" component={ReportsScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
+
 
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyDetails} />
@@ -84,6 +85,8 @@ export default function App() {
 
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
+
+
 
         </Stack.Navigator>
       </NavigationContainer>
