@@ -1,15 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
-import HomeDashboardScreen from './HomeDashboardScreen';
+import HomeStack from './HomeStack';
 import DiscoverScreen from './DiscoverScreen';
+import SavedScreen from './SavedScreen';
+import ApplicationTrackingScreen from './ApplicationTrackingScreen';
 // Placeholder screens — we'll replace these one by one
 
-function SavedScreen() {
-  return <View style={styles.placeholder}><Text>Saved</Text></View>;
-}
-function ApplicationsScreen() {
-  return <View style={styles.placeholder}><Text>Applications</Text></View>;
-}
+
+
 function ProfileScreen() {
   return <View style={styles.placeholder}><Text>Profile</Text></View>;
 }
@@ -41,10 +39,10 @@ export default function StudentTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home"         component={HomeDashboardScreen} />  {/* ← replaced */}
+      <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="Discover"     component={DiscoverScreen} />
       <Tab.Screen name="Saved"        component={SavedScreen} />
-      <Tab.Screen name="Applications" component={ApplicationsScreen} />
+      <Tab.Screen name="Applications" component={ApplicationTrackingScreen} />
       <Tab.Screen name="Profile"      component={ProfileScreen} />
     </Tab.Navigator>
   );

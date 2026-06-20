@@ -24,10 +24,14 @@ import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
+import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
+import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
 
 import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
 import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
+// import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
+// import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CompanyReviewCompleteScreen';
 
 import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
@@ -40,7 +44,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="CompanyEngagement">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
 
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
@@ -65,6 +69,8 @@ export default function App() {
 
           {/* Student Experience screens */}
           <Stack.Screen name="HomeDashboard" component={StudentTabs} />
+          <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
+          <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
@@ -79,9 +85,10 @@ export default function App() {
 
 
           {/* Company onboarding */}
-          <Stack.Screen name="CompanyInformation" component={CompanyDetails} />
+          <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
-
+          {/* <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} /> */}
+          {/* <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} /> */}
 
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
