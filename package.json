@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
-    "@react-navigation/native": "^7.3.0",
+    "@react-navigation/bottom-tabs": "^7.18.2",
+    "@react-navigation/native": "^7.3.3",
     "@react-navigation/stack": "^7.10.2",
     "expo": "54",
     "expo-linear-gradient": "~15.0.8",
