@@ -24,15 +24,24 @@ import SkillsScreen from './app/StudentOnboardingScreens/SkillsScreen';
 import CareerInterestsScreen from './app/StudentOnboardingScreens/CareerInterestsScreen';
 import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLocationScreen';
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
+
 import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
 import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
 
+// Company onboarding screens
 import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
 import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
-// import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
+import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
+import CompanyProfileCompletion from './app/Company Onboarding screens/CompanyProfileCompletion';
 // import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CompanyReviewCompleteScreen';
+// ^ commented out — file doesn't exist yet, uncomment once it's built and pushed
 
+// University experience — using the Bottom Tab Navigator (UniversityTabs)
+// instead of importing each university screen individually here.
+// UniversityTabs.tsx internally imports UniversityDashboardScreen,
+// StudentMonitoringScreen, PlacementAnalyticsScreen, ReportsScreen,
+// and SettingsScreen as its 5 tabs — see that file for those screens.
 import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
@@ -83,17 +92,15 @@ export default function App() {
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
 
-
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
-          {/* <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} /> */}
+          <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
+          <Stack.Screen name="CompanyProfileCompletion" component={CompanyProfileCompletion} />
           {/* <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} /> */}
 
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
-
-
 
         </Stack.Navigator>
       </NavigationContainer>
