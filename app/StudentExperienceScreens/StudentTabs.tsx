@@ -4,13 +4,12 @@ import HomeStack from './HomeStack';
 import DiscoverScreen from './DiscoverScreen';
 import SavedScreen from './SavedScreen';
 import ApplicationTrackingScreen from './ApplicationTrackingScreen';
+import StudentProfileScreen from './StudentProfileScreen';
 // Placeholder screens — we'll replace these one by one
 
 
 
-function ProfileScreen() {
-  return <View style={styles.placeholder}><Text>Profile</Text></View>;
-}
+
 
 const Tab = createBottomTabNavigator();
 
@@ -43,7 +42,7 @@ export default function StudentTabs() {
       <Tab.Screen name="Discover"     component={DiscoverScreen} />
       <Tab.Screen name="Saved"        component={SavedScreen} />
       <Tab.Screen name="Applications" component={ApplicationTrackingScreen} />
-      <Tab.Screen name="Profile"      component={ProfileScreen} />
+      <Tab.Screen name="Profile" component={StudentProfileScreen} />
     </Tab.Navigator>
   );
 }
