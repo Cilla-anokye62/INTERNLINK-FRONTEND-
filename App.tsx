@@ -30,10 +30,10 @@ import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDe
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
 
 // Company onboarding screens
-import CompanyInformation from './app/Company Onboarding screens/CompanyInformation';
-import CompanyDetails from './app/Company Onboarding screens/CompanyDetails';
-import RecruitmentPreferencesScreen from './app/Company Onboarding screens/RecruitmentPreferencesScreen';
-import CompanyProfileCompletion from './app/Company Onboarding screens/CompanyProfileCompletion';
+import CompanyInformation from './app/CompanyOnboardingScreens/CompanyInformation';
+import CompanyDetails from './app/CompanyOnboardingScreens/CompanyDetails';
+import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
+import CompanyProfileCompletion from './app/CompanyOnboardingScreens/CompanyProfileCompletion';
 // import CompanyReviewCompleteScreen from './app/Company Onboarding screens/CompanyReviewCompleteScreen';
 // ^ commented out — file doesn't exist yet, uncomment once it's built and pushed
 
@@ -53,7 +53,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="UniversityTabs">
 
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
