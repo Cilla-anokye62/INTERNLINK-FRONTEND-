@@ -56,6 +56,7 @@ import DiscoverEmptyScreen from './app/SystemStateScreens/DiscoverEmptyScreen';
 import NoConnectionScreen from './app/SystemStateScreens/NoConnectionScreen';
 import LoadingStateScreen from './app/SystemStateScreens/LoadingStateScreen';
 import SearchResultsScreen from './app/SystemStateScreens/SearchResultsScreen';
+import ActionSuccessfulScreen from './app/SystemStateScreens/ActionSuccessfulScreen';
 
 
 const Stack = createStackNavigator();
@@ -94,7 +95,7 @@ export default function App() {
           <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
           <Stack.Screen name="StudentEditProfile" component={StudentEditProfileScreen} />
           <Stack.Screen name="StudentSettings" component={StudentSettingsScreen} />
-          
+
 
           {/* University onboarding */}
           <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
@@ -110,7 +111,7 @@ export default function App() {
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
           <Stack.Screen name="Reports" component={ReportsScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
-    
+
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
           <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
@@ -122,7 +123,7 @@ export default function App() {
           <Stack.Screen name="NoConnection" component={NoConnectionScreen} />
           <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
           <Stack.Screen name="LoadingState" component={LoadingStateScreen} />
-
+          <Stack.Screen name="ActionSuccessful" component={ActionSuccessfulScreen} />
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
 
