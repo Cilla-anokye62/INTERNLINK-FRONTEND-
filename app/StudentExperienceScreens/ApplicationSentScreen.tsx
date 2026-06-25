@@ -76,7 +76,7 @@ export default function ApplicationSentScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EAF6F5',
+    backgroundColor: '#F5FBFA',
     paddingHorizontal: 24,
   },
 

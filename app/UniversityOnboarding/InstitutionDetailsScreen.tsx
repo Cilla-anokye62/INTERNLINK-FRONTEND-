@@ -40,7 +40,7 @@ import {
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background:        '#D9F2EE', // mint — full screen background
+  background:        '#F5FBFA', // mint — full screen background
   card:              '#FFFFFF', // white card behind all content
   progressTrack:     '#B2DDD8', // unfilled part of progress bar
   progressFill:      '#2EC4B6', // filled part of progress bar

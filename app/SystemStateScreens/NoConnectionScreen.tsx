@@ -46,7 +46,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated
 const COLORS = {
   // Page background — plain white/very light grey, unlike the mint
   // background used in the other state screens
-  background:        '#FAFAFA',
+  background:        '#F5FBFA',
 
   // The centered card itself
   cardBg:            '#FFFFFF',

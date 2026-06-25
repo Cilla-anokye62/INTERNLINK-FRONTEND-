@@ -133,7 +133,7 @@ export default function HomeDashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   scrollContent: {
     paddingHorizontal: 24,

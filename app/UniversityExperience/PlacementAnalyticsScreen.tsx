@@ -45,7 +45,7 @@ import { LineChart } from 'react-native-chart-kit'; // renders the filled trend 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background:        '#D9F2EE', // mint — full screen background
+  background:        '#F5FBFA', // mint — full screen background
   headerTitle:       '#0D3B47', // "Analytics"
   headerSubtitle:    '#4A7C75', // "Real-time insights"
   menuBtnBg:         '#FFFFFF', // "···" circle background

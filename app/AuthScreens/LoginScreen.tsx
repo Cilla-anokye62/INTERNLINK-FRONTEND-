@@ -16,7 +16,7 @@ import {
 const { height } = Dimensions.get('window');
 
 const COLORS = {
-  background: '#D9F2EE',
+  background: '#F5FBFA',
   title: '#0D3B47',
   subtitle: '#4A7C75',
   label: '#0D3B47',

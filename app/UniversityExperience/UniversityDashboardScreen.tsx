@@ -42,7 +42,7 @@ import { LinearGradient } from 'expo-linear-gradient'; // used for the teal grad
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background:        '#D9F2EE', // mint — full screen background
+  background:        '#F5FBFA', // mint — full screen background
   headerAvatarBg:    '#0D3B47', // dark teal circle with "M"
   headerAvatarText:  '#FFFFFF',
   headerTitle:       '#0D3B47', // "MIT Career Hub"

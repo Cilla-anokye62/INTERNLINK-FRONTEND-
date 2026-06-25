@@ -47,7 +47,7 @@ const COLORS = {
   // Page background — soft light lavender/grey, matching the subtle
   // gradient feel from the design (kept as a flat color here; see
   // the optional LinearGradient note below if you want the gradient)
-  background: '#F2F1F8',
+  background: '#F5FBFA',
 
   // Centered card
   cardBg: '#FFFFFF',

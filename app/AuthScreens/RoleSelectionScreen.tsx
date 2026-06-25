@@ -40,7 +40,7 @@ const ROLES: RoleOption[] = [
 ];
 
 const COLORS = {
-  background: '#D9F2EE',
+  background: '#F5FBFA',
   card: '#FFFFFF',
   cardBorderIdle: 'transparent',
   cardBorderActive: '#329891',

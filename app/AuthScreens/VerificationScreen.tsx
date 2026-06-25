@@ -94,7 +94,7 @@ export default function VerificationScreen({ navigation,route }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D9F5F0',
+    backgroundColor: '#F5FBFA',
     paddingHorizontal: 24,
     paddingTop: height * 0.03,    // relative instead of fixed 60
     alignItems: 'center',

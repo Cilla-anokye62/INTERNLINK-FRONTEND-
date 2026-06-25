@@ -104,7 +104,7 @@ const CompanyInformationScreen: React.FC = () => {
 };
 
 const TEAL = "#2CC6B5";
-const LIGHT_BG = "#EEF9F8";
+const LIGHT_BG = "#F5FBFA";
 const BORDER = "#D1E8E6";
 const DARK_TEXT = "#1A202C";
 const MID_TEXT = "#718096";

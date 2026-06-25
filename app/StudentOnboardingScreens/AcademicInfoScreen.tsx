@@ -194,7 +194,7 @@ export default function AcademicInfoScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EAF6F5',
+    backgroundColor: '#F5FBFA',
   },
   container: {
     flex: 1,

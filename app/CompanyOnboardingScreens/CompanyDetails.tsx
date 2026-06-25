@@ -117,7 +117,7 @@ const CompanyDetailsScreen: React.FC = () => {
 
 const TEAL = '#3DBFB8';
 const TEAL_DARK = '#2ea89f';
-const BACKGROUND = '#eef9f9';
+const BACKGROUND = '#F5FBFA';
 const LABEL_COLOR = '#8a9aab';
 const TEXT_COLOR = '#1a2b35';
 const BORDER_COLOR = '#dce8ea';

@@ -124,7 +124,7 @@ export default function SignUpScreen({ navigation , route}: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   container: {
     flex: 1,

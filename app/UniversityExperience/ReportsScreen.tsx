@@ -36,7 +36,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background: '#D9F2EE', // mint — full screen background
+  background: '#F5FBFA', // mint — full screen background
   headerTitle: '#0D3B47', // "Reports"
   headerSubtitle: '#4A7C75', // "Generate & export"
   addBtnBg: '#2EC4B6', // circular "+" button

@@ -211,7 +211,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#E8F8F5',
+    backgroundColor: '#F5FBFA',
   },
   scrollContent: {
     paddingHorizontal: 24,

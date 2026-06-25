@@ -1,4 +1,4 @@
-import { View, StyleSheet, Image, Text, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Image, Text, Animated, Dimensions, Platform } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,12 +27,13 @@ export default function SplashScreen({ navigation }: any) {
       }),
     ]).start();
 
-    // Preload the onboarding images so they're decoded before the fade reveals them
     const preload = async () => {
       try {
-        await Promise.all([
-          Image.prefetch(Image.resolveAssetSource(require('../assets/WelcomeOnboardingImages/discover.png')).uri),
-        ]);
+        if (Platform.OS !== 'web') {
+          await Promise.all([
+            Image.prefetch(Image.resolveAssetSource(require('../assets/WelcomeOnboardingImages/discover.webp')).uri),
+          ]);
+        }
       } catch (e) {
         console.log('Image preload error:', e);
       } finally {
@@ -45,7 +46,7 @@ export default function SplashScreen({ navigation }: any) {
   }, []);
 
   useEffect(() => {
-    if (!assetsReady) return; // wait for the image to actually be ready
+    if (!assetsReady) return;
 
     const exitTimer = setTimeout(() => {
       Animated.timing(splashFade, {

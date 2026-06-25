@@ -197,7 +197,7 @@ export default function DiscoverScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
 
   // Header

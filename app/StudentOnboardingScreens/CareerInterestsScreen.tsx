@@ -124,13 +124,13 @@ export default function CareerInterestsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   topSection: {
     paddingHorizontal: 24,
     paddingTop: height * 0.02,
     paddingBottom: 12,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   progressRow: {
     flexDirection: 'row',
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: height * 0.03,
     paddingTop: 12,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   bottomInfo: {
     flexDirection: 'row',

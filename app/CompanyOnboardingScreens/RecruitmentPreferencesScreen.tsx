@@ -198,11 +198,11 @@ const BORDER_COLOR = '#E5E7EB';
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5FBFA',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5FBFA',
   },
   scrollContent: {
     paddingHorizontal: 20,

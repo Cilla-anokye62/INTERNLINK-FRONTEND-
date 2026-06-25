@@ -163,7 +163,7 @@ export default function SkillsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
 
   // Top fixed section
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: height * 0.02,
     paddingBottom: 12,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   progressRow: {
     flexDirection: 'row',
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: height * 0.03,
     paddingTop: 12,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: '#F5FBFA',
   },
   continueButton: {
     backgroundColor: '#2CACAD',

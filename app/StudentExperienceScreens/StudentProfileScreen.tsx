@@ -148,7 +148,7 @@ export default function StudentProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EAF6F5',
+    backgroundColor: '#F5FBFA',
   },
   scrollContent: {
     paddingHorizontal: 24,

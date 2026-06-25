@@ -16,7 +16,7 @@ import {
 const { height } = Dimensions.get('window');
 
 const COLORS = {
-  background:       '#D9F2EE',
+  background:       '#F5FBFA',
   card:             '#FFFFFF',
   progressTrack:    '#B2DDD8',
   progressFill:     '#2EC4B6',

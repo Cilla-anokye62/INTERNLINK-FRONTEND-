@@ -60,7 +60,7 @@ const COLORS = {
   headerTitle:       '#0F6E64', // "InternLink" teal text
   bellIcon:          '#1A1A2E',
 
-  background:        '#D9F2EE', // mint body background
+  background:        '#F5FBFA', // mint body background
 
   illustrationCardBg:'#FFFFFF',
 
