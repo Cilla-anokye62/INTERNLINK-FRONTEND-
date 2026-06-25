@@ -1,7 +1,8 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+
 
 // First screens
 import SplashScreen from './app/SplashScreen';
@@ -66,11 +67,17 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
-
+        <Stack.Navigator 
+  screenOptions={{ 
+    headerShown: false,
+    cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
+  }} 
+  initialRouteName="Splash"
+>
           {/* Entry screens */}
           <Stack.Screen name="Splash" component={SplashScreen} />
-          <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} />
+          <Stack.Screen name="WelcomeOnboarding" component={WelcomeOnboardingScreen} 
+/>
 
           {/* Auth screens */}
           <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />

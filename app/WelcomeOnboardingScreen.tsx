@@ -135,11 +135,11 @@ const styles = StyleSheet.create({
   },
   textBlock: {
     paddingHorizontal: 28,
-    paddingTop: 180,
+    paddingTop: 60,
     zIndex: 1,
   },
   title: {
-    fontSize:35,
+    fontSize: 28,
     fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
@@ -149,8 +149,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
   },
   description: {
-    fontSize: 18,
-    marginTop: 40,
+    fontSize: 15,
     fontWeight: '500',
     color: '#FFFFFF',
     textAlign: 'center',
@@ -201,7 +200,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6
+    elevation: 6,
   },
   buttonText: {
     color: '#FFFFFF',

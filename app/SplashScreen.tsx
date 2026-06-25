@@ -1,116 +1,132 @@
 import { View, StyleSheet, Image, Text, Animated, Dimensions } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import WelcomeOnboardingScreen from './WelcomeOnboardingScreen';
 
 const { height } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation }: any) {
-  
-  const [progress, setProgress] = useState(0);
-  const shineAnimation = useRef(new Animated.Value(-1)).current;
+
+  const logoScale = useRef(new Animated.Value(0.9)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const splashFade = useRef(new Animated.Value(1)).current;
+  const [assetsReady, setAssetsReady] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 1) {
-          clearInterval(interval);
-          return 1;
-        }
-        return prev + 0.05;
+    Animated.parallel([
+      Animated.timing(logoScale, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Preload the onboarding images so they're decoded before the fade reveals them
+    const preload = async () => {
+      try {
+        await Promise.all([
+          Image.prefetch(Image.resolveAssetSource(require('../assets/WelcomeOnboardingImages/discover.png')).uri),
+        ]);
+      } catch (e) {
+        console.log('Image preload error:', e);
+      } finally {
+        setAssetsReady(true);
+      }
+    };
+    preload();
+
+    return () => {};
+  }, []);
+
+  useEffect(() => {
+    if (!assetsReady) return; // wait for the image to actually be ready
+
+    const exitTimer = setTimeout(() => {
+      Animated.timing(splashFade, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        navigation.replace('WelcomeOnboarding');
       });
-    }, 100);
-    
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(shineAnimation, {
-          toValue: 1,
-          duration: 1800,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1200)
-      ])
-    ).start();
+    }, 2000);
 
-    return () => clearInterval(interval);
-  }, [shineAnimation]);
-
-  useEffect(() => {
-    if (progress >= 1) {
-      navigation.navigate('WelcomeOnboarding');
-    }
-  }, [progress]);
-
-  const translateX = shineAnimation.interpolate({
-    inputRange: [-1, 1],
-    outputRange: [-250, 250], 
-  });
+    return () => clearTimeout(exitTimer);
+  }, [assetsReady]);
 
   return (
-    <LinearGradient
-      colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea}>
+    <View style={styles.root}>
+      <View style={StyleSheet.absoluteFillObject}>
+        <WelcomeOnboardingScreen navigation={navigation} />
+      </View>
 
-        {/* Center content */}
-        <View style={styles.centerContent}>
-          <View style={styles.logoContainer}>
-            <Image source={require('../assets/logo.png')} style={styles.logo} />
-            <Animated.View
-              style={[styles.shineWrapper, { transform: [{ translateX }] }]}
-            >
-              <LinearGradient
-                colors={[
-                  'rgba(255, 255, 255, 0)',
-                  'rgba(255, 255, 255, 0.1)', 
-                  'rgba(255, 255, 255, 0)'
+      <Animated.View
+        style={[styles.splashOverlay, { opacity: splashFade }]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.container}
+        >
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.centerContent}>
+              <Animated.View
+                style={[
+                  styles.logoContainer,
+                  {
+                    opacity: logoOpacity,
+                    transform: [{ scale: logoScale }],
+                  },
                 ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                locations={[0.3, 0.5, 0.7]} 
-                style={StyleSheet.absoluteFillObject}
-              />
-            </Animated.View>
-          </View>
+              >
+                <Image source={require('../assets/logo.png')} style={styles.logo} />
+              </Animated.View>
 
-          <Text style={styles.appName}>
-            <Text style={styles.internText}>Intern</Text>
-            <Text style={styles.linkText}>Link</Text>
-          </Text>
-        </View>
-
-        {/* Progress bar pinned to bottom */}
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-        </View>
-
-      </SafeAreaView>
-    </LinearGradient>
+              <Animated.Text style={[styles.appName, { opacity: logoOpacity }]}>
+                <Text style={styles.internText}>Intern</Text>
+                <Text style={styles.linkText}>Link</Text>
+              </Animated.Text>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  splashOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
   container: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',  // pushes progress bar to bottom
+    justifyContent: 'center',
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',         // keeps logo + name centered
+    justifyContent: 'center',
   },
   logoContainer: {
     width: 130,
     height: 130,
     borderRadius: 28,
-    marginBottom: height * 0.04,      // relative instead of fixed 50
+    marginBottom: height * 0.04,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,33 +136,14 @@ const styles = StyleSheet.create({
     height: '80%',
     alignSelf: 'center',
   },
-  shineWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    width: '150%', 
-    height: '150%',
-    top: '-25%',
-  },
   appName: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: height * 0.04,      // relative instead of fixed 40
   },
   internText: {
     color: '#024D60',
   },
   linkText: {
     color: '#2CACAD',
-  },
-  progressContainer: {
-    marginBottom: height * 0.06,      // relative instead of fixed bottom: 80
-    width: 150,
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 2,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 2,
   },
 });
