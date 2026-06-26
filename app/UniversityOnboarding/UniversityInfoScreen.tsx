@@ -16,32 +16,32 @@ import {
 const { height } = Dimensions.get('window');
 
 const COLORS = {
-  background:       '#F5FBFA',
-  card:             '#FFFFFF',
-  progressTrack:    '#B2DDD8',
-  progressFill:     '#2EC4B6',
-  stepLabel:        '#4A7C75',
-  stepPercent:      '#2EC4B6',
-  title:            '#0D3B47',
-  subtitle:         '#4A7C75',
-  uploadCard:       '#F4FCFB',
+  background: '#F5FBFA',
+  card: '#FFFFFF',
+  progressTrack: '#B2DDD8',
+  progressFill: '#2EC4B6',
+  stepLabel: '#4A7C75',
+  stepPercent: '#2EC4B6',
+  title: '#0D3B47',
+  subtitle: '#4A7C75',
+  uploadCard: '#F4FCFB',
   uploadCardBorder: '#C5E8E3',
   uploadIconCircle: '#E8F8F5',
   uploadIconBorder: '#2EC4B6',
-  uploadIcon:       '#2EC4B6',
-  uploadTitle:      '#0D3B47',
-  uploadSubtitle:   '#9BB8B4',
-  uploadBtn:        '#2EC4B6',
-  uploadBtnText:    '#FFFFFF',
-  label:            '#0D3B47',
-  inputBg:          '#FFFFFF',
-  inputBorder:      '#C5E8E3',
+  uploadIcon: '#2EC4B6',
+  uploadTitle: '#0D3B47',
+  uploadSubtitle: '#9BB8B4',
+  uploadBtn: '#2EC4B6',
+  uploadBtnText: '#FFFFFF',
+  label: '#0D3B47',
+  inputBg: '#FFFFFF',
+  inputBorder: '#C5E8E3',
   inputBorderFocus: '#2EC4B6',
-  inputText:        '#0D3B47',
-  placeholder:      '#9BB8B4',
-  inputIcon:        '#9BB8B4',
-  nextBtn:          '#2EC4B6',
-  nextBtnText:      '#FFFFFF',
+  inputText: '#0D3B47',
+  placeholder: '#9BB8B4',
+  inputIcon: '#9BB8B4',
+  nextBtn: '#2EC4B6',
+  nextBtnText: '#FFFFFF',
 };
 
 const FIELDS = [
@@ -88,7 +88,7 @@ export default function UniversityInfoScreen({ navigation }: any) {
 
   const handleNext = () => {
     console.log('University info submitted:', formValues);
-    // TODO: navigation.navigate('UniversityStep2');
+    navigation.navigate('InstitutionDetails');
   };
 
   const PROGRESS = 0.25;

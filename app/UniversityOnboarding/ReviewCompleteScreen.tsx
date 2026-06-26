@@ -135,15 +135,19 @@ export default function ReviewCompleteScreen({ navigation }: any) {
   // Called when the user taps "Complete Setup"
   const handleCompleteSetup = () => {
     console.log('Completing university setup...');
-    // TODO: submit all collected onboarding data to your backend, then:
-    // navigation.navigate('UniversityDashboard');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'UniversityTabs' }],
+    });
   };
 
   // Called when the user taps "Save & finish later"
   const handleSaveForLater = () => {
     console.log('Saving progress for later...');
-    // TODO: persist form data locally or to backend, then:
-    // navigation.navigate('Home');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'RoleSelection' }],
+    });
   };
 
   // Called when the pencil icon on a review row is tapped

@@ -145,7 +145,7 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
       studentCount,
       selectedPrograms,
     });
-    // TODO: navigation.navigate('CareerServicesSetup'); // step 3 of 4
+    navigation.navigate('CareerServicesSetup'); // step 3 of 4
   };
 
   // Step 2 of 4 = 50%

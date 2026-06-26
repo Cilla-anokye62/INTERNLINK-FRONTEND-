@@ -144,7 +144,7 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
   // Called when the Continue button is tapped
   const handleContinue = () => {
     console.log('Career services info submitted:', formValues);
-    // TODO: navigation.navigate('ReviewComplete'); // step 4 of 4
+    navigation.navigate('ReviewComplete'); // step 4 of 4
   };
 
   // Step 3 of 4 = 75%
