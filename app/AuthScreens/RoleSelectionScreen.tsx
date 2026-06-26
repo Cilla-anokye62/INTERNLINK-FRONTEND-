@@ -4,10 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 type Role = 'student' | 'employer' | 'university';
 
@@ -15,27 +16,27 @@ interface RoleOption {
   id: Role;
   title: string;
   description: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
 }
 
 const ROLES: RoleOption[] = [
   {
     id: 'student',
     title: "I'm a Student",
-    description: "I'm looking for internships and opportunities.",
-    icon: '🎓',
+    description: "Looking for internships and opportunities.",
+    icon: 'school-outline',
   },
   {
     id: 'employer',
     title: "I'm an Employer",
-    description: "I'm hiring interns and managing programs.",
-    icon: '🏢',
+    description: "Hiring interns and managing programs.",
+    icon: 'briefcase-outline',
   },
   {
     id: 'university',
     title: "I'm a University",
-    description: "I'm managing student placements and partner relations.",
-    icon: '🏛️',
+    description: "Managing student placements and partner relations.",
+    icon: 'library-outline',
   },
 ];
 
@@ -46,12 +47,14 @@ const COLORS = {
   cardBorderActive: '#329891',
   iconCircle: 'rgba(46,196,182,0.18)',
   iconCircleActive: '#2EC4B6',
+  iconIdle: '#2EC4B6',
+  iconSelected: '#FFFFFF',
   titleText: '#0D3B47',
   subtitleText: '#4A7C75',
   cardTitle: '#0D3B47',
   cardDescription: '#4A7C75',
   checkmark: '#FFFFFF',
-  buttonActive: '#329891',
+  buttonActive: '#2CACAD',
   buttonInactive: 'rgba(13,59,71,0.20)',
   buttonTextActive: '#FFFFFF',
   buttonTextInact: '#6B9E99',
@@ -64,10 +67,10 @@ const { width, height } = Dimensions.get('window');
 export default function RoleSelectionScreen({ navigation }: any) {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
- const handleContinue = () => {
-  if (!selectedRole) return;
-  navigation.navigate('SignUp', { role: selectedRole });
-};
+  const handleContinue = () => {
+    if (!selectedRole) return;
+    navigation.navigate('SignUp', { role: selectedRole });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -80,17 +83,15 @@ export default function RoleSelectionScreen({ navigation }: any) {
           <TouchableOpacity
             style={styles.backBtn}
             activeOpacity={0.7}
-            onPress={() => navigation.goBack()}  // ← was missing
+            onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backArrowText}>‹</Text>
+            <Ionicons name="chevron-back" size={24} color={COLORS.backArrow} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <Text style={styles.pageTitle}>Who are you?</Text>
             <Text style={styles.pageSubtitle}>Select your role to get started.</Text>
           </View>
-
-          <View style={styles.backBtn} />
         </View>
 
         {/* Role Cards */}
@@ -105,7 +106,11 @@ export default function RoleSelectionScreen({ navigation }: any) {
                 activeOpacity={0.85}
               >
                 <View style={[styles.iconCircle, isSelected && styles.iconCircleSelected]}>
-                  <Text style={styles.iconEmoji}>{role.icon}</Text>
+                  <Ionicons
+                    name={role.icon}
+                    size={26}
+                    color={isSelected ? COLORS.iconSelected : COLORS.iconIdle}
+                  />
                 </View>
 
                 <View style={styles.cardTextBlock}>
@@ -154,15 +159,15 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: height * 0.02,      // relative instead of fixed 20
-    paddingBottom: height * 0.04,   // relative instead of fixed 36
+    paddingTop: height * 0.02,
+    paddingBottom: height * 0.04,
     justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: height * 0.04,    // relative instead of fixed 36
-    marginTop: height * 0.02,       // relative instead of fixed 36
+    marginBottom: height * 0.04,
+    marginTop: height * 0.02,
   },
   backBtn: {
     width: 42,
@@ -176,12 +181,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
-  },
-  backArrowText: {
-    fontSize: 28,
-    color: COLORS.backArrow,
-    lineHeight: 32,
-    marginRight: 2,
   },
   headerCenter: {
     flex: 1,
@@ -232,9 +231,6 @@ const styles = StyleSheet.create({
   iconCircleSelected: {
     backgroundColor: COLORS.iconCircleActive,
   },
-  iconEmoji: {
-    fontSize: 22,
-  },
   cardTextBlock: {
     flex: 1,
   },
@@ -267,11 +263,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingVertical: 18,
     alignItems: 'center',
-    marginTop: height * 0.02,       // relative instead of fixed 20
+    marginTop: height * 0.02,
   },
   continueBtnActive: {
-    backgroundColor: COLORS.buttonActive,
-    shadowColor: COLORS.buttonActive,
+    backgroundColor: '#2CACAD',
+    shadowColor: '#2CACAD',
     shadowOpacity: 0.5,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 5 },
