@@ -40,47 +40,47 @@ import {
 // Same teal/mint family used across the onboarding flow.
 const COLORS = {
   background: '#F5FBFA', // mint — full screen background
-  card: '#FFFFFF', // white card behind all content
+  card: 'transparent', // transparent card
   progressTrack: '#B2DDD8', // unfilled part of progress bar
-  progressFill: '#2EC4B6', // filled part of progress bar
-  stepLabel: '#4A7C75', // "University setup · Step 4 of 4"
-  stepPercent: '#2EC4B6', // "100%" text
-  title: '#0D3B47', // "Review & complete"
-  subtitle: '#4A7C75', // subtitle text
+  progressFill: '#2CACAD', // filled part of progress bar
+  stepLabel: '#64748B', // "University setup · Step 4 of 4"
+  stepPercent: '#2CACAD', // "100%" text
+  title: '#024D60', // "Review & complete"
+  subtitle: '#64748B', // subtitle text
 
   // University summary card (inside the white card)
-  summaryCardBg: '#F4FCFB', // slightly tinted background
+  summaryCardBg: '#FFFFFF', // white background for contrast on teal
   summaryCardBorder: '#C5E8E3',
-  avatarBg: '#0D3B47', // dark teal circle behind "M"
+  avatarBg: '#024D60', // dark teal circle behind "M"
   avatarText: '#FFFFFF',
-  summaryName: '#0D3B47',
-  summaryDetail: '#4A7C75',
+  summaryName: '#024D60',
+  summaryDetail: '#64748B',
   completenessBg: '#D6F2E3', // light green pill behind "95%"
   completenessText: '#1E8E5A', // green text inside the pill
   summaryBarTrack: '#E0F0EE',
-  summaryBarFill: '#2EC4B6',
+  summaryBarFill: '#2CACAD',
 
   // Review rows
   rowBorder: '#E8F4F2',
   rowIconBg: '#E8F8F5', // light teal circle behind each row icon
-  rowIcon: '#2EC4B6',
-  rowTitle: '#0D3B47',
+  rowIcon: '#2CACAD',
+  rowTitle: '#024D60',
   rowSubtitle: '#7A9D98',
   editBtnBg: '#F0F4F3', // grey circle behind the pencil icon
   editIcon: '#5C7D78',
 
   // Info banner
   bannerBg: '#E3F6F1',
-  bannerIconBg: '#2EC4B6',
+  bannerIconBg: '#2CACAD',
   bannerIcon: '#FFFFFF',
   bannerText: '#1F5C52',
 
   // Buttons
-  completeBtnBg: '#2EC4B6',
+  completeBtnBg: '#2CACAD',
   completeBtnText: '#FFFFFF',
   saveLaterBtnBg: '#FFFFFF',
   saveLaterBtnBorder: '#D5EAE7',
-  saveLaterBtnText: '#4A7C75',
+  saveLaterBtnText: '#64748B',
 };
 
 
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   // ScrollView inner padding — keeps mint visible around the card
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
     backgroundColor: COLORS.background,
@@ -362,25 +362,19 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
-  // ── White card wrapping all main content ──────────────────────────
+  // ── Card wrapping all main content ──────────────────────────
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 24,
-    padding: 22,
-    // Shadow lifts the card off the mint background
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    padding: 0,
   },
 
   // ── Title section (inside card) ───────────────────────────────────
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: COLORS.title,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
@@ -550,28 +544,21 @@ const styles = StyleSheet.create({
   // ── Complete Setup button (filled teal, primary action) ───────────────
   completeBtn: {
     backgroundColor: COLORS.completeBtnBg,
-    borderRadius: 50, // pill shape
+    borderRadius: 30, // pill shape
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 12, // space before the second button below
-    // Teal glow shadow to emphasise this as the primary action
-    shadowColor: COLORS.completeBtnBg,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6,
   },
   completeBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: COLORS.completeBtnText,
-    letterSpacing: 0.5,
   },
 
   // ── Save & finish later button (outlined, secondary action) ────────────
   saveLaterBtn: {
     backgroundColor: COLORS.saveLaterBtnBg,
-    borderRadius: 50,
+    borderRadius: 30,
     borderWidth: 1.5,
     borderColor: COLORS.saveLaterBtnBorder,
     paddingVertical: 15,

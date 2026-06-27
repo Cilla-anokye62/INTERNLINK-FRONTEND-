@@ -41,42 +41,42 @@ import {
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
   background:        '#F5FBFA', // mint — full screen background
-  card:              '#FFFFFF', // white card behind all content
+  card:              'transparent', // transparent card
   progressTrack:     '#B2DDD8', // unfilled part of progress bar
-  progressFill:      '#2EC4B6', // filled part of progress bar
-  stepLabel:         '#4A7C75', // "University setup · Step 2 of 4"
-  stepPercent:       '#2EC4B6', // "50%" text
-  title:             '#0D3B47', // "Institution details"
-  subtitle:          '#4A7C75', // "Tell employers about your campus."
+  progressFill:      '#2CACAD', // filled part of progress bar
+  stepLabel:         '#64748B', // "University setup · Step 2 of 4"
+  stepPercent:       '#2CACAD', // "50%" text
+  title:             '#024D60', // "Institution details"
+  subtitle:          '#64748B', // "Tell employers about your campus."
 
-  label:             '#0D3B47', // ALL CAPS field labels
+  label:             '#024D60', // field labels
 
   // Institution Type pill buttons (Public / Private / Hybrid)
   typeIdleBg:        '#FFFFFF',
   typeIdleBorder:    '#C5E8E3',
   typeIdleText:      '#4A7C75',
-  typeActiveBg:      '#2EC4B6', // selected pill (e.g. "Private")
+  typeActiveBg:      '#2CACAD', // selected pill (e.g. "Private")
   typeActiveText:    '#FFFFFF',
 
   // Regular text inputs (Country, City, Number of Students)
   inputBg:           '#FFFFFF',
-  inputBorder:       '#C5E8E3',
-  inputBorderFocus:  '#2EC4B6',
-  inputText:         '#0D3B47',
-  placeholder:       '#9BB8B4',
-  inputIcon:         '#9BB8B4',
+  inputBorder:       'transparent',
+  inputBorderFocus:  '#2CACAD',
+  inputText:         '#024D60',
+  placeholder:       '#94A3B8',
+  inputIcon:         '#94A3B8',
 
   // Academic Programs box + chips
   programsBoxBg:     '#FFFFFF',
   programsBoxBorder: '#C5E8E3',
-  programsHint:      '#9BB8B4', // "Select all that apply"
+  programsHint:      '#94A3B8', // "Select all that apply"
   chipIdleBg:        '#FFFFFF',
   chipIdleBorder:    '#D8E8E5',
   chipIdleText:      '#4A7C75',
-  chipActiveBg:      '#2EC4B6', // selected chip (e.g. "Computer Science")
+  chipActiveBg:      '#2CACAD', // selected chip (e.g. "Computer Science")
   chipActiveText:    '#FFFFFF',
 
-  continueBtn:       '#2EC4B6',
+  continueBtn:       '#2CACAD',
   continueBtnText:   '#FFFFFF',
 };
 
@@ -111,8 +111,8 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
   const [institutionType, setInstitutionType] = useState<string>('Private');
 
   // Plain text field values
-  const [country, setCountry] = useState('United States');
-  const [city, setCity] = useState('Cambridge, MA');
+  const [country, setCountry] = useState('Ghana');
+  const [city, setCity] = useState('Ashanti Region, Kumasi');
   const [studentCount, setStudentCount] = useState('11,520 students');
 
   // Tracks which text input is focused, for border highlighting
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
     backgroundColor: COLORS.background,
@@ -410,24 +410,19 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
-  // ── White card ──────────────────────────────────────────────────
+  // ── Card ──────────────────────────────────────────────────
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 24,
-    padding: 22,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    padding: 0,
   },
 
   // ── Title ───────────────────────────────────────────────────────
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: COLORS.title,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
@@ -441,12 +436,10 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: COLORS.label,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: 6,
   },
 
   // ── Institution Type pills ─────────────────────────────────────
@@ -497,20 +490,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: COLORS.inputBorder,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     height: 52,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    elevation: 2,
   },
   inputWrapperFocused: {
     borderColor: COLORS.inputBorderFocus,
   },
   inputIcon: {
     fontSize: 15,
-    marginRight: 8,
+    marginRight: 10,
     color: COLORS.inputIcon,
   },
   input: {
@@ -570,21 +564,15 @@ const styles = StyleSheet.create({
   // ── Continue button ────────────────────────────────────────────
   continueBtn: {
     backgroundColor: COLORS.continueBtn,
-    borderRadius: 50,
+    borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: COLORS.continueBtn,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6,
   },
   continueBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: COLORS.continueBtnText,
-    letterSpacing: 0.5,
   },
 
 });

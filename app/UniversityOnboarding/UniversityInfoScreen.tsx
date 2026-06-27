@@ -12,65 +12,70 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
 const COLORS = {
   background: '#F5FBFA',
-  card: '#FFFFFF',
+  card: 'transparent',
   progressTrack: '#B2DDD8',
-  progressFill: '#2EC4B6',
-  stepLabel: '#4A7C75',
-  stepPercent: '#2EC4B6',
-  title: '#0D3B47',
-  subtitle: '#4A7C75',
-  uploadCard: '#F4FCFB',
+  progressFill: '#2CACAD',
+  stepLabel: '#64748B',
+  stepPercent: '#2CACAD',
+  title: '#024D60',
+  subtitle: '#64748B',
+  uploadCard: '#FFFFFF',
   uploadCardBorder: '#C5E8E3',
   uploadIconCircle: '#E8F8F5',
-  uploadIconBorder: '#2EC4B6',
-  uploadIcon: '#2EC4B6',
-  uploadTitle: '#0D3B47',
-  uploadSubtitle: '#9BB8B4',
-  uploadBtn: '#2EC4B6',
+  uploadIconBorder: '#2CACAD',
+  uploadIcon: '#2CACAD',
+  uploadTitle: '#024D60',
+  uploadSubtitle: '#94A3B8',
+  uploadBtn: '#2CACAD',
   uploadBtnText: '#FFFFFF',
-  label: '#0D3B47',
+  label: '#024D60',
   inputBg: '#FFFFFF',
-  inputBorder: '#C5E8E3',
-  inputBorderFocus: '#2EC4B6',
-  inputText: '#0D3B47',
-  placeholder: '#9BB8B4',
-  inputIcon: '#9BB8B4',
-  nextBtn: '#2EC4B6',
+  inputBorder: 'transparent',
+  inputBorderFocus: '#2CACAD',
+  inputText: '#024D60',
+  placeholder: '#94A3B8',
+  inputIcon: '#94A3B8',
+  nextBtn: '#2CACAD',
   nextBtnText: '#FFFFFF',
 };
 
+// Each field now carries an `icon` that is an Ionicons NAME string
+// (e.g. "school-outline") instead of an emoji character. The actual
+// <Ionicons /> component gets rendered further down, where
+// field.icon is passed in as the `name` prop.
 const FIELDS = [
   {
     id: 'name',
-    label: 'UNIVERSITY NAME',
-    placeholder: 'Massachusetts Institute of Technology',
-    icon: '🎓',
+    label: 'University Name',
+    placeholder: 'Kwame Nkrumah University...',
+    icon: 'school-outline',
     keyboardType: 'default' as const,
   },
   {
     id: 'email',
-    label: 'OFFICIAL EMAIL',
-    placeholder: 'careers@mit.edu',
-    icon: '✉',
+    label: 'Official Email',
+    placeholder: 'knust@knust.edu.gh',
+    icon: 'mail-outline',
     keyboardType: 'email-address' as const,
   },
   {
     id: 'phone',
-    label: 'CONTACT PHONE',
-    placeholder: '+1 (617) 253-1000',
-    icon: '📞',
+    label: 'Contact Phone',
+    placeholder: '+233 24 123 4567',
+    icon: 'call-outline',
     keyboardType: 'phone-pad' as const,
   },
   {
     id: 'website',
-    label: 'WEBSITE',
-    placeholder: 'https://www.mit.edu',
-    icon: '🌐',
+    label: 'Website',
+    placeholder: 'https://www.knust.edu.gh',
+    icon: 'globe-outline',
     keyboardType: 'url' as const,
   },
 ];
@@ -125,7 +130,16 @@ export default function UniversityInfoScreen({ navigation }: any) {
             {/* Upload row */}
             <View style={styles.uploadCard}>
               <View style={styles.uploadIconCircle}>
-                <Text style={styles.uploadIconText}>⬆</Text>
+                {/*
+                  Upload arrow — swapped from the "⬆" emoji to a real
+                  Ionicons icon. Sized and colored the same way the
+                  emoji's Text style used to be (20px, COLORS.uploadIcon).
+                */}
+                <Ionicons
+                  name="cloud-upload-outline"
+                  size={20}
+                  color={COLORS.uploadIcon}
+                />
               </View>
               <View style={styles.uploadTextBlock}>
                 <Text style={styles.uploadTitle}>Upload university logo</Text>
@@ -147,11 +161,25 @@ export default function UniversityInfoScreen({ navigation }: any) {
               {FIELDS.map((field) => (
                 <View key={field.id} style={styles.fieldGroup}>
                   <Text style={styles.label}>{field.label}</Text>
+
+                  {/*
+                    This wrapper already matched the target structure:
+                    a focus-aware container holding an icon + TextInput
+                    side by side. Only the icon itself needed swapping —
+                    from a <Text>{emoji}</Text> to a real <Ionicons />,
+                    using the same inputIcon style name (now repurposed
+                    for icon spacing instead of font styling).
+                  */}
                   <View style={[
-                    styles.inputWrapper,
-                    focusedInput === field.id && styles.inputWrapperFocused,
+                    styles.inputContainer,
+                    focusedInput === field.id && styles.inputContainerFocused,
                   ]}>
-                    <Text style={styles.inputIcon}>{field.icon}</Text>
+                    <Ionicons
+                      name={field.icon as any}
+                      size={18}
+                      color={COLORS.inputIcon}
+                      style={styles.inputIcon}
+                    />
                     <TextInput
                       style={styles.input}
                       placeholder={field.placeholder}
@@ -170,7 +198,14 @@ export default function UniversityInfoScreen({ navigation }: any) {
 
             {/* Next button */}
             <TouchableOpacity style={styles.nextBtn} onPress={handleNext} activeOpacity={0.85}>
-              <Text style={styles.nextBtnText}>Next  →</Text>
+              <Text style={styles.nextBtnText}>Next</Text>
+              {/* TODO icon ("→") replaced with a real arrow icon for consistency */}
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={COLORS.nextBtnText}
+                style={{ marginLeft: 6 }}
+              />
             </TouchableOpacity>
 
           </View>
@@ -190,9 +225,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: height * 0.03,    // relative instead of fixed 20
-    paddingBottom: height * 0.05, // relative instead of fixed 40
+    paddingHorizontal: 24,
+    paddingTop: height * 0.03,
+    paddingBottom: height * 0.05,
     backgroundColor: COLORS.background,
   },
   stepRow: {
@@ -217,7 +252,7 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: COLORS.progressTrack,
     borderRadius: 3,
-    marginBottom: height * 0.025, // relative instead of fixed 20
+    marginBottom: height * 0.025,
     overflow: 'hidden',
   },
   progressFill: {
@@ -228,24 +263,19 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 24,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    padding: 0,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: COLORS.title,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     color: COLORS.subtitle,
     lineHeight: 20,
-    marginBottom: height * 0.025, // relative instead of fixed 22
+    marginBottom: height * 0.03,
   },
   uploadCard: {
     flexDirection: 'row',
@@ -255,7 +285,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.uploadCardBorder,
     padding: 14,
-    marginBottom: height * 0.03,  // relative instead of fixed 24
+    marginBottom: height * 0.03,
   },
   uploadIconCircle: {
     width: 50,
@@ -268,10 +298,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
-  },
-  uploadIconText: {
-    fontSize: 20,
-    color: COLORS.uploadIcon,
   },
   uploadTextBlock: {
     flex: 1,
@@ -300,62 +326,60 @@ const styles = StyleSheet.create({
     color: COLORS.uploadBtnText,
   },
   fieldsContainer: {
-    marginBottom: height * 0.03,  // relative instead of fixed 24
+    marginBottom: height * 0.03,
   },
   fieldGroup: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: COLORS.label,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 7,
+    marginBottom: 6,
   },
-  inputWrapper: {
+  // Renamed from `inputWrapper` to `inputContainer` and
+  // `inputWrapperFocused` to `inputContainerFocused` to match the
+  // naming convention used in the target snippet you provided.
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: COLORS.inputBorder,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     height: 52,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    elevation: 2,
   },
-  inputWrapperFocused: {
+  inputContainerFocused: {
     borderColor: COLORS.inputBorderFocus,
   },
+  // Now styles the spacing around the Ionicons icon rather than a
+  // font size/color (Ionicons takes size/color as direct props instead)
   inputIcon: {
-    fontSize: 16,
     marginRight: 10,
-    color: COLORS.inputIcon,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: COLORS.inputText,
   },
   nextBtn: {
+    flexDirection: 'row', // added so the "Next" text and arrow icon sit side by side
     backgroundColor: COLORS.nextBtn,
-    borderRadius: 50,
+    borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: COLORS.nextBtn,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6,
+    justifyContent: 'center',
   },
   nextBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: COLORS.nextBtnText,
-    letterSpacing: 0.5,
   },
 });

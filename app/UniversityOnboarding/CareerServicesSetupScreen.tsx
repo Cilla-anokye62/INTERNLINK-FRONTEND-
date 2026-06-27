@@ -43,30 +43,30 @@ import {
 // Same teal/mint family used across the onboarding flow for consistency.
 const COLORS = {
   background:        '#F5FBFA', // mint — full screen background
-  card:              '#FFFFFF', // white card behind all content
+  card:              'transparent', // transparent card
   progressTrack:     '#B2DDD8', // unfilled part of progress bar
-  progressFill:      '#2EC4B6', // filled part of progress bar
-  stepLabel:         '#4A7C75', // "University setup · Step 3 of 4"
-  stepPercent:       '#2EC4B6', // "75%" text
-  title:             '#0D3B47', // "Career services setup"
-  subtitle:          '#4A7C75', // "Who do employers reach out to?"
+  progressFill:      '#2CACAD', // filled part of progress bar
+  stepLabel:         '#64748B', // "University setup · Step 3 of 4"
+  stepPercent:       '#2CACAD', // "75%" text
+  title:             '#024D60', // "Career services setup"
+  subtitle:          '#64748B', // "Who do employers reach out to?"
 
-  label:             '#0D3B47', // ALL CAPS field labels
+  label:             '#024D60', // field labels
   inputBg:           '#FFFFFF', // input box background
-  inputBorder:       '#C5E8E3', // idle border
-  inputBorderFocus:  '#2EC4B6', // focused border
-  inputText:         '#0D3B47', // text the user types
-  placeholder:       '#9BB8B4', // placeholder text
-  inputIcon:         '#9BB8B4', // icon inside single-line inputs
+  inputBorder:       'transparent', // idle border
+  inputBorderFocus:  '#2CACAD', // focused border
+  inputText:         '#024D60', // text the user types
+  placeholder:       '#94A3B8', // placeholder text
+  inputIcon:         '#94A3B8', // icon inside single-line inputs
 
   // The "Placement Office" multi-line info box has its own slightly
   // different styling since it shows 3 stacked rows instead of one input
   infoBoxBg:         '#FFFFFF',
   infoBoxBorder:     '#C5E8E3',
-  infoBoxIcon:       '#2EC4B6', // location/phone/clock icons are teal here
-  infoBoxText:       '#0D3B47',
+  infoBoxIcon:       '#2CACAD', // location/phone/clock icons are teal here
+  infoBoxText:       '#024D60',
 
-  continueBtn:       '#2EC4B6', // Continue button
+  continueBtn:       '#2CACAD', // Continue button
   continueBtnText:   '#FFFFFF',
 };
 
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   // ScrollView keeps mint visible around the white card
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
     backgroundColor: COLORS.background,
@@ -329,24 +329,19 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
 
-  // ── White card ──────────────────────────────────────────────────
+  // ── Card ──────────────────────────────────────────────────
   card: {
     backgroundColor: COLORS.card,
     borderRadius: 24,
-    padding: 22,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    padding: 0,
   },
 
   // ── Title ───────────────────────────────────────────────────────
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: COLORS.title,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
@@ -360,12 +355,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: COLORS.label,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 7,
+    marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -374,13 +367,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: COLORS.inputBorder,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     height: 52,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    elevation: 2,
   },
   inputWrapperFocused: {
     borderColor: COLORS.inputBorderFocus,
@@ -392,7 +386,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: COLORS.inputText,
   },
 
@@ -433,22 +427,15 @@ const styles = StyleSheet.create({
   // ── Continue button ────────────────────────────────────────────
   continueBtn: {
     backgroundColor: COLORS.continueBtn,
-    borderRadius: 50, // pill shape
+    borderRadius: 30, // pill shape
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 6,
-    // Teal glow shadow
-    shadowColor: COLORS.continueBtn,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 6,
   },
   continueBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: COLORS.continueBtnText,
-    letterSpacing: 0.5,
   },
 
 });
