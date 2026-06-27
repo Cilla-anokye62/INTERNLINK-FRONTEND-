@@ -37,13 +37,10 @@ import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/Recruit
 import CompanyReviewCompleteScreen from './app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
 
 //University experience screens
-import UniversityDashboardScreen from './app/UniversityExperience/UniversityDashboardScreen';
+import UniversityDashboardScreen from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
-import PlacementAnalyticsScreen from './app/UniversityExperience/PlacementAnalyticsScreen';
-import StudentMonitoringScreen from './app/UniversityExperience/StudentMonitoringScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
-import ReportsScreen from './app/UniversityExperience/ReportsScreen';
-import SettingsScreen from './app/UniversityExperience/SettingsScreen';
+
 
 //Student experience screens
 import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
@@ -58,6 +55,7 @@ import NoConnectionScreen from './app/SystemStateScreens/NoConnectionScreen';
 import LoadingStateScreen from './app/SystemStateScreens/LoadingStateScreen';
 import SearchResultsScreen from './app/SystemStateScreens/SearchResultsScreen';
 import ActionSuccessfulScreen from './app/SystemStateScreens/ActionSuccessfulScreen';
+import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 
 
 const Stack = createStackNavigator();
@@ -111,13 +109,10 @@ export default function App() {
           <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
 
           {/* University experience screens */}
-          <Stack.Screen name="UniversityDashboard" component={UniversityDashboardScreen} />
-          <Stack.Screen name="PlacementAnalytics" component={PlacementAnalyticsScreen} />
+          <Stack.Screen name="UniversityTabs" component={UniversityTabs} /> 
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
-          <Stack.Screen name="StudentMonitoring" component={StudentMonitoringScreen} />
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
-          <Stack.Screen name="Reports" component={ReportsScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
+        
 
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
