@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
@@ -52,6 +53,7 @@ export default function AcademicInfoScreen({ navigation }: any) {
   const [level, setLevel] = useState('');
   const [graduationYear, setGraduationYear] = useState('');
   const [openDropdown, setOpenDropdown] = useState<'university' | 'level' | 'year' | null>(null);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   const handleNext = () => {
     if (!university || !programme || !level || !graduationYear) {
@@ -127,52 +129,79 @@ export default function AcademicInfoScreen({ navigation }: any) {
           {/* University */}
           <Text style={styles.label}>University</Text>
           <TouchableOpacity
-            style={styles.inputContainer}
-            onPress={() => setOpenDropdown('university')}
+            style={[
+              styles.inputContainer,
+              focusedInput === 'university' && styles.inputContainerFocused,
+            ]}
+            onPress={() => {
+              setOpenDropdown('university');
+              setFocusedInput('university');
+            }}
             activeOpacity={0.7}
           >
+            <Ionicons name="school-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
             <Text style={[styles.dropdownText, !university && styles.placeholder]}>
               {university || 'Select your university'}
             </Text>
-            <Text style={styles.chevron}>⌄</Text>
+            <Ionicons name="chevron-down" size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           {/* Programme */}
           <Text style={styles.label}>Programme/Course of Study</Text>
-          <View style={styles.inputContainer}>
+          <View style={[
+            styles.inputContainer,
+            focusedInput === 'programme' && styles.inputContainerFocused,
+          ]}>
+            <Ionicons name="book-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="e.g. Bsc. Computer Science"
               placeholderTextColor="#94A3B8"
               value={programme}
               onChangeText={setProgramme}
+              onFocus={() => setFocusedInput('programme')}
+              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
           {/* Academic Level */}
           <Text style={styles.label}>Academic Level</Text>
           <TouchableOpacity
-            style={styles.inputContainer}
-            onPress={() => setOpenDropdown('level')}
+            style={[
+              styles.inputContainer,
+              focusedInput === 'level' && styles.inputContainerFocused,
+            ]}
+            onPress={() => {
+              setOpenDropdown('level');
+              setFocusedInput('level');
+            }}
             activeOpacity={0.7}
           >
+            <Ionicons name="layers-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
             <Text style={[styles.dropdownText, !level && styles.placeholder]}>
               {level || 'Select level'}
             </Text>
-            <Text style={styles.chevron}>⌄</Text>
+            <Ionicons name="chevron-down" size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           {/* Expected Graduation */}
           <Text style={styles.label}>Expected Graduation</Text>
           <TouchableOpacity
-            style={styles.inputContainer}
-            onPress={() => setOpenDropdown('year')}
+            style={[
+              styles.inputContainer,
+              focusedInput === 'graduationYear' && styles.inputContainerFocused,
+            ]}
+            onPress={() => {
+              setOpenDropdown('year');
+              setFocusedInput('graduationYear');
+            }}
             activeOpacity={0.7}
           >
+            <Ionicons name="calendar-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
             <Text style={[styles.dropdownText, !graduationYear && styles.placeholder]}>
               {graduationYear || 'Select year'}
             </Text>
-            <Text style={styles.chevron}>⌄</Text>
+            <Ionicons name="chevron-down" size={18} color="#94A3B8" />
           </TouchableOpacity>
 
         </View>
@@ -248,7 +277,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
     marginBottom: height * 0.03,  // relative instead of fixed 28
@@ -263,12 +291,24 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFA',
-    borderRadius: 30,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingHorizontal: 16,
+    marginBottom: 16,
     height: 52,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  inputContainerFocused: {
+    borderColor: '#2CACAD',
+  },
+  inputIcon: {
+    marginRight: 10,
   },
   input: {
     flex: 1,
@@ -282,10 +322,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: '#94A3B8',
-  },
-  chevron: {
-    fontSize: 18,
-    color: '#555',
   },
   button: {
     backgroundColor: '#2CACAD',

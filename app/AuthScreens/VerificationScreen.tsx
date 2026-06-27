@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
 export default function VerificationScreen({ navigation,route }: any) {
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(59);
+  const [timer, setTimer] = useState(60);
   const inputs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -41,13 +42,8 @@ export default function VerificationScreen({ navigation,route }: any) {
     <SafeAreaView style={styles.container}>
       {/* Back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backArrow}>{'<'}</Text>
+        <Ionicons name="chevron-back" size={24} color="#024D60" />
       </TouchableOpacity>
-
-      {/* Email icon */}
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>✉️</Text>
-      </View>
 
       {/* Header */}
       <Text style={styles.title}>Verify your email</Text>
@@ -79,7 +75,7 @@ export default function VerificationScreen({ navigation,route }: any) {
       <Text style={styles.resendText}>
         Didn't receive the code?{' '}
         <Text style={styles.resendLink}>
-          Resend Code ({timer > 0 ? `0:${timer < 10 ? `0${timer}` : timer}` : 'Resend'})
+          Resend Code ({timer > 0 ? `${Math.floor(timer / 60)}:${timer % 60 < 10 ? `0${timer % 60}` : timer % 60}` : 'Resend'})
         </Text>
       </Text>
 
@@ -96,7 +92,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5FBFA',
     paddingHorizontal: 24,
-    paddingTop: height * 0.03,    // relative instead of fixed 60
+    paddingTop: height * 0.10,
     alignItems: 'center',
   },
   backButton: {
@@ -107,24 +103,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: height * 0.04,  // relative instead of fixed 32
-  },
-  backArrow: {
-    fontSize: 18,
-    color: '#024D60',
-    fontWeight: 'bold',
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#B2EDE8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: height * 0.03,  // relative instead of fixed 24
-  },
-  icon: {
-    fontSize: 36,
+    marginTop: -height * 0.07,
+    marginBottom: height * 0.04,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   title: {
     fontSize: 28,
