@@ -31,6 +31,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -168,7 +169,11 @@ export default function SettingsScreen({ navigation }: any) {
             onPress={handleBackPress}
             activeOpacity={0.7}
           >
-            <Text style={styles.backArrowText}>‹</Text>
+            <Ionicons
+              name="arrow-back-outline"
+              size={22}
+              color={COLORS.backArrow}
+            />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>Settings</Text>
@@ -194,7 +199,11 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
 
           {/* Right: chevron indicating this row is tappable */}
-          <Text style={styles.chevronText}>›</Text>
+          <Ionicons
+            name="chevron-forward-outline"
+            size={18}
+            color={COLORS.chevron}
+          />
         </TouchableOpacity>
         {/* ── END PROFILE CARD ────────────────────────────────────── */}
 
@@ -226,7 +235,11 @@ export default function SettingsScreen({ navigation }: any) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.rowText}>{item.title}</Text>
-                  <Text style={styles.chevronText}>›</Text>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={18}
+                    color={COLORS.chevron}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -294,12 +307,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-  },
-  backArrowText: {
-    fontSize: 22,
-    color: COLORS.backArrow,
-    lineHeight: 26,
-    marginRight: 2, // small nudge so the chevron looks visually centred
   },
   headerTitle: {
     fontSize: 20,
@@ -390,10 +397,6 @@ const styles = StyleSheet.create({
   rowText: {
     fontSize: 14,
     color: COLORS.rowText,
-  },
-  chevronText: {
-    fontSize: 18,
-    color: COLORS.chevron,
   },
 
   // ── Sign out link ──────────────────────────────────────────────

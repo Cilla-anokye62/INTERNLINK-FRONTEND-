@@ -37,6 +37,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -79,14 +80,14 @@ const SIMPLE_FIELDS = [
     id: 'contactName',
     label: 'CAREER SERVICES CONTACT',
     placeholder: 'Dr. Sarah Whitman',
-    icon: '👤',
+    icon: 'person-outline',
     keyboardType: 'default' as const,
   },
   {
     id: 'departmentEmail',
     label: 'DEPARTMENT EMAIL',
     placeholder: 'career.services@mit.edu',
-    icon: '✉',
+    icon: 'mail-outline',
     keyboardType: 'email-address' as const,
   },
 ];
@@ -99,14 +100,14 @@ const COORDINATOR_FIELDS = [
     id: 'coordinatorName',
     label: 'INTERNSHIP COORDINATOR',
     placeholder: 'Marcus Liu',
-    icon: '👤',
+    icon: 'person-outline',
     keyboardType: 'default' as const,
   },
   {
     id: 'coordinatorEmail',
     label: '', // no label shown above this one in the design — it sits right under the name field
     placeholder: 'm.liu@mit.edu',
-    icon: '✉',
+    icon: 'mail-outline',
     keyboardType: 'email-address' as const,
   },
 ];
@@ -115,9 +116,9 @@ const COORDINATOR_FIELDS = [
 // The Placement Office box shows three rows, each with a different icon.
 // Looping over this array avoids writing the same row markup three times.
 const PLACEMENT_INFO_ROWS = [
-  { id: 'location', icon: '📍', text: 'Building E39, 2nd Floor' },
-  { id: 'phone', icon: '📞', text: '+1 (617) 253-4733' },
-  { id: 'hours', icon: '💼', text: 'Mon – Fri · 9:00 – 17:00' },
+  { id: 'location', icon: 'location-outline', text: 'Building E39, 2nd Floor' },
+  { id: 'phone', icon: 'call-outline', text: '+1 (617) 253-4733' },
+  { id: 'hours', icon: 'time-outline', text: 'Mon – Fri · 9:00 – 17:00' },
 ];
 
 
@@ -163,9 +164,12 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
         styles.inputWrapper,
         focusedInput === field.id && styles.inputWrapperFocused,
       ]}>
-        {/* Icon placeholder — swap for <Ionicons /> later */}
-        <Text style={styles.inputIcon}>{field.icon}</Text>
-
+        <Ionicons
+          name={field.icon as any}
+          size={18}
+          color={COLORS.inputIcon}
+          style={styles.inputIcon}
+        />
         <TextInput
           style={styles.input}
           placeholder={field.placeholder}
@@ -243,7 +247,12 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
                       index === PLACEMENT_INFO_ROWS.length - 1 && styles.infoRowLast,
                     ]}
                   >
-                    <Text style={styles.infoRowIcon}>{row.icon}</Text>
+                    <Ionicons
+                      name={row.icon as any}
+                      size={15}
+                      color={COLORS.infoBoxIcon}
+                      style={styles.infoRowIcon}
+                    />
                     <Text style={styles.infoRowText}>{row.text}</Text>
                   </View>
                 ))}
@@ -380,9 +389,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.inputBorderFocus,
   },
   inputIcon: {
-    fontSize: 16,
     marginRight: 10,
-    color: COLORS.inputIcon,
   },
   input: {
     flex: 1,
@@ -413,8 +420,6 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   infoRowIcon: {
-    fontSize: 15,
-    color: COLORS.infoBoxIcon,
     marginRight: 12,
     width: 20, // fixed width keeps all icons vertically aligned regardless of glyph width
   },

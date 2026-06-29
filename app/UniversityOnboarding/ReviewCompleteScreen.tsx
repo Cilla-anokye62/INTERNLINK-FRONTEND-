@@ -34,6 +34,7 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -91,25 +92,25 @@ const COLORS = {
 const REVIEW_ROWS = [
   {
     id: 'universityInfo',
-    icon: '🎓',
+    icon: 'school-outline',
     title: 'University info',
     detail: 'MIT · careers@mit.edu',
   },
   {
     id: 'institutionDetails',
-    icon: '🏢',
+    icon: 'business-outline',
     title: 'Institution details',
     detail: 'Private · 5 programs',
   },
   {
     id: 'careerServices',
-    icon: '👤',
+    icon: 'person-outline',
     title: 'Career services',
     detail: 'Dr. Sarah Whitman',
   },
   {
     id: 'coordinator',
-    icon: '💼',
+    icon: 'briefcase-outline',
     title: 'Coordinator',
     detail: 'Marcus Liu',
   },
@@ -243,8 +244,11 @@ export default function ReviewCompleteScreen({ navigation }: any) {
 
                 {/* Left: icon circle */}
                 <View style={styles.rowIconCircle}>
-                  {/* Emoji placeholder — swap for <Ionicons /> later */}
-                  <Text style={styles.rowIconText}>{row.icon}</Text>
+                  <Ionicons
+                    name={row.icon as any}
+                    size={18}
+                    color={COLORS.rowIcon}
+                  />
                 </View>
 
                 {/* Middle: title + detail text, fills remaining space */}
@@ -259,8 +263,11 @@ export default function ReviewCompleteScreen({ navigation }: any) {
                   onPress={() => handleEditRow(row.id)}
                   activeOpacity={0.7}
                 >
-                  {/* Pencil emoji placeholder — swap for <Ionicons name="pencil-outline" /> */}
-                  <Text style={styles.editIconText}>✎</Text>
+                  <Ionicons
+                    name="create-outline"
+                    size={14}
+                    color={COLORS.editIcon}
+                  />
                 </TouchableOpacity>
 
               </View>
@@ -274,8 +281,11 @@ export default function ReviewCompleteScreen({ navigation }: any) {
           */}
           <View style={styles.banner}>
             <View style={styles.bannerIconCircle}>
-              {/* Shield emoji placeholder — swap for <Ionicons name="shield-checkmark-outline" /> */}
-              <Text style={styles.bannerIconText}>🛡</Text>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={14}
+                color={COLORS.bannerIcon}
+              />
             </View>
             <Text style={styles.bannerText}>
               Your profile will be reviewed within 24 hours before going live.
@@ -477,10 +487,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  rowIconText: {
-    fontSize: 18,
-    color: COLORS.rowIcon,
-  },
   // Title + subtitle column — flex: 1 fills the space between icon and edit button
   rowTextBlock: {
     flex: 1,
@@ -505,10 +511,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
-  editIconText: {
-    fontSize: 14,
-    color: COLORS.editIcon,
-  },
 
   // ── Info banner (inside white card) ─────────────────────────────────
   banner: {
@@ -528,10 +530,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-  },
-  bannerIconText: {
-    fontSize: 14,
-    color: COLORS.bannerIcon,
   },
   // flex: 1 lets the banner text wrap onto a second line instead of overflowing
   bannerText: {

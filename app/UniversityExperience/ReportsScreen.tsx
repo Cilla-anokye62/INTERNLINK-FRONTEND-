@@ -32,6 +32,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -148,8 +149,11 @@ export default function ReportsScreen({ navigation }: any) {
             onPress={handleGenerateReport}
             activeOpacity={0.85}
           >
-            {/* TODO: swap for <Ionicons name="add" size={22} color="#FFFFFF" /> */}
-            <Text style={styles.addBtnText}>+</Text>
+            <Ionicons
+              name="add"
+              size={22}
+              color={COLORS.addBtnIcon}
+            />
           </TouchableOpacity>
         </View>
         {/* ── END HEADER ──────────────────────────────────────────── */}
@@ -170,8 +174,11 @@ export default function ReportsScreen({ navigation }: any) {
 
             {/* Left: file icon inside a light teal circle */}
             <View style={styles.iconCircle}>
-              {/* TODO: swap for <Ionicons name="document-text-outline" size={20} /> */}
-              <Text style={styles.fileIconText}>📄</Text>
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color={COLORS.fileIcon}
+              />
             </View>
 
             {/* Middle: title + detail line, fills remaining space.
@@ -192,8 +199,11 @@ export default function ReportsScreen({ navigation }: any) {
                 activeOpacity={0.7}
                 style={styles.downloadBtn}
               >
-                {/* TODO: swap for <Ionicons name="download-outline" size={18} /> */}
-                <Text style={styles.downloadIconText}>⬇</Text>
+                <Ionicons
+                  name="download-outline"
+                  size={18}
+                  color={COLORS.downloadIcon}
+                />
               </TouchableOpacity>
             </View>
 
@@ -260,13 +270,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
   },
-  addBtnText: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: COLORS.addBtnIcon,
-    // Nudge the "+" glyph up slightly so it looks vertically centred
-    marginTop: -2,
-  },
 
   // ── Report rows ───────────────────────────────────────────────
   reportRow: {
@@ -290,10 +293,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
-  },
-  fileIconText: {
-    fontSize: 17,
-    color: COLORS.fileIcon,
   },
   // Title + detail column — flex: 1 fills the space between icon and download button
   reportTextBlock: {
@@ -328,10 +327,6 @@ const styles = StyleSheet.create({
   },
   downloadBtn: {
     padding: 2, // slightly larger tap target than the icon's visual size
-  },
-  downloadIconText: {
-    fontSize: 16,
-    color: COLORS.downloadIcon,
   },
 
 

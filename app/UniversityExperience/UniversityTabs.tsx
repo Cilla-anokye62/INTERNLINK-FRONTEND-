@@ -27,6 +27,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 // Import every screen that should appear as a tab.
 // Update these paths to match wherever you actually saved each file
@@ -51,17 +52,15 @@ const COLORS = {
 
 
 // ─── TAB ICON DATA ────────────────────────────────────────────────
-// Maps each route name to the emoji shown above its label.
+// Maps each route name to the Ionicons name shown above its label.
 // Centralising this here means the icon-per-tab logic lives in ONE
 // place instead of being copy-pasted into every screen file like before.
-// TODO: once you install @expo/vector-icons, replace this lookup with
-// real <Ionicons /> elements instead of emoji strings.
 const TAB_ICONS: Record<string, string> = {
-  Overview: '🏠',
-  Students: '🎓',
-  Analytics: '📊',
-  Reports: '📄',
-  Settings: '⚙️',
+  Overview: 'home-outline',
+  Students: 'school-outline',
+  Analytics: 'analytics-outline',
+  Reports: 'document-text-outline',
+  Settings: 'settings-outline',
 };
 
 
@@ -105,9 +104,11 @@ export default function UniversityTabs() {
         // already the correct active/inactive color from above, so we
         // don't need to calculate that ourselves like in the old code.
         tabBarIcon: ({ color }) => (
-          <Text style={{ fontSize: 18, color }}>
-            {TAB_ICONS[route.name]}
-          </Text>
+          <Ionicons
+            name={TAB_ICONS[route.name] as any}
+            size={22}
+            color={color}
+          />
         ),
       })}
     >

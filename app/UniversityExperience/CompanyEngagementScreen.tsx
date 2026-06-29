@@ -30,6 +30,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -156,7 +157,11 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             onPress={handleBackPress}
             activeOpacity={0.7}
           >
-            <Text style={styles.backArrowText}>‹</Text>
+            <Ionicons
+              name="arrow-back-outline"
+              size={22}
+              color={COLORS.backArrow}
+            />
           </TouchableOpacity>
 
           <View style={styles.headerTextBlock}>
@@ -169,7 +174,11 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             onPress={handleMenuPress}
             activeOpacity={0.7}
           >
-            <Text style={styles.menuBtnText}>···</Text>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={18}
+              color={COLORS.menuBtnIcon}
+            />
           </TouchableOpacity>
 
         </View>
@@ -257,12 +266,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  backArrowText: {
-    fontSize: 22,
-    color: COLORS.backArrow,
-    lineHeight: 26,
-    marginRight: 2,
-  },
   headerTextBlock: {
     flex: 1, // fills space between back button and menu button
   },
@@ -288,11 +291,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-  },
-  menuBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.menuBtnIcon,
   },
 
   // ── Stat cards (side by side) ─────────────────────────────────

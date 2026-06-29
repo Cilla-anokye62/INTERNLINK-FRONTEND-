@@ -34,6 +34,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -195,8 +196,11 @@ export default function StudentMonitoringScreen({ navigation }: any) {
             onPress={handleFilterPress}
             activeOpacity={0.7}
           >
-            {/* TODO: swap for <Ionicons name="filter-outline" size={18} /> */}
-            <Text style={styles.filterIconText}>▽</Text>
+            <Ionicons
+              name="filter-outline"
+              size={18}
+              color={COLORS.filterIcon}
+            />
           </TouchableOpacity>
         </View>
         {/* ── END HEADER ──────────────────────────────────────────── */}
@@ -204,8 +208,12 @@ export default function StudentMonitoringScreen({ navigation }: any) {
 
         {/* ── SEARCH BAR ───────────────────────────────────────────── */}
         <View style={styles.searchBar}>
-          {/* TODO: swap for <Ionicons name="search-outline" size={16} /> */}
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons
+            name="search-outline"
+            size={16}
+            color={COLORS.searchIcon}
+            style={{ marginRight: 10 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search students..."
@@ -338,10 +346,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  filterIconText: {
-    fontSize: 15,
-    color: COLORS.filterIcon,
-  },
 
   // ── Search bar ────────────────────────────────────────────────
   searchBar: {
@@ -357,11 +361,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-  },
-  searchIcon: {
-    fontSize: 14,
-    marginRight: 10,
-    color: COLORS.searchIcon,
   },
   searchInput: {
     flex: 1,

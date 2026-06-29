@@ -41,6 +41,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { LineChart } from 'react-native-chart-kit'; // renders the filled trend line
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -164,8 +165,11 @@ export default function PlacementAnalyticsScreen({ navigation }: any) {
             onPress={handleMenuPress}
             activeOpacity={0.7}
           >
-            {/* TODO: swap for <Ionicons name="ellipsis-horizontal" size={18} /> */}
-            <Text style={styles.menuBtnText}>···</Text>
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={18}
+              color={COLORS.menuBtnIcon}
+            />
           </TouchableOpacity>
         </View>
         {/* ── END HEADER ──────────────────────────────────────────── */}
@@ -342,11 +346,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-  },
-  menuBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.menuBtnIcon,
   },
 
   // ── Offers accepted card ──────────────────────────────────────

@@ -36,6 +36,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -231,8 +232,12 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                   styles.inputWrapper,
                   focusedInput === 'country' && styles.inputWrapperFocused,
                 ]}>
-                  {/* TODO: swap for <Ionicons name="location-outline" /> */}
-                  <Text style={styles.inputIcon}>📍</Text>
+                  <Ionicons
+                    name="location-outline"
+                    size={18}
+                    color={COLORS.inputIcon}
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="United States"
@@ -278,8 +283,12 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                 styles.inputWrapper,
                 focusedInput === 'students' && styles.inputWrapperFocused,
               ]}>
-                {/* TODO: swap for <Ionicons name="people-outline" /> */}
-                <Text style={styles.inputIcon}>👥</Text>
+                  <Ionicons
+                    name="people-outline"
+                    size={18}
+                    color={COLORS.inputIcon}
+                    style={styles.inputIcon}
+                  />
                 <TextInput
                   style={styles.input}
                   placeholder="11,520 students"
@@ -322,7 +331,12 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                       >
                         {/* Checkmark only shows on selected chips */}
                         {isSelected && (
-                          <Text style={styles.chipCheck}>✓ </Text>
+                          <Ionicons
+                            name="checkmark"
+                            size={12}
+                            color={COLORS.chipActiveText}
+                            style={{ marginRight: 2 }}
+                          />
                         )}
                         <Text style={[
                           styles.chipText,
@@ -503,9 +517,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.inputBorderFocus,
   },
   inputIcon: {
-    fontSize: 15,
     marginRight: 10,
-    color: COLORS.inputIcon,
   },
   input: {
     flex: 1,
@@ -545,11 +557,6 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: COLORS.chipActiveBg,
     borderColor: COLORS.chipActiveBg,
-  },
-  chipCheck: {
-    fontSize: 12,
-    color: COLORS.chipActiveText,
-    fontWeight: '700',
   },
   chipText: {
     fontSize: 13,
