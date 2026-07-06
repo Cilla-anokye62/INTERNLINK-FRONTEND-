@@ -17,7 +17,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,9 +26,11 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -60,21 +62,48 @@ const COLORS = {
 export default function PersonalInfoScreen({ navigation }: any) {
 
   // Form state
-  const [fullName, setFullName] = useState('Kenneth Baidoo');
-  const [email, setEmail] = useState('kenneth.baidoo@uni.edu'); // read-only
-  const [phone, setPhone] = useState('+233 24 123 4567');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState(''); // read-only
+  const [phone, setPhone] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // Track which input is focused
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  // Load data from AsyncStorage on mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const savedUsername = await AsyncStorage.getItem('username');
+      const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
+      const savedPhone = await AsyncStorage.getItem('userPhone');
+      const savedEmail = await AsyncStorage.getItem('userEmail');
+      
+      if (savedUsername) setFullName(savedUsername);
+      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
+      if (savedPhone) setPhone(savedPhone);
+      if (savedEmail) setEmail(savedEmail);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleSave = () => {
-    console.log('Saving personal info:', { fullName, phone });
-    // TODO: save to backend
-    navigation.goBack();
+  const handleSave = async () => {
+    try {
+      await AsyncStorage.setItem('username', fullName);
+      await AsyncStorage.setItem('userPhone', phone);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error saving personal info:', error);
+      alert('Failed to save changes');
+    }
   };
 
   const handleChangePhoto = () => {
@@ -118,9 +147,13 @@ export default function PersonalInfoScreen({ navigation }: any) {
               onPress={handleChangePhoto}
               activeOpacity={0.85}
             >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>KB</Text>
-              </View>
+              {profilePhoto ? (
+                <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{fullName ? fullName.charAt(0).toUpperCase() : 'U'}</Text>
+                </View>
+              )}
               <View style={styles.cameraBadge}>
                 <Ionicons
                   name="camera-outline"
@@ -280,6 +313,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
   avatarText: {
     fontSize: 20,

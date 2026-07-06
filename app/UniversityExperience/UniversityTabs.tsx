@@ -37,7 +37,7 @@ import UniversityDashboardScreen from './UniversityDashboardScreen';
 import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
-import SettingsScreen from './SettingsScreen';
+import SettingsScreen from '../SettingsComponents/SettingsScreen';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -121,7 +121,11 @@ export default function UniversityTabs() {
       <Tab.Screen name="Students" component={StudentMonitoringScreen} />
       <Tab.Screen name="Analytics" component={PlacementAnalyticsScreen} />
       <Tab.Screen name="Reports" component={ReportsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        initialParams={{ role: 'university' }}
+      />
     </Tab.Navigator>
   );
 }

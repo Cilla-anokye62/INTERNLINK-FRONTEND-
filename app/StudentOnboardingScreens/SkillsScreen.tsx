@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');
 
@@ -14,8 +15,10 @@ const ALL_SKILLS = [
   'Cloud (AWS)', 'Team Collaboration', 'Problem Solving',
 ];
 
-export default function SkillsScreen({ navigation }: any) {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+export default function SkillsScreen({ navigation, route }: any) {
+  const isEditing = route.params?.isEditing || false;
+  const initialSkills = route.params?.initialSkills || [];
+  const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills);
   const [search, setSearch] = useState('');
 
   const toggleSkill = (skill: string) => {
@@ -38,7 +41,14 @@ export default function SkillsScreen({ navigation }: any) {
       alert('Please select at least 3 skills.');
       return;
     }
-    navigation.navigate('CareerInterests');
+    
+    if (isEditing) {
+      // Save skills to AsyncStorage and navigate back
+      AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
+      navigation.goBack();
+    } else {
+      navigation.navigate('CareerInterests');
+    }
   };
 
   return (
@@ -48,19 +58,26 @@ export default function SkillsScreen({ navigation }: any) {
       <View style={styles.topSection}>
         {/* Progress bar */}
         <View style={styles.progressRow}>
-          <Text style={styles.stepLabel}>Step 2 of 5</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('NextScreen')}>
-            <Text style={styles.skipText}>Skip</Text>
-          </TouchableOpacity>
+          <Text style={styles.stepLabel}>{isEditing ? 'Edit Skills' : 'Step 2 of 5'}</Text>
+          {!isEditing && (
+            <TouchableOpacity onPress={() => navigation.navigate('NextScreen')}>
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: '40%' }]} />
-        </View>
+        {!isEditing && (
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: '40%' }]} />
+          </View>
+        )}
 
         {/* Header */}
-        <Text style={styles.title}>What skills do{'\n'}you have?</Text>
+        <Text style={styles.title}>{isEditing ? 'Edit your skills' : 'What skills do\nyou have?'}</Text>
         <Text style={styles.subtitle}>
-          Select all that apply. Add at least 3 for better matches.
+          {isEditing 
+            ? 'Update your skills to improve your profile visibility.'
+            : 'Select all that apply. Add at least 3 for better matches.'
+          }
         </Text>
 
         {/* Search */}
@@ -152,7 +169,7 @@ export default function SkillsScreen({ navigation }: any) {
       {/* Fixed Continue button */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.continueButton} onPress={handleContinue} activeOpacity={0.85}>
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={styles.continueButtonText}>{isEditing ? 'Save Changes' : 'Continue'}</Text>
         </TouchableOpacity>
       </View>
 

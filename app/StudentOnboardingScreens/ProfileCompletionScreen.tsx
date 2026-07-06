@@ -1,5 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');
 
@@ -33,9 +36,90 @@ const STAND_OUT_ITEMS = [
 ];
 
 export default function ProfileCompletionScreen({ navigation }: any) {
+  const [username, setUsername] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [completionItems, setCompletionItems] = useState(COMPLETION_ITEMS);
+  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [portfolioLink, setPortfolioLink] = useState('');
+  const [bio, setBio] = useState('');
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [showBioModal, setShowBioModal] = useState(false);
 
-  const handleComplete = () => {
-    navigation.navigate('HomeDashboard');
+  const handleComplete = async () => {
+    // Save all profile data to AsyncStorage
+    try {
+      await AsyncStorage.setItem('username', username);
+      await AsyncStorage.setItem('userBio', bio);
+      await AsyncStorage.setItem('userProfilePhoto', profilePhoto || '');
+      await AsyncStorage.setItem('userPortfolioLink', portfolioLink);
+      await AsyncStorage.setItem('userResumeUploaded', JSON.stringify(resumeUploaded));
+      
+      navigation.navigate('HomeDashboard');
+    } catch (error) {
+      console.error('Error saving profile data:', error);
+      alert('Failed to save profile data');
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets[0]) {
+      setProfilePhoto(result.assets[0].uri);
+      // Update photo status to Done
+      setCompletionItems(prev => 
+        prev.map(item => 
+          item.id === 'photo' ? { ...item, status: 'Done' } : item
+        )
+      );
+    }
+  };
+
+  const handleResumeUpload = () => {
+    // TODO: Implement actual file picker for resume
+    setResumeUploaded(true);
+    setShowResumeModal(false);
+  };
+
+  const handlePortfolioSave = () => {
+    if (portfolioLink.trim()) {
+      setShowPortfolioModal(false);
+    }
+  };
+
+  const handleBioSave = async () => {
+    if (bio.trim()) {
+      // Save bio to AsyncStorage
+      await AsyncStorage.setItem('userBio', bio);
+      setShowBioModal(false);
+    }
+  };
+
+  const handleStandOutItemPress = (itemId: string) => {
+    switch (itemId) {
+      case 'resume':
+        setShowResumeModal(true);
+        break;
+      case 'portfolio':
+        setShowPortfolioModal(true);
+        break;
+      case 'bio':
+        setShowBioModal(true);
+        break;
+    }
   };
 
   return (
@@ -64,26 +148,44 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         </Text>
 
         {/* Upload photo placeholder */}
-        <TouchableOpacity style={styles.uploadPhotoBox} activeOpacity={0.8}>
-          <View style={styles.uploadIconBox}>
-            <Text style={styles.uploadIcon}>📋</Text>
-            <View style={styles.uploadPlusBadge}>
-              <Text style={styles.uploadPlusText}>+</Text>
+        <TouchableOpacity style={styles.uploadPhotoBox} onPress={pickImage} activeOpacity={0.8}>
+          {profilePhoto ? (
+            <Image source={{ uri: profilePhoto }} style={styles.uploadedImage} />
+          ) : (
+            <View style={styles.uploadIconBox}>
+              <Text style={styles.uploadIcon}>📋</Text>
+              <View style={styles.uploadPlusBadge}>
+                <Text style={styles.uploadPlusText}>+</Text>
+              </View>
             </View>
-          </View>
-          <Text style={styles.uploadPhotoLabel}>Upload Profile Photo</Text>
+          )}
+          <Text style={styles.uploadPhotoLabel}>
+            {profilePhoto ? 'Change Photo' : 'Upload Profile Photo'}
+          </Text>
         </TouchableOpacity>
+
+        {/* Username input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Username</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+          />
+        </View>
 
         {/* Completion checklist */}
         <View style={styles.card}>
-          {COMPLETION_ITEMS.map((item, index) => {
+          {completionItems.map((item, index) => {
             const isDone = item.status === 'Done';
             return (
               <View
                 key={item.id}
                 style={[
                   styles.checklistItem,
-                  index < COMPLETION_ITEMS.length - 1 && styles.checklistItemBorder,
+                  index < completionItems.length - 1 && styles.checklistItemBorder,
                 ]}
               >
                 <View style={[styles.checkCircle, isDone && styles.checkCircleDone]}>
@@ -115,25 +217,38 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         {/* Stand out section */}
         <Text style={styles.standOutLabel}>STAND OUT EVEN MORE</Text>
         <View style={styles.card}>
-          {STAND_OUT_ITEMS.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.standOutItem,
-                index < STAND_OUT_ITEMS.length - 1 && styles.checklistItemBorder,
-              ]}
-              activeOpacity={0.7}
-            >
-              <View style={styles.standOutIconCircle}>
-                <Text style={styles.standOutIcon}>{item.icon}</Text>
-              </View>
-              <View style={styles.standOutText}>
-                <Text style={styles.standOutTitle}>{item.title}</Text>
-                <Text style={styles.standOutSubtitle}>{item.subtitle}</Text>
-              </View>
-              <Text style={styles.standOutArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
+          {STAND_OUT_ITEMS.map((item, index) => {
+            const isCompleted = 
+              (item.id === 'resume' && resumeUploaded) ||
+              (item.id === 'portfolio' && portfolioLink.trim()) ||
+              (item.id === 'bio' && bio.trim());
+            return (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.standOutItem,
+                  index < STAND_OUT_ITEMS.length - 1 && styles.checklistItemBorder,
+                ]}
+                onPress={() => handleStandOutItemPress(item.id)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.standOutIconCircle, isCompleted && styles.standOutIconCircleDone]}>
+                  <Text style={styles.standOutIcon}>{item.icon}</Text>
+                </View>
+                <View style={styles.standOutText}>
+                  <Text style={styles.standOutTitle}>{item.title}</Text>
+                  <Text style={styles.standOutSubtitle}>
+                    {isCompleted ? 'Completed' : item.subtitle}
+                  </Text>
+                </View>
+                {isCompleted ? (
+                  <Text style={styles.standOutCheck}>✓</Text>
+                ) : (
+                  <Text style={styles.standOutArrow}>›</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Complete button */}
@@ -147,6 +262,87 @@ export default function ProfileCompletionScreen({ navigation }: any) {
 
         <View style={{ height: height * 0.03 }} />
       </ScrollView>
+
+      {/* Resume Upload Modal */}
+      {showResumeModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Upload Resume</Text>
+            <Text style={styles.modalSubtitle}>Select a PDF file (max 5MB)</Text>
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={handleResumeUpload}
+            >
+              <Text style={styles.modalButtonText}>Choose File</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalCancelButton}
+              onPress={() => setShowResumeModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Portfolio Link Modal */}
+      {showPortfolioModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Portfolio Link</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="https://yourportfolio.com"
+              value={portfolioLink}
+              onChangeText={setPortfolioLink}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={handlePortfolioSave}
+            >
+              <Text style={styles.modalButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalCancelButton}
+              onPress={() => setShowPortfolioModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Bio Modal */}
+      {showBioModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Write Your Bio</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalTextArea]}
+              placeholder="Tell employers about yourself..."
+              value={bio}
+              onChangeText={setBio}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={handleBioSave}
+            >
+              <Text style={styles.modalButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalCancelButton}
+              onPress={() => setShowBioModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -213,6 +409,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: height * 0.03,
   },
+  uploadedImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    marginBottom: 10,
+  },
   uploadIconBox: {
     width: 90,
     height: 90,
@@ -246,6 +448,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#024D60',
     fontWeight: '600',
+  },
+
+  // Username input
+  inputContainer: {
+    marginBottom: height * 0.03,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#024D60',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#DDDDDD',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 14,
+    color: '#024D60',
   },
 
   // Checklist card
@@ -383,6 +606,78 @@ const styles = StyleSheet.create({
   standOutArrow: {
     fontSize: 20,
     color: '#94A3B8',
+  },
+  standOutIconCircleDone: {
+    backgroundColor: '#2CACAD',
+  },
+  standOutCheck: {
+    fontSize: 20,
+    color: '#2CACAD',
+    fontWeight: 'bold',
+  },
+
+  // Modal styles
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#024D60',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 20,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#024D60',
+    marginBottom: 16,
+  },
+  modalTextArea: {
+    height: 100,
+  },
+  modalButton: {
+    backgroundColor: '#2CACAD',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    color: '#64748B',
+    fontSize: 14,
   },
 
   // Complete button
