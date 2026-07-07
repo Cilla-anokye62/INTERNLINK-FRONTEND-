@@ -35,7 +35,7 @@ export default function DiscoverScreen({ navigation }: any) {
 
   // Clears the search box and resets the category filter back to "All".
   // This is what the empty state's "Browse All" button calls — it's
-  // the quickest way to get the user back to seeing every internship.
+  
   const handleBrowseAll = () => {
     setSearch('');
     setActiveCategory('All');
