@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: TEAL,
-    borderRadius: 14,
+    borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 10,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   saveLaterButton: {
     backgroundColor: '#FFFFFF',
