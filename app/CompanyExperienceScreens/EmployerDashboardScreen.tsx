@@ -7,8 +7,11 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // ---------- Types ----------
+type Props = NativeStackScreenProps<any, any>;
+
 interface StatItem {
   label: string;
   value: string;
@@ -114,7 +117,7 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 };
 
 // ---------- Main Screen ----------
-const EmployerDashboardScreen: React.FC = () => {
+const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   const stats: StatItem[] = [
     { label: 'Active', value: '6' },
     { label: 'Interviews', value: '24' },
@@ -183,17 +186,14 @@ const EmployerDashboardScreen: React.FC = () => {
 
   const handleQuickActionPress = (title: string): void => {
     console.log('Quick action pressed:', title);
-    // TODO: navigate to relevant screen
   };
 
   const handleManagePress = (): void => {
     console.log('Manage pressed');
-    // TODO: navigate to listings management screen
   };
 
   const handleNotificationPress = (): void => {
     console.log('Notification bell pressed');
-    // TODO: navigate to notifications screen
   };
 
   return (

@@ -36,9 +36,12 @@ const Chip: React.FC<ChipProps> = ({ label, selected, onPress }) => {
     </TouchableOpacity>
   );
 };
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+type Props = NativeStackScreenProps<any, any>;
 
 // ---------- Main Screen ----------
-const RecruitmentPreferencesScreen: React.FC = () => {
+const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
   // Internship categories state
   const [categories, setCategories] = useState<ChipData[]>([
     { label: 'Engineering', selected: true },
@@ -78,10 +81,7 @@ const RecruitmentPreferencesScreen: React.FC = () => {
   };
 
   const handleContinue = (): void => {
-    console.log('Categories:', categories.filter((c) => c.selected));
-    console.log('Qualifications:', qualifications.filter((q) => q.selected));
-    console.log('Work setup:', workSetup);
-    // TODO: navigate to next step
+    navigation.navigate('CompanyProfileCompletion');
   };
 
   return (

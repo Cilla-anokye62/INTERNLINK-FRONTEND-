@@ -42,6 +42,9 @@ export default function SkillsScreen({ navigation, route }: any) {
       return;
     }
     
+    if (isEditing) {
+      // Save skills to AsyncStorage and navigate back
+      AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
     // Always save skills to AsyncStorage
     await AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
     

@@ -1,3 +1,7 @@
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -25,6 +29,16 @@ const EXPERIENCE = [
 ];
 
 export default function StudentProfileScreen({ navigation, route }: any) {
+  // Get bio from route params if available (from ProfileCompletionScreen)
+  const initialBio = route.params?.bio || 
+    'CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.';
+  const initialSkills = route.params?.skills || SKILLS;
+  
+  const [username, setUsername] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [aboutText, setAboutText] = useState(initialBio);
+  const [skills, setSkills] = useState(initialSkills);
+  const [experience, setExperience] = useState(EXPERIENCE);
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [aboutText, setAboutText] = useState('');
@@ -189,6 +203,13 @@ export default function StudentProfileScreen({ navigation, route }: any) {
 
         {/* Profile card */}
         <View style={styles.profileCard}>
+          {profilePhoto ? (
+            <Image source={{ uri: profilePhoto }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
+            </View>
+          )}
           <TouchableOpacity onPress={isEditMode ? handlePhotoOptions : undefined} activeOpacity={0.85}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.avatar} />
@@ -210,6 +231,16 @@ export default function StudentProfileScreen({ navigation, route }: any) {
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedText}>✓ Verified</Text>
             </View>
+          </View>
+
+          {/* Edit profile button */}
+          <TouchableOpacity
+            style={styles.editButton}
+            activeOpacity={0.85}
+            onPress={handleEditProfileToggle}
+          >
+            <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
+          </TouchableOpacity>
           </View>
 
           <View style={styles.buttonRow}>
