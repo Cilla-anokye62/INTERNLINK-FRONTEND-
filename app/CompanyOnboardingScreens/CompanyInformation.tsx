@@ -11,6 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+type Props = NativeStackScreenProps<any, any>;
+
 
 interface FormField {
   label: string;
@@ -20,7 +22,7 @@ interface FormField {
   keyboardType?: "default" | "email-address" | "phone-pad" | "url";
 }
 
-const CompanyInformationScreen: React.FC = () => {
+const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   const [companyName, setCompanyName] = useState<string>("Northwind Studios");
   const [companyEmail, setCompanyEmail] = useState<string>("talent@northwind.io");
   const [contactPhone, setContactPhone] = useState<string>("+1 (415) 555-2014");
@@ -40,10 +42,9 @@ const CompanyInformationScreen: React.FC = () => {
     WEBSITE: setWebsite,
   };
 
-  const handleContinue = (): void => {
-    console.log("Continue tapped", { companyName, companyEmail, contactPhone, website });
-  };
-
+ const handleContinue = (): void => {
+  navigation.navigate('CompanyDetails');
+};
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
