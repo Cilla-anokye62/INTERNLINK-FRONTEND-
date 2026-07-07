@@ -181,7 +181,7 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleContinue}
           activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={styles.continueButtonText}>Next  →</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -337,14 +337,14 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     backgroundColor: TEAL,
-    borderRadius: 14,
+    borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   continueButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
 });
 

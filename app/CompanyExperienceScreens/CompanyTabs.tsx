@@ -9,7 +9,7 @@ import ApplicantsScreen from './ApplicantsScreen';
 
 import SettingsScreen from '../SettingsComponents/SettingsScreen';
 
-// ---------- Types ----------
+
 
 export type CompanyTabParamList = {
   Dashboard: undefined;

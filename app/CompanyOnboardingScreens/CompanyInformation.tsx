@@ -48,7 +48,6 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
 
           <View style={styles.progressRow}>
             <Text style={styles.progressLabel}>Company setup · Step 1 of 4</Text>
@@ -95,10 +94,9 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
           ))}
 
           <TouchableOpacity style={styles.continueButton} onPress={handleContinue} activeOpacity={0.85}>
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={styles.continueButtonText}>Next  →</Text>
           </TouchableOpacity>
 
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -112,8 +110,7 @@ const MID_TEXT = "#718096";
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: LIGHT_BG },
-  scrollContent: { flexGrow: 1, padding: 16 },
-  card: { backgroundColor: "#FFFFFF", borderRadius: 20, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
+  scrollContent: { flexGrow: 1, padding: 24 },
   progressRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
   progressLabel: { fontSize: 12, color: MID_TEXT },
   progressPercent: { fontSize: 12, color: TEAL, fontWeight: "600" },
@@ -129,13 +126,13 @@ const styles = StyleSheet.create({
   logoSubText: { fontSize: 11, color: MID_TEXT, marginTop: 2 },
   uploadBadge: { backgroundColor: TEAL, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   uploadBadgeText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
-  fieldWrapper: { marginBottom: 16 },
+  fieldWrapper: { marginBottom: 24 },
   fieldLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 0.8, color: MID_TEXT, marginBottom: 6, textTransform: "uppercase" },
   inputRow: { flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: BORDER, borderRadius: 10, paddingHorizontal: 12, paddingVertical: Platform.OS === "ios" ? 12 : 8, backgroundColor: "#FAFFFE" },
   inputIcon: { fontSize: 16, marginRight: 8 },
   textInput: { flex: 1, fontSize: 14, color: DARK_TEXT, padding: 0 },
-  continueButton: { marginTop: 8, backgroundColor: TEAL, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
-  continueButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700", letterSpacing: 0.3 },
+  continueButton: { marginTop: 8, backgroundColor: TEAL, borderRadius: 30, paddingVertical: 16, alignItems: "center" },
+  continueButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
 });
 
 export default CompanyInformationScreen;
