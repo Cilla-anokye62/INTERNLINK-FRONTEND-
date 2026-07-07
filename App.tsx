@@ -52,7 +52,6 @@ import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagemen
 import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
 import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentEditProfileScreen from './app/StudentExperienceScreens/StudentEditProfileScreen';
-import StudentSettingsScreen from './app/StudentExperienceScreens/StudentSettingsScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
 
 //System state screens
@@ -62,6 +61,18 @@ import LoadingStateScreen from './app/SystemStateScreens/LoadingStateScreen';
 import SearchResultsScreen from './app/SystemStateScreens/SearchResultsScreen';
 import ActionSuccessfulScreen from './app/SystemStateScreens/ActionSuccessfulScreen';
 import UniversityTabs from './app/UniversityExperience/UniversityTabs';
+
+//Settings components (shared across all roles)
+import SettingsScreen from './app/SettingsComponents/SettingsScreen';
+import PersonalInfoScreen from './app/SettingsComponents/PersonalInfoScreen';
+import EmailPasswordScreen from './app/SettingsComponents/EmailPasswordScreen';
+import ConnectedAccountsScreen from './app/SettingsComponents/ConnectedAccountsScreen';
+import NotificationSettingsScreen from './app/SettingsComponents/NotificationSettingsScreen';
+import PrivacySettingsScreen from './app/SettingsComponents/PrivacySettingsScreen';
+import LanguageSettingsScreen from './app/SettingsComponents/LanguageSettingsScreen';
+import AppearanceSettingsScreen from './app/SettingsComponents/AppearanceSettingsScreen';
+import HelpCenterScreen from './app/SettingsComponents/HelpCenterScreen';
+import SendFeedbackScreen from './app/SettingsComponents/SendFeedbackScreen';
 
 
 const Stack = createStackNavigator();
@@ -105,7 +116,6 @@ export default function App() {
           <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
           <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
           <Stack.Screen name="StudentEditProfile" component={StudentEditProfileScreen} />
-          <Stack.Screen name="StudentSettings" component={StudentSettingsScreen} />
 
 
           {/* University onboarding */}
@@ -139,6 +149,18 @@ export default function App() {
           <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
           <Stack.Screen name="LoadingState" component={LoadingStateScreen} />
           <Stack.Screen name="ActionSuccessful" component={ActionSuccessfulScreen} />
+
+          {/* Settings components (shared across all roles) */}
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+          <Stack.Screen name="EmailPassword" component={EmailPasswordScreen} />
+          <Stack.Screen name="ConnectedAccounts" component={ConnectedAccountsScreen} />
+          <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+          <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
+          <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} />
+          <Stack.Screen name="AppearanceSettings" component={AppearanceSettingsScreen} />
+          <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+          <Stack.Screen name="SendFeedback" component={SendFeedbackScreen} />
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
 

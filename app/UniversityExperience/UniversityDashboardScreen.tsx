@@ -38,6 +38,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // updated, non-deprecated version
 import { LinearGradient } from 'expo-linear-gradient'; // used for the teal gradient card
+import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -99,10 +100,10 @@ const PLACEMENT_STATS = [
 // Storing them in an array means adding a 5th card is a one-line change
 // (the grid layout below already wraps automatically).
 const QUICK_ACCESS_CARDS = [
-  { id: 'students', icon: '🎓', title: 'Students', subtitle: '1,476 total' },
-  { id: 'companies', icon: '🏢', title: 'Companies', subtitle: '238 partners' },
-  { id: 'analytics', icon: '📊', title: 'Analytics', subtitle: 'View trends' },
-  { id: 'reports', icon: '📄', title: 'Reports', subtitle: 'Generate' },
+  { id: 'students', icon: 'school-outline', title: 'Students', subtitle: '1,476 total' },
+  { id: 'companies', icon: 'business-outline', title: 'Companies', subtitle: '238 partners' },
+  { id: 'analytics', icon: 'analytics-outline', title: 'Analytics', subtitle: 'View trends' },
+  { id: 'reports', icon: 'document-text-outline', title: 'Reports', subtitle: 'Generate' },
 ];
 
 // Top placements list — each row shows a company logo letter, name,
@@ -184,8 +185,11 @@ export default function UniversityDashboardScreen({ navigation }: any) {
             onPress={() => console.log('Notifications tapped')}
             activeOpacity={0.7}
           >
-            {/* TODO: replace with <Ionicons name="notifications-outline" size={20} /> */}
-            <Text style={styles.bellIcon}>🔔</Text>
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color={COLORS.bellIcon}
+            />
           </TouchableOpacity>
 
         </View>
@@ -259,8 +263,11 @@ export default function UniversityDashboardScreen({ navigation }: any) {
             >
               {/* Icon circle */}
               <View style={styles.gridIconCircle}>
-                {/* TODO: swap emoji for <Ionicons /> */}
-                <Text style={styles.gridIconText}>{card.icon}</Text>
+                <Ionicons
+                  name={card.icon as any}
+                  size={18}
+                  color={COLORS.gridIcon}
+                />
               </View>
 
               <Text style={styles.gridTitle}>{card.title}</Text>
@@ -305,8 +312,11 @@ export default function UniversityDashboardScreen({ navigation }: any) {
             </View>
 
             {/* Arrow icon on the right */}
-            {/* TODO: swap for <Ionicons name="arrow-up-outline" /> rotated, or "open-outline" */}
-            <Text style={styles.arrowIcon}>↗</Text>
+            <Ionicons
+              name="arrow-forward-outline"
+              size={18}
+              color={COLORS.arrowIcon}
+            />
           </TouchableOpacity>
         ))}
         {/* ── END TOP PLACEMENTS ──────────────────────────────────── */}
@@ -385,9 +395,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-  },
-  bellIcon: {
-    fontSize: 16,
   },
 
   // ── Placement rate card (gradient) ───────────────────────────
@@ -483,10 +490,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-  gridIconText: {
-    fontSize: 16,
-    color: COLORS.gridIcon,
-  },
   gridTitle: {
     fontSize: 14,
     fontWeight: '700',
@@ -550,10 +553,6 @@ const styles = StyleSheet.create({
   companyDetail: {
     fontSize: 12,
     color: COLORS.companyDetail,
-  },
-  arrowIcon: {
-    fontSize: 16,
-    color: COLORS.arrowIcon,
   },
 
 });

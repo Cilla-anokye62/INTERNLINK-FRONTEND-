@@ -11,7 +11,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 
-// ---------- Types ----------
+
 type CompanySize = '1-10' | '11-50' | '51-200' | '200+';
 
 type Props = NativeStackScreenProps<any, any>;

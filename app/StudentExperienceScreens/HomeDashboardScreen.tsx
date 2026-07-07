@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +18,26 @@ const ACTIVITY = [
 ];
 
 export default function HomeDashboardScreen({ navigation }: any) {
+  const [username, setUsername] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  // Load user data on mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const savedUsername = await AsyncStorage.getItem('username');
+      const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
+      
+      if (savedUsername) setUsername(savedUsername);
+      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -24,11 +46,15 @@ export default function HomeDashboardScreen({ navigation }: any) {
       >
         {/* Top bar */}
         <View style={styles.topBar}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>AM</Text>
-          </View>
+          {profilePhoto ? (
+            <Image source={{ uri: profilePhoto }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
+            </View>
+          )}
           <View style={styles.greetingBlock}>
-            <Text style={styles.greeting}>Hi, Alex 👋</Text>
+            <Text style={styles.greeting}>Hi, {username || 'there'} 👋</Text>
             <Text style={styles.greetingSub}>Let's find your perfect role</Text>
           </View>
 

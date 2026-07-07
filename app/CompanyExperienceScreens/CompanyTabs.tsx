@@ -2,15 +2,21 @@ import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import EmployerDashboardScreen from './EmployerDashboardScreen';
+
 import CompanyProfileScreen from './CompanyProfileScreen';
 import ListingsScreen from './ListingsScreen';
 import ApplicantsScreen from './ApplicantsScreen';
+
+import SettingsScreen from '../SettingsComponents/SettingsScreen';
+
+// ---------- Types ----------
+
 export type CompanyTabParamList = {
   Dashboard: undefined;
   Listings: undefined;
   Applicants: undefined;
   Company: undefined;
-  Settings: undefined;
+  Settings: { role: string };
 };
 
 interface TabIconProps {
@@ -78,7 +84,8 @@ const CompanyTabs: React.FC = () => {
 /> 
       <Tab.Screen
         name="Settings"
-        component={EmployerDashboardScreen}
+        component={SettingsScreen}
+        initialParams={{ role: 'employer' }}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
         }}
