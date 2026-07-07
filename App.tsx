@@ -2,6 +2,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
 
 
 // First screens
@@ -72,6 +74,20 @@ import SendFeedbackScreen from './app/SettingsComponents/SendFeedbackScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
+  // Clear AsyncStorage on app start for testing purposes
+  // Remove this in production
+  useEffect(() => {
+    const clearData = async () => {
+      try {
+        await AsyncStorage.clear();
+        console.log('AsyncStorage cleared for testing');
+      } catch (error) {
+        console.error('Error clearing AsyncStorage:', error);
+      }
+    };
+    clearData();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>

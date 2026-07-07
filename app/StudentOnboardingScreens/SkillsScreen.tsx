@@ -36,15 +36,16 @@ export default function SkillsScreen({ navigation, route }: any) {
     s.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedSkills.length < 3) {
       alert('Please select at least 3 skills.');
       return;
     }
     
+    // Always save skills to AsyncStorage
+    await AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
+    
     if (isEditing) {
-      // Save skills to AsyncStorage and navigate back
-      AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
       navigation.goBack();
     } else {
       navigation.navigate('CareerInterests');
