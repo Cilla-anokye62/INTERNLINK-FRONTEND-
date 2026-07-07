@@ -2,6 +2,12 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 
 const SKILLS = ['React', 'TypeScript', 'Python', 'Figma', 'Tailwind', 'GraphQL', 'Node.js'];
 
@@ -33,12 +39,18 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const [aboutText, setAboutText] = useState(initialBio);
   const [skills, setSkills] = useState(initialSkills);
   const [experience, setExperience] = useState(EXPERIENCE);
+  const [username, setUsername] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [aboutText, setAboutText] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [experience, setExperience] = useState<any[]>([]);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [editingExperience, setEditingExperience] = useState<any>(null);
   const [newExperienceTitle, setNewExperienceTitle] = useState('');
   const [newExperienceSubtitle, setNewExperienceSubtitle] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   // Load saved data on mount
   useEffect(() => {
@@ -135,6 +147,43 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     }
   };
 
+  const handleShareProfile = async () => {
+    const profileLink = `https://internlink.app/profile/${username || 'user'}`;
+    await Clipboard.setStringAsync(profileLink);
+    Alert.alert('Link Copied', 'Profile link copied to clipboard!');
+  };
+
+  const handlePhotoOptions = () => {
+    setShowPhotoOptions(true);
+  };
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets[0]) {
+      setProfilePhoto(result.assets[0].uri);
+      await AsyncStorage.setItem('userProfilePhoto', result.assets[0].uri);
+    }
+    setShowPhotoOptions(false);
+  };
+
+  const handleRemovePhoto = async () => {
+    setProfilePhoto(null);
+    await AsyncStorage.removeItem('userProfilePhoto');
+    setShowPhotoOptions(false);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -161,6 +210,20 @@ export default function StudentProfileScreen({ navigation, route }: any) {
               <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
             </View>
           )}
+          <TouchableOpacity onPress={isEditMode ? handlePhotoOptions : undefined} activeOpacity={0.85}>
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
+              </View>
+            )}
+            {isEditMode && (
+              <View style={styles.editPhotoBadge}>
+                <Text style={styles.editPhotoBadgeText}>✎</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <Text style={styles.name}>{username || 'Your Name'}</Text>
           <Text style={styles.subtitle}>Student</Text>
 
@@ -178,6 +241,24 @@ export default function StudentProfileScreen({ navigation, route }: any) {
           >
             <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
           </TouchableOpacity>
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={handleShareProfile}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.shareButtonText}>Share Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.editButton}
+              activeOpacity={0.85}
+              onPress={handleEditProfileToggle}
+            >
+              <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* About section */}
@@ -329,6 +410,35 @@ export default function StudentProfileScreen({ navigation, route }: any) {
           </View>
         </Modal>
       )}
+
+      {/* Photo options modal */}
+      <Modal
+        visible={showPhotoOptions}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPhotoOptions(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPhotoOptions(false)}
+        >
+          <View style={styles.photoOptionsContainer}>
+            <Text style={styles.photoOptionsTitle}>Photo Options</Text>
+            <TouchableOpacity style={styles.photoOption} onPress={handlePickImage}>
+              <Text style={styles.photoOptionText}>Choose New Photo</Text>
+            </TouchableOpacity>
+            {profilePhoto && (
+              <TouchableOpacity style={styles.photoOption} onPress={handleRemovePhoto}>
+                <Text style={[styles.photoOptionText, styles.removePhotoText]}>Remove Photo</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[styles.photoOption, styles.cancelOption]} onPress={() => setShowPhotoOptions(false)}>
+              <Text style={styles.cancelOptionText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -450,17 +560,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
   },
   editButton: {
-    width: '100%',
-    borderRadius: 30,
-    paddingVertical: 14,
+    flex: 1,
+    backgroundColor: '#2CACAD',
+    borderRadius: 20,
+    paddingVertical: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
   },
   editButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
     fontSize: 14,
-    fontWeight: '700',
-    color: '#024D60',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -601,5 +710,77 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  shareButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#2CACAD',
+  },
+  shareButtonText: {
+    color: '#2CACAD',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  editPhotoBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#2CACAD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  editPhotoBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  photoOptionsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 30,
+  },
+  photoOptionsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#024D60',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  photoOption: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  photoOptionText: {
+    fontSize: 16,
+    color: '#024D60',
+    textAlign: 'center',
+  },
+  removePhotoText: {
+    color: '#E0524C',
+  },
+  cancelOption: {
+    borderBottomWidth: 0,
+    marginTop: 8,
+  },
+  cancelOptionText: {
+    fontSize: 16,
+    color: '#94A3B8',
+    textAlign: 'center',
   },
 });

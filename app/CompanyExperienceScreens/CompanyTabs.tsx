@@ -2,6 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import EmployerDashboardScreen from './EmployerDashboardScreen';
+import SettingsScreen from '../SettingsComponents/SettingsScreen';
 
 import CompanyProfileScreen from './CompanyProfileScreen';
 import ListingsScreen from './ListingsScreen';

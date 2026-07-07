@@ -136,6 +136,7 @@ export default function SettingsScreen({ navigation, route }: any) {
     // Navigate to role-specific profile screen
     if (userRole === 'student') {
       navigation.navigate('Profile');
+      navigation.navigate('HomeDashboard', { screen: 'Profile' });
     } else if (userRole === 'university') {
       navigation.navigate('EditProfile');
     } else if (userRole === 'employer') {
@@ -215,6 +216,7 @@ export default function SettingsScreen({ navigation, route }: any) {
           onPress={handleProfilePress}
           activeOpacity={0.85}
         >
+        <View style={styles.profileCard}>
           {profilePhoto ? (
             <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
           ) : (
@@ -232,6 +234,7 @@ export default function SettingsScreen({ navigation, route }: any) {
             color={COLORS.chevron}
           />
         </TouchableOpacity>
+        </View>
 
         {/* Settings Sections */}
         {SETTINGS_SECTIONS.map((section) => (
