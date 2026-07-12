@@ -180,6 +180,7 @@ export default function SkillsScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
+}
 
 const styles = StyleSheet.create({
   safeArea: {

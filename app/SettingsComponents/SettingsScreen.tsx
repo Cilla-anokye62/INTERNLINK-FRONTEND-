@@ -35,28 +35,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
 const COLORS = {
-  background:        '#F5FBFA',
-  backBtnBg:         '#FFFFFF',
-  backArrow:         '#0D3B47',
-  headerTitle:       '#0D3B47',
+  background: '#F5FBFA',
+  backBtnBg: '#FFFFFF',
+  backArrow: '#0D3B47',
+  headerTitle: '#0D3B47',
 
   // Profile card
-  profileCardBg:     '#FFFFFF',
-  avatarBg:          '#0D3B47',
-  avatarText:        '#FFFFFF',
-  profileName:       '#0D3B47',
-  profileEmail:      '#9BB8B4',
-  chevron:           '#C7DAD7',
+  profileCardBg: '#FFFFFF',
+  avatarBg: '#0D3B47',
+  avatarText: '#FFFFFF',
+  profileName: '#0D3B47',
+  profileEmail: '#9BB8B4',
+  chevron: '#C7DAD7',
 
   // Section labels
-  sectionLabel:      '#4A7C75',
+  sectionLabel: '#4A7C75',
 
   // Setting rows
-  rowBg:             '#FFFFFF',
-  rowText:           '#0D3B47',
+  rowBg: '#FFFFFF',
+  rowText: '#0D3B47',
 
   // Sign out link
-  signOutText:       '#E0524C',
+  signOutText: '#E0524C',
 };
 
 
@@ -113,7 +113,7 @@ export default function SettingsScreen({ navigation, route }: any) {
     try {
       const savedUsername = await AsyncStorage.getItem('username');
       const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
-      
+
       if (savedUsername) {
         setUsername(savedUsername);
         setProfile(prev => ({
@@ -216,25 +216,26 @@ export default function SettingsScreen({ navigation, route }: any) {
           onPress={handleProfilePress}
           activeOpacity={0.85}
         >
-        <View style={styles.profileCard}>
-          {profilePhoto ? (
-            <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{profile.initials}</Text>
+          <View style={styles.profileCard}>
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{profile.initials}</Text>
+              </View>
+            )}
+            <View style={styles.profileTextBlock}>
+              <Text style={styles.profileName}>{profile.name}</Text>
+              <Text style={styles.profileEmail}>{profile.email}</Text>
             </View>
-          )}
-          <View style={styles.profileTextBlock}>
-            <Text style={styles.profileName}>{profile.name}</Text>
-            <Text style={styles.profileEmail}>{profile.email}</Text>
+            <Ionicons
+              name="chevron-forward-outline"
+              size={18}
+              color={COLORS.chevron}
+            />
           </View>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={18}
-            color={COLORS.chevron}
-          />
         </TouchableOpacity>
-        </View>
+
 
         {/* Settings Sections */}
         {SETTINGS_SECTIONS.map((section) => (

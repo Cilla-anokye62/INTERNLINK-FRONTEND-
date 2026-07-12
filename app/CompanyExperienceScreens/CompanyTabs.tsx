@@ -8,7 +8,6 @@ import CompanyProfileScreen from './CompanyProfileScreen';
 import ListingsScreen from './ListingsScreen';
 import ApplicantsScreen from './ApplicantsScreen';
 
-import SettingsScreen from '../SettingsComponents/SettingsScreen';
 
 
 
@@ -62,13 +61,13 @@ const CompanyTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-  name="Listings"
-  component={ListingsScreen}
-  options={{
-    tabBarIcon: ({ focused }) => <TabIcon icon="🗂️" focused={focused} />,
-  }}
-/>
-      
+        name="Listings"
+        component={ListingsScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon icon="🗂️" focused={focused} />,
+        }}
+      />
+
       <Tab.Screen
         name="Applicants"
         component={ApplicantsScreen}
@@ -77,12 +76,12 @@ const CompanyTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-  name="Company"
-  component={CompanyProfileScreen}
-  options={{
-    tabBarIcon: ({ focused }) => <TabIcon icon="🏢" focused={focused} />,
-  }}
-/> 
+        name="Company"
+        component={CompanyProfileScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon icon="🏢" focused={focused} />,
+        }}
+      />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

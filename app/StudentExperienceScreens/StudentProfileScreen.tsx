@@ -1,7 +1,3 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -30,20 +26,15 @@ const EXPERIENCE = [
 
 export default function StudentProfileScreen({ navigation, route }: any) {
   // Get bio from route params if available (from ProfileCompletionScreen)
-  const initialBio = route.params?.bio || 
+  const initialBio = route.params?.bio ||
     'CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.';
   const initialSkills = route.params?.skills || SKILLS;
-  
+
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [aboutText, setAboutText] = useState(initialBio);
   const [skills, setSkills] = useState(initialSkills);
   const [experience, setExperience] = useState(EXPERIENCE);
-  const [username, setUsername] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [aboutText, setAboutText] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const [experience, setExperience] = useState<any[]>([]);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [editingExperience, setEditingExperience] = useState<any>(null);
@@ -74,7 +65,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
       const savedBio = await AsyncStorage.getItem('userBio');
       const savedSkills = await AsyncStorage.getItem('userSkills');
       const savedExperience = await AsyncStorage.getItem('userExperience');
-      
+
       if (savedUsername) setUsername(savedUsername);
       if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
       if (savedAbout) setAboutText(savedAbout);
@@ -108,8 +99,8 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   };
 
   const handleSkillsEdit = () => {
-    navigation.navigate('Skills', { 
-      isEditing: true, 
+    navigation.navigate('Skills', {
+      isEditing: true,
       initialSkills: skills,
       fromProfile: true
     });
@@ -160,7 +151,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
+      Alert.alert('Permission needed', 'We need camera roll permissions to make this work!');
       return;
     }
 
@@ -203,13 +194,6 @@ export default function StudentProfileScreen({ navigation, route }: any) {
 
         {/* Profile card */}
         <View style={styles.profileCard}>
-          {profilePhoto ? (
-            <Image source={{ uri: profilePhoto }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
-            </View>
-          )}
           <TouchableOpacity onPress={isEditMode ? handlePhotoOptions : undefined} activeOpacity={0.85}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.avatar} />
@@ -232,8 +216,16 @@ export default function StudentProfileScreen({ navigation, route }: any) {
               <Text style={styles.verifiedText}>✓ Verified</Text>
             </View>
           </View>
+        </View>
 
-          {/* Edit profile button */}
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={handleShareProfile}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.shareButtonText}>Share Profile</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.editButton}
             activeOpacity={0.85}
@@ -241,25 +233,8 @@ export default function StudentProfileScreen({ navigation, route }: any) {
           >
             <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
           </TouchableOpacity>
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShareProfile}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.shareButtonText}>Share Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.editButton}
-              activeOpacity={0.85}
-              onPress={handleEditProfileToggle}
-            >
-              <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
-            </TouchableOpacity>
-          </View>
         </View>
+
 
         {/* About section */}
         <View style={styles.sectionHeader}>
