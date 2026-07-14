@@ -19,7 +19,6 @@ interface TabIconProps {
   focused: boolean;
 }
 
-// ---------- Tab Icon ----------
 const TabIcon: React.FC<TabIconProps> = ({ icon, focused }) => {
   return (
     <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
@@ -59,21 +58,22 @@ const CompanyTabs: React.FC = () => {
       />
       <Tab.Screen
         name="Listings"
-        component={EmployerDashboardScreen}
+        component={ListingsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="🗂️" focused={focused} />,
         }}
       />
+
       <Tab.Screen
         name="Applicants"
-        component={EmployerDashboardScreen}
+        component={ApplicantsScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="👥" focused={focused} />,
         }}
       />
       <Tab.Screen
         name="Company"
-        component={EmployerDashboardScreen}
+        component={CompanyProfileScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="🏢" focused={focused} />,
         }}

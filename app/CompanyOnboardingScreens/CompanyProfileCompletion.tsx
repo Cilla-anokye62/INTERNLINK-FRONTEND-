@@ -39,9 +39,11 @@ const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit }) => {
     </View>
   );
 };
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+type Props = NativeStackScreenProps<any, any>;
 // ---------- Main Screen ----------
-const CompanyProfileCompletion: React.FC = () => {
+const CompanyProfileCompletion: React.FC<Props> = ({ navigation }) => {
   const summaryRows: SummaryRow[] = [
     {
       icon: '🏢',
@@ -70,10 +72,12 @@ const CompanyProfileCompletion: React.FC = () => {
     // TODO: navigate back to the relevant setup step
   };
 
-  const handleCompleteSetup = (): void => {
-    console.log('Complete setup pressed');
-    // TODO: submit company profile
-  };
+ const handleCompleteSetup = (): void => {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'CompanyTabs' }],
+  });
+};
 
   const handleSaveAndFinishLater = (): void => {
     console.log('Save & finish later pressed');
@@ -348,7 +352,7 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: TEAL,
-    borderRadius: 14,
+    borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 10,
@@ -356,7 +360,7 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   saveLaterButton: {
     backgroundColor: '#FFFFFF',

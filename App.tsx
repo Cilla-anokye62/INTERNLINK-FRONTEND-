@@ -33,13 +33,16 @@ import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompl
 
 //Company onboarding screens
 import CompanyInformation from './app/CompanyOnboardingScreens/CompanyInformation';
-import CompanyDetails from './app/CompanyOnboardingScreens/CompanyDetails';
 import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
 import CompanyReviewCompleteScreen from './app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
-
+import CompanyDetailsScreen from './app/CompanyOnboardingScreens/CompanyDetailsScreen';
+import CompanyProfileCompletion from './app/CompanyOnboardingScreens/CompanyProfileCompletion';
 //Company experience screens
 import CompanyTabs from './app/CompanyExperienceScreens/CompanyTabs';
-
+import CompanyProfileScreen from './app/CompanyExperienceScreens/CompanyProfileScreen';
+import NewInternshipDetailsScreen from './app/CompanyExperienceScreens/NewInternshipDetailsScreen';
+import ApplicantsScreen from './app/CompanyExperienceScreens/ApplicantsScreen';
+import ApplicantDetailScreen from './app/CompanyExperienceScreens/ApplicantDetailScreen';
 //University experience screens
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
@@ -139,12 +142,16 @@ export default function App() {
 
           {/* Company onboarding */}
           <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
-          <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
           <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
           <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} />
-
+          <Stack.Screen name="CompanyDetails" component={CompanyDetailsScreen} />
+          <Stack.Screen name="CompanyProfileCompletion" component={CompanyProfileCompletion} />
           {/* Company experience screens */}
           <Stack.Screen name="CompanyTabs" component={CompanyTabs} />
+          <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
+          <Stack.Screen name="NewInternshipDetails" component={NewInternshipDetailsScreen} />
+          <Stack.Screen name="Applicants" component={ApplicantsScreen} />
+          <Stack.Screen name="ApplicantDetail" component={ApplicantDetailScreen} />
 
           {/* System states */}
           <Stack.Screen name="DiscoverEmpty" component={DiscoverEmptyScreen} />

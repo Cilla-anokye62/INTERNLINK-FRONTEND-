@@ -25,14 +25,19 @@ const EXPERIENCE = [
 ];
 
 export default function StudentProfileScreen({ navigation, route }: any) {
+  // Get bio from route params if available (from ProfileCompletionScreen)
+  const initialBio = route.params?.bio ||
+    'CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.';
+  const initialSkills = route.params?.skills || SKILLS;
+
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [aboutText, setAboutText] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const [experience, setExperience] = useState<any[]>([]);
+  const [aboutText, setAboutText] = useState(initialBio);
+  const [skills, setSkills] = useState(initialSkills);
+  const [experience, setExperience] = useState(EXPERIENCE);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [newExperienceTitle, setNewExperienceTitle] = useState('');
@@ -59,6 +64,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
       const savedBio = await AsyncStorage.getItem('userBio');
       const savedSkills = await AsyncStorage.getItem('userSkills');
       const savedExperience = await AsyncStorage.getItem('userExperience');
+
 
       if (savedUsername) setUsername(savedUsername);
       if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
@@ -89,6 +95,15 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   };
 
   const handleSkillsEdit = () => {
+    navigation.navigate('Skills', {
+      isEditing: true,
+      initialSkills: skills,
+      fromProfile: true
+    });
+  };
+
+  const handleExperienceEdit = () => {
+    setShowExperienceModal(true);
     navigation.navigate('StudentOnboarding', { screen: 'Skills', params: { isEditing: true, initialSkills: skills, fromProfile: true } });
   };
 
@@ -127,7 +142,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('Sorry, we need camera roll permissions to make this work!');
+      Alert.alert('Permission needed', 'We need camera roll permissions to make this work!');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -190,24 +205,25 @@ export default function StudentProfileScreen({ navigation, route }: any) {
               <Text style={styles.verifiedText}>✓ Verified</Text>
             </View>
           </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShareProfile}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.shareButtonText}>Share Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.editButton}
-              activeOpacity={0.85}
-              onPress={handleEditProfileToggle}
-            >
-              <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
-            </TouchableOpacity>
-          </View>
         </View>
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={handleShareProfile}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.shareButtonText}>Share Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.editButton}
+            activeOpacity={0.85}
+            onPress={handleEditProfileToggle}
+          >
+            <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
+          </TouchableOpacity>
+        </View>
+
 
         {/* About section */}
         <View style={styles.sectionHeader}>

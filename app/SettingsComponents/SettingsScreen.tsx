@@ -96,6 +96,7 @@ export default function SettingsScreen({ navigation, route }: any) {
       const savedUsername = await AsyncStorage.getItem('username');
       const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
 
+
       if (savedUsername) {
         setUsername(savedUsername);
         setProfile(prev => ({
@@ -117,6 +118,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   const handleProfilePress = () => {
     // Navigate to role-specific profile screen
     if (userRole === 'student') {
+      navigation.navigate('Profile');
       navigation.navigate('HomeDashboard', { screen: 'Profile' });
     } else if (userRole === 'university') {
       navigation.navigate('EditProfile');
@@ -193,19 +195,31 @@ export default function SettingsScreen({ navigation, route }: any) {
         </View>
 
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          {profilePhoto ? (
-            <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{profile.initials}</Text>
+        <TouchableOpacity
+          style={styles.profileCard}
+          onPress={handleProfilePress}
+          activeOpacity={0.85}
+        >
+          <View style={styles.profileCard}>
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{profile.initials}</Text>
+              </View>
+            )}
+            <View style={styles.profileTextBlock}>
+              <Text style={styles.profileName}>{profile.name}</Text>
+              <Text style={styles.profileEmail}>{profile.email}</Text>
             </View>
-          )}
-          <View style={styles.profileTextBlock}>
-            <Text style={styles.profileName}>{profile.name}</Text>
-            <Text style={styles.profileEmail}>{profile.email}</Text>
+            <Ionicons
+              name="chevron-forward-outline"
+              size={18}
+              color={COLORS.chevron}
+            />
           </View>
-        </View>
+        </TouchableOpacity>
+
 
         {/* Settings Sections */}
         {SETTINGS_SECTIONS.map((section) => (

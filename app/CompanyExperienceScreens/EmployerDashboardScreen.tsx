@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
+type Props = NativeStackScreenProps<any, any>;
+
 interface StatItem {
   label: string;
   value: string;
