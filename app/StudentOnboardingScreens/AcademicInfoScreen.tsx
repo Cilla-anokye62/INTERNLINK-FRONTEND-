@@ -1,7 +1,9 @@
+import React from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
@@ -48,6 +50,9 @@ const GRADUATION_YEARS = Array.from({ length: 10 }, (_, i) =>
 );
 
 export default function AcademicInfoScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [university, setUniversity] = useState('');
   const [programme, setProgramme] = useState('');
   const [level, setLevel] = useState('');
@@ -136,11 +141,11 @@ export default function AcademicInfoScreen({ navigation }: any) {
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="school-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+          <Ionicons name="school-outline" size={18} color={colors.placeholder} style={styles.inputIcon} />
           <Text style={[styles.dropdownText, !university && styles.placeholder]}>
             {university || 'Select your university'}
           </Text>
-          <Ionicons name="chevron-down" size={18} color="#94A3B8" />
+          <Ionicons name="chevron-down" size={18} color={colors.placeholder} />
         </TouchableOpacity>
 
         {/* Programme */}
@@ -149,11 +154,11 @@ export default function AcademicInfoScreen({ navigation }: any) {
           styles.inputContainer,
           focusedInput === 'programme' && styles.inputContainerFocused,
         ]}>
-          <Ionicons name="book-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+          <Ionicons name="book-outline" size={18} color={colors.placeholder} style={styles.inputIcon} />
           <TextInput
             style={styles.input}
             placeholder="e.g. Bsc. Computer Science"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.placeholder}
             value={programme}
             onChangeText={setProgramme}
             onFocus={() => setFocusedInput('programme')}
@@ -174,11 +179,11 @@ export default function AcademicInfoScreen({ navigation }: any) {
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="layers-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+          <Ionicons name="layers-outline" size={18} color={colors.placeholder} style={styles.inputIcon} />
           <Text style={[styles.dropdownText, !level && styles.placeholder]}>
             {level || 'Select level'}
           </Text>
-          <Ionicons name="chevron-down" size={18} color="#94A3B8" />
+          <Ionicons name="chevron-down" size={18} color={colors.placeholder} />
         </TouchableOpacity>
 
         {/* Expected Graduation */}
@@ -194,11 +199,11 @@ export default function AcademicInfoScreen({ navigation }: any) {
           }}
           activeOpacity={0.7}
         >
-          <Ionicons name="calendar-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+          <Ionicons name="calendar-outline" size={18} color={colors.placeholder} style={styles.inputIcon} />
           <Text style={[styles.dropdownText, !graduationYear && styles.placeholder]}>
             {graduationYear || 'Select year'}
           </Text>
-          <Ionicons name="chevron-down" size={18} color="#94A3B8" />
+          <Ionicons name="chevron-down" size={18} color={colors.placeholder} />
         </TouchableOpacity>
 
         {/* Next Button */}
@@ -215,10 +220,10 @@ export default function AcademicInfoScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -235,37 +240,37 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
   profileLabel: {
     fontSize: 12,
-    color: '#666',
+    color: colors.subtitle,
   },
   progressBarBg: {
     width: '100%',
     height: 6,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
     marginBottom: height * 0.04,
   },
   progressBarFill: {
     width: '25%',
     height: 6,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 15,
-    color: '#0e3038',
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: height * 0.03,
@@ -274,13 +279,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.label,
     marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
@@ -294,7 +299,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: '#2CACAD',
+    borderColor: colors.accent,
   },
   inputIcon: {
     marginRight: 10,
@@ -302,25 +307,25 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
   dropdownText: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
   placeholder: {
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   button: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     maxHeight: 360,
     overflow: 'hidden',
@@ -340,10 +345,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   modalItemText: {
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
 });

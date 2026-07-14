@@ -1,3 +1,4 @@
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import HomeStack from './HomeStack';
@@ -5,22 +6,27 @@ import DiscoverScreen from './DiscoverScreen';
 import SavedScreen from './SavedScreen';
 import ApplicationTrackingScreen from './ApplicationTrackingScreen';
 import StudentProfileScreen from './StudentProfileScreen';
-// Placeholder screens — we'll replace these one by one
-
-
-
-
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const Tab = createBottomTabNavigator();
 
 export default function StudentTabs() {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#2CACAD',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          backgroundColor: colors.tabBarBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
+          height: 64,
+          paddingBottom: 10,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ focused, color }) => {
           const icons: Record<string, string> = {
@@ -48,19 +54,6 @@ export default function StudentTabs() {
 }
 
 const styles = StyleSheet.create({
-  placeholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    height: 64,
-    paddingBottom: 10,
-    paddingTop: 8,
-  },
   tabLabel: {
     fontSize: 11,
     fontWeight: '600',

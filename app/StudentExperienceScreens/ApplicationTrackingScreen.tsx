@@ -1,6 +1,8 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const FILTERS = ['All', 'Review', 'Interview', 'Offer', 'Rejected'];
 
@@ -16,7 +18,7 @@ const APPLICATIONS = [
     statusLabel: 'Offer',
     statusColor: '#10B981',
     statusBg: '#D1FAE5',
-    currentStage: 3, // index into STAGES, inclusive progress
+    currentStage: 3,
     showStages: true,
   },
   {
@@ -55,6 +57,9 @@ const APPLICATIONS = [
 ];
 
 export default function ApplicationTrackingScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [activeFilter, setActiveFilter] = useState('All');
 
   return (
@@ -149,10 +154,10 @@ export default function ApplicationTrackingScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
 
   // Header
@@ -167,24 +172,24 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   headerSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginTop: 2,
   },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuDots: {
     fontSize: 18,
-    color: '#024D60',
+    color: colors.menuBtnIcon,
     fontWeight: 'bold',
     letterSpacing: 2,
   },
@@ -199,21 +204,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   filterChipActive: {
-    backgroundColor: '#2CACAD',
-    borderColor: '#2CACAD',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   filterText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     fontWeight: '500',
   },
   filterTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '700',
   },
 
@@ -226,7 +231,7 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -259,12 +264,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   cardCompany: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
   },
   statusBadge: {
     borderRadius: 20,
@@ -276,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Detailed stages (Airbnb-style)
+  // Detailed stages
   stagesRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -287,13 +292,13 @@ const styles = StyleSheet.create({
   },
   stageLabel: {
     fontSize: 9,
-    color: '#CBD5E1',
+    color: colors.placeholder,
     fontWeight: '700',
     marginBottom: 6,
     letterSpacing: 0.3,
   },
   stageLabelActive: {
-    color: '#2CACAD',
+    color: colors.accent,
   },
   stageDotsRow: {
     flexDirection: 'row',
@@ -304,30 +309,30 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.inputBorder,
   },
   stageDotActive: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
   },
   stageLine: {
     flex: 1,
     height: 2,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.inputBorder,
   },
   stageLineActive: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
   },
 
-  // Simple progress bar (other cards)
+  // Simple progress bar
   simpleProgressBg: {
     width: '100%',
     height: 5,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
   },
   simpleProgressFill: {
     height: 5,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
 });

@@ -1,5 +1,7 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const SKILLS = ['React', 'TypeScript', 'Python', 'Figma', 'Tailwind', 'GraphQL', 'Node.js'];
 
@@ -20,7 +22,10 @@ const EXPERIENCE = [
   },
 ];
 
-export default function StudentProfileScreen({ navigation }: any) {
+export default function StudentEditProfileScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -70,7 +75,6 @@ export default function StudentProfileScreen({ navigation }: any) {
             </View>
           </View>
 
-          {/* Edit profile button — navigates to StudentEditProfile */}
           <TouchableOpacity
             style={styles.editButton}
             activeOpacity={0.85}
@@ -142,10 +146,10 @@ export default function StudentProfileScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -161,13 +165,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   settingsButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -175,7 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
@@ -185,25 +189,25 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: 'bold',
     fontSize: 26,
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 12,
   },
   badgesRow: {
@@ -212,25 +216,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   verifiedBadge: {
-    backgroundColor: '#D4F0EE',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   verifiedText: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   locationBadge: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.ratePillBg,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   locationText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.ratePillText,
     fontWeight: '500',
   },
   statsRow: {
@@ -246,17 +250,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.rowBorder,
   },
   editButton: {
     width: '100%',
@@ -264,12 +268,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.card,
   },
   editButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#024D60',
+    color: colors.title,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -280,22 +285,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   editLink: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
   },
   aboutText: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     lineHeight: 22,
   },
   skillsRow: {
@@ -304,16 +309,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skillChip: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#C8E6E4',
+    borderColor: colors.inputBorder,
   },
   skillText: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   experienceItem: {
@@ -323,7 +328,7 @@ const styles = StyleSheet.create({
   },
   experienceItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   experienceIcon: {
     width: 40,
@@ -344,11 +349,11 @@ const styles = StyleSheet.create({
   experienceTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   experienceSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
   },
 });

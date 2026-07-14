@@ -20,7 +20,11 @@ interface FormField {
   keyboardType?: "default" | "email-address" | "phone-pad" | "url";
 }
 
-const CompanyInformationScreen: React.FC = () => {
+type Props = {
+  navigation: any;
+};
+
+const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   const [companyName, setCompanyName] = useState<string>("Northwind Studios");
   const [companyEmail, setCompanyEmail] = useState<string>("talent@northwind.io");
   const [contactPhone, setContactPhone] = useState<string>("+1 (415) 555-2014");
@@ -41,7 +45,7 @@ const CompanyInformationScreen: React.FC = () => {
   };
 
   const handleContinue = (): void => {
-    console.log("Continue tapped", { companyName, companyEmail, contactPhone, website });
+    navigation.navigate('CompanyDetails');
   };
 
   return (

@@ -1,0 +1,33 @@
+# Finish Theme Refactoring
+
+To finish the theme logic and implement Dark Mode across the remaining 36 screens, I will write an automated script. Doing this manually file-by-file would be very slow and prone to human error.
+
+## User Review Required
+
+> [!CAUTION]
+> **Automated Codebase Refactoring**
+> I will be running a script that modifies 36 files at once. It will replace all the hardcoded `const COLORS` with our new dynamic `colors` hook. 
+> 
+> Once approved, this script will run instantly. After it finishes, I will run a strict TypeScript check (`tsc`) to ensure no screens were accidentally broken.
+
+## Open Questions
+None. If you are ready to apply the theme to the rest of the application, click **Proceed**.
+
+## Proposed Changes
+
+### 1. Create Refactoring Script
+I will create a temporary NodeJS script in the `scratch` folder (`refactor_theme.js`). This script will recursively scan your `app/` directory and perform the following operations on every screen:
+
+- **Remove** the local `const COLORS = { ... }` block.
+- **Inject** `import { useThemeColor } from '.../src/hooks/useThemeColor';` at the top of the file with the correct relative path.
+- **Inject** `const colors = useThemeColor();` inside the main component function.
+- **Wrap** the existing `StyleSheet.create` inside a `createStyles(colors)` function so the styles can access the dynamic theme.
+- **Find and Replace** all instances of `COLORS.something` with `colors.something`.
+
+### 2. Execute Script
+I will run the script, which will rewrite the 36 screens in a matter of seconds.
+
+## Verification Plan
+
+### Automated Type Check
+After the script completes, I will run `npx tsc --noEmit` across the entire project. This will verify that the script successfully updated the styles and didn't introduce any syntax errors. If any errors appear, I will fix them manually.

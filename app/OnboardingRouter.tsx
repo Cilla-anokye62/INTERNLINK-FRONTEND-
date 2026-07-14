@@ -11,6 +11,8 @@ export default function OnboardingRouter({ navigation, route }: any) {
       navigation.replace('CompanyInformation');
     } else if (role === 'university') {
       navigation.replace('UniversityInfo');
+    } else {
+      navigation.replace('RoleSelection');
     }
   }, []);
 

@@ -39,38 +39,15 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  // Page background — plain white/very light grey, unlike the mint
-  // background used in the other state screens
-  background:        '#F5FBFA',
-
-  // The centered card itself
-  cardBg:            '#FFFFFF',
-  cardBorder:        '#EFEFEF',
-
-  // Icon
-  iconCircleBg:      '#FBE7E8', // soft pink circle behind the icon
-  iconColor:         '#B3261E', // red "no connection" icon/slash color
-
-  // Text
-  headline:          '#1A1A2E', // near-black, slightly navy-tinted
-  subtext:           '#6B7280',
-
-  // Buttons
-  retryBtnBg:         '#0F6E64', // dark teal, slightly deeper than your usual accent
-  retryBtnText:       '#FFFFFF',
-  goBackBtnBg:        '#FFFFFF',
-  goBackBtnBorder:    '#0F6E64',
-  goBackBtnText:      '#0F6E64',
-};
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function NoConnectionScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Called when "Retry" is tapped — should re-attempt whatever failed
   const handleRetry = () => {
@@ -87,7 +64,7 @@ export default function NoConnectionScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/*
         This outer View centers the card both vertically and
@@ -103,7 +80,7 @@ export default function NoConnectionScreen({ navigation }: any) {
           <View style={styles.iconCircle}>
             {/*
               TODO: replace this Text with a real icon, e.g.:
-              <Ionicons name="cloud-offline-outline" size={36} color={COLORS.iconColor} />
+              <Ionicons name="cloud-offline-outline" size={36} color={colors.iconColor} />
               The design shows a cloud with a slash through it.
             */}
             <Text style={styles.iconText}>☁️</Text>
@@ -147,11 +124,11 @@ export default function NoConnectionScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // Centers the card both vertically and horizontally on the screen
@@ -166,10 +143,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380, // keeps the card from stretching too wide on tablets
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: colors.cardBorder,
     paddingVertical: 40,
     paddingHorizontal: 28,
     alignItems: 'center',
@@ -186,7 +163,7 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: COLORS.iconCircleBg,
+    backgroundColor: colors.iconCircleBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -203,7 +180,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 50,
     height: 3,
-    backgroundColor: COLORS.iconColor,
+    backgroundColor: colors.iconColor,
     borderRadius: 2,
     transform: [{ rotate: '45deg' }],
   },
@@ -212,14 +189,14 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.headline,
+    color: colors.headline,
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 28,
   },
   subtext: {
     fontSize: 14,
-    color: COLORS.subtext,
+    color: colors.subtext,
     textAlign: 'center',
     lineHeight: 21,
     marginBottom: 28,
@@ -230,7 +207,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.retryBtnBg,
+    backgroundColor: colors.retryBtnBg,
     borderRadius: 10,
     paddingVertical: 15,
     width: '100%',
@@ -238,20 +215,20 @@ const styles = StyleSheet.create({
   },
   retryIcon: {
     fontSize: 15,
-    color: COLORS.retryBtnText,
+    color: colors.retryBtnText,
     marginRight: 8,
     fontWeight: '700',
   },
   retryBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.retryBtnText,
+    color: colors.retryBtnText,
   },
   goBackBtn: {
-    backgroundColor: COLORS.goBackBtnBg,
+    backgroundColor: colors.goBackBtnBg,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: COLORS.goBackBtnBorder,
+    borderColor: colors.goBackBtnBorder,
     paddingVertical: 15,
     width: '100%',
     alignItems: 'center',
@@ -259,7 +236,7 @@ const styles = StyleSheet.create({
   goBackBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.goBackBtnText,
+    color: colors.goBackBtnText,
   },
 
 });

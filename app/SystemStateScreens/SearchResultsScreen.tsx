@@ -34,47 +34,8 @@ import {
   StatusBar,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#D9F2EE', // mint — full screen background
-  backBtnBg:         '#FFFFFF',
-  backArrow:         '#0D3B47',
-  headerTitle:       '#0D3B47', // "Search"
-  headerSubtitle:    '#4A7C75', // "42 results for 'React'"
-  filtersLink:       '#2EC4B6', // "Filters · 3"
-
-  // Search bar
-  searchBg:          '#FFFFFF',
-  searchIcon:        '#9BB8B4',
-  searchText:        '#0D3B47',
-
-  // Active filter chips (Remote, Summer, $40+ — removable)
-  filterChipBg:      '#2EC4B6',
-  filterChipText:    '#FFFFFF',
-  filterChipX:       'rgba(255,255,255,0.85)',
-  // Suggestion chip (Engineering — not yet applied, no ✕)
-  suggestionChipBg:  '#FFFFFF',
-  suggestionChipBorder: '#C5E8E3',
-  suggestionChipText:'#4A7C75',
-
-  // "Sorted by" row
-  sortedByText:      '#7A9D98',
-  changeLink:        '#2EC4B6',
-
-  // Internship cards
-  cardBg:            '#FFFFFF',
-  roleTitle:         '#0D3B47',
-  companyName:        '#4A7C75',
-  locationText:      '#9BB8B4',
-  bookmarkIcon:      '#0D3B47',
-  matchPillBg:       '#D6EEF2',
-  matchPillText:     '#1B7E94',
-  ratePillBg:        '#F0F4F3',
-  ratePillText:      '#4A7C75',
-};
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -140,6 +101,9 @@ const SEARCH_RESULTS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function SearchResultsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // What's typed in the search bar — starts pre-filled with "React"
   // to match the design
@@ -198,7 +162,7 @@ export default function SearchResultsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -239,7 +203,7 @@ export default function SearchResultsScreen({ navigation }: any) {
           <TextInput
             style={styles.searchInput}
             placeholder="Search internships..."
-            placeholderTextColor={COLORS.searchIcon}
+            placeholderTextColor={colors.searchIcon}
             value={searchText}
             onChangeText={setSearchText}
             autoCapitalize="none"
@@ -372,11 +336,11 @@ export default function SearchResultsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -395,7 +359,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -407,7 +371,7 @@ const styles = StyleSheet.create({
   },
   backArrowText: {
     fontSize: 22,
-    color: COLORS.backArrow,
+    color: colors.backArrow,
     lineHeight: 26,
     marginRight: 2,
   },
@@ -417,17 +381,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
     marginTop: 2,
   },
   filtersLink: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.filtersLink,
+    color: colors.filtersLink,
     marginTop: 9, // aligns roughly with the "Search" title's baseline
   },
 
@@ -435,7 +399,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.searchBg,
+    backgroundColor: colors.searchBg,
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
@@ -449,12 +413,12 @@ const styles = StyleSheet.create({
   searchIcon: {
     fontSize: 14,
     marginRight: 10,
-    color: COLORS.searchIcon,
+    color: colors.searchIcon,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.searchText,
+    color: colors.searchText,
   },
 
   // ── Filter chips row ──────────────────────────────────────────
@@ -473,30 +437,30 @@ const styles = StyleSheet.create({
   },
   // Applied/removable filters — solid teal background
   filterChipActive: {
-    backgroundColor: COLORS.filterChipBg,
+    backgroundColor: colors.filterChipBg,
   },
   // Suggestion chip (Engineering) — outlined, white background
   filterChipSuggestion: {
-    backgroundColor: COLORS.suggestionChipBg,
+    backgroundColor: colors.suggestionChipBg,
     borderWidth: 1.5,
-    borderColor: COLORS.suggestionChipBorder,
+    borderColor: colors.suggestionChipBorder,
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
   },
   filterChipTextActive: {
-    color: COLORS.filterChipText,
+    color: colors.filterChipText,
   },
   filterChipTextSuggestion: {
-    color: COLORS.suggestionChipText,
+    color: colors.suggestionChipText,
   },
   filterChipXBtn: {
     marginLeft: 6,
   },
   filterChipXText: {
     fontSize: 11,
-    color: COLORS.filterChipX,
+    color: colors.filterChipX,
     fontWeight: '700',
   },
 
@@ -509,17 +473,17 @@ const styles = StyleSheet.create({
   },
   sortedByText: {
     fontSize: 12,
-    color: COLORS.sortedByText,
+    color: colors.sortedByText,
   },
   changeLink: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.changeLink,
+    color: colors.changeLink,
   },
 
   // ── Search result cards ──────────────────────────────────────
   resultCard: {
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 16,
     padding: 14,
     marginBottom: 12, // space between each result card
@@ -553,12 +517,12 @@ const styles = StyleSheet.create({
   roleTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.roleTitle,
+    color: colors.roleTitle,
     marginBottom: 2,
   },
   companyName: {
     fontSize: 12,
-    color: COLORS.companyName,
+    color: colors.companyName,
   },
   bookmarkBtn: {
     padding: 4, // larger tap target than the icon's visual size
@@ -568,7 +532,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 12,
-    color: COLORS.locationText,
+    color: colors.locationText,
     marginBottom: 10,
     marginLeft: 54, // aligns with the text block above (avatar width + margin)
   },
@@ -580,7 +544,7 @@ const styles = StyleSheet.create({
     marginLeft: 54, // same alignment as the location line above
   },
   matchPill: {
-    backgroundColor: COLORS.matchPillBg,
+    backgroundColor: colors.matchPillBg,
     borderRadius: 50,
     paddingVertical: 5,
     paddingHorizontal: 12,
@@ -588,10 +552,10 @@ const styles = StyleSheet.create({
   matchPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.matchPillText,
+    color: colors.matchPillText,
   },
   ratePill: {
-    backgroundColor: COLORS.ratePillBg,
+    backgroundColor: colors.ratePillBg,
     borderRadius: 50,
     paddingVertical: 5,
     paddingHorizontal: 12,
@@ -599,7 +563,7 @@ const styles = StyleSheet.create({
   ratePillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.ratePillText,
+    color: colors.ratePillText,
   },
 
 });

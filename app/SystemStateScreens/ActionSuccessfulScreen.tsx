@@ -39,37 +39,15 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  // Page background — soft light lavender/grey, matching the subtle
-  // gradient feel from the design (kept as a flat color here; see
-  // the optional LinearGradient note below if you want the gradient)
-  background: '#F5FBFA',
-
-  // Centered card
-  cardBg: '#FFFFFF',
-  cardBorder: '#EFEFEF',
-
-  // Concentric circle icon
-  outerRing: '#BFE6E0', // pale teal outer ring
-  innerCircle: '#0F6E64', // solid dark teal inner circle
-  checkmarkColor: '#1A1A2E', // near-black checkmark
-
-  // Text
-  headline: '#1A1A2E',
-  subtext: '#6B7280',
-
-  // Button
-  doneBtnBg: '#0F6E64',
-  doneBtnText: '#FFFFFF',
-};
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function ActionSuccessfulScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Called when "Done" is tapped — should close this confirmation
   // and return the user to wherever makes sense after success.
@@ -83,7 +61,7 @@ export default function ActionSuccessfulScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/*
         Centers the card both vertically and horizontally on the
@@ -105,7 +83,7 @@ export default function ActionSuccessfulScreen({ navigation }: any) {
           <View style={styles.iconWrapper}>
             <View style={styles.outerRing} />
             <View style={styles.innerCircle}>
-              {/* TODO: replace with <Ionicons name="checkmark" size={32} color={COLORS.checkmarkColor} /> */}
+              {/* TODO: replace with <Ionicons name="checkmark" size={32} color={colors.checkmarkColor} /> */}
               <Text style={styles.checkmarkText}>✓</Text>
             </View>
           </View>
@@ -141,11 +119,11 @@ export default function ActionSuccessfulScreen({ navigation }: any) {
 const ICON_SIZE = 110;       // outer ring diameter
 const INNER_CIRCLE_SIZE = 76; // inner solid circle diameter
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // Centers the card both vertically and horizontally
@@ -160,10 +138,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380, // prevents the card from stretching too wide on tablets
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: colors.cardBorder,
     paddingVertical: 40,
     paddingHorizontal: 28,
     alignItems: 'center',
@@ -190,7 +168,7 @@ const styles = StyleSheet.create({
     width: ICON_SIZE,
     height: ICON_SIZE,
     borderRadius: ICON_SIZE / 2,
-    backgroundColor: COLORS.outerRing,
+    backgroundColor: colors.outerRing,
   },
   // The solid, smaller inner circle — sits on top of the outer ring,
   // centered automatically since both share the same parent's
@@ -199,28 +177,28 @@ const styles = StyleSheet.create({
     width: INNER_CIRCLE_SIZE,
     height: INNER_CIRCLE_SIZE,
     borderRadius: INNER_CIRCLE_SIZE / 2,
-    backgroundColor: COLORS.innerCircle,
+    backgroundColor: colors.innerCircle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkmarkText: {
     fontSize: 32,
     fontWeight: '700',
-    color: COLORS.checkmarkColor,
+    color: colors.checkmarkColor,
   },
 
   // ── Text ──────────────────────────────────────────────────────
   headline: {
     fontSize: 26,
     fontWeight: '800',
-    color: COLORS.headline,
+    color: colors.headline,
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 32,
   },
   subtext: {
     fontSize: 14,
-    color: COLORS.subtext,
+    color: colors.subtext,
     textAlign: 'center',
     lineHeight: 21,
     marginBottom: 28,
@@ -231,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.doneBtnBg,
+    backgroundColor: colors.doneBtnBg,
     borderRadius: 10,
     paddingVertical: 16,
     width: '100%',
@@ -239,12 +217,12 @@ const styles = StyleSheet.create({
   doneBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.doneBtnText,
+    color: colors.doneBtnText,
     marginRight: 8,
   },
   doneBtnArrow: {
     fontSize: 16,
-    color: COLORS.doneBtnText,
+    color: colors.doneBtnText,
     fontWeight: '700',
   },
 

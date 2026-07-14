@@ -30,35 +30,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  backBtnBg:         '#FFFFFF',
-  backArrow:         '#0D3B47',
-  headerTitle:       '#0D3B47', // "Placements"
-  headerSubtitle:    '#4A7C75', // "Spring 2026 cohort"
-
-  statCardBg:        '#FFFFFF',
-  statLabel:         '#9BB8B4',
-  statValue:         '#0D3B47',
-  statChangePositive:'#2EC4B6',
-
-  sectionCardBg:     '#FFFFFF',
-  sectionTitle:      '#0D3B47',
-  filterText:        '#2EC4B6',
-  deptName:          '#0D3B47',
-  deptPercent:       '#0D3B47',
-  barTrack:          '#E5F2F0',
-  barFill:           '#2EC4B6',
-
-  trendCardBg:       '#FFFFFF',
-  trendTitle:        '#0D3B47',
-  chartAreaBg:        '#FFFFFF',
-  chartAreaBorder:   '#F0F6F5',
-  monthLabel:        '#9BB8B4',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -102,6 +74,9 @@ const MONTH_LABELS = ['S', 'O', 'N', 'D', 'J', 'F', 'M'];
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PlacementOverviewScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   const handleBackPress = () => {
     console.log('Back tapped');
@@ -115,7 +90,7 @@ export default function PlacementOverviewScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -132,7 +107,7 @@ export default function PlacementOverviewScreen({ navigation }: any) {
             <Ionicons
               name="arrow-back-outline"
               size={22}
-              color={COLORS.backArrow}
+              color={colors.backArrow}
             />
           </TouchableOpacity>
 
@@ -214,11 +189,11 @@ export default function PlacementOverviewScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // paddingBottom is back to a normal value (no tab bar to clear
@@ -241,7 +216,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -257,12 +232,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
   },
 
   // ── Stat cards grid ───────────────────────────────────────────
@@ -274,7 +249,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.statCardBg,
+    backgroundColor: colors.statCardBg,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -286,24 +261,24 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.statLabel,
+    color: colors.statLabel,
     marginBottom: 6,
   },
   statValue: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.statValue,
+    color: colors.statValue,
     marginBottom: 4,
   },
   statChange: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.statChangePositive,
+    color: colors.statChangePositive,
   },
 
   // ── Shared "card" container style ──────────────────────────────
   sectionCard: {
-    backgroundColor: COLORS.sectionCardBg,
+    backgroundColor: colors.sectionCardBg,
     borderRadius: 18,
     padding: 18,
     marginBottom: 18,
@@ -322,12 +297,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.sectionTitle,
+    color: colors.sectionTitle,
   },
   filterText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.filterText,
+    color: colors.filterText,
   },
 
   deptRow: {
@@ -344,28 +319,28 @@ const styles = StyleSheet.create({
   deptName: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.deptName,
+    color: colors.deptName,
   },
   deptPercent: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.deptPercent,
+    color: colors.deptPercent,
   },
   barTrack: {
     width: '100%',
     height: 7,
-    backgroundColor: COLORS.barTrack,
+    backgroundColor: colors.barTrack,
     borderRadius: 4,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    backgroundColor: COLORS.barFill,
+    backgroundColor: colors.barFill,
     borderRadius: 4,
   },
 
   trendCard: {
-    backgroundColor: COLORS.trendCardBg,
+    backgroundColor: colors.trendCardBg,
     borderRadius: 18,
     padding: 18,
     shadowColor: '#000',
@@ -377,16 +352,16 @@ const styles = StyleSheet.create({
   trendTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.trendTitle,
+    color: colors.trendTitle,
     marginBottom: 14,
   },
   chartArea: {
     width: '100%',
     height: 130,
-    backgroundColor: COLORS.chartAreaBg,
+    backgroundColor: colors.chartAreaBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.chartAreaBorder,
+    borderColor: colors.chartAreaBorder,
     marginBottom: 10,
   },
   monthLabelsRow: {
@@ -395,7 +370,7 @@ const styles = StyleSheet.create({
   },
   monthLabel: {
     fontSize: 11,
-    color: COLORS.monthLabel,
+    color: colors.monthLabel,
   },
 
 });

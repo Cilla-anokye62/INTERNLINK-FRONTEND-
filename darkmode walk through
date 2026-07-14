@@ -1,0 +1,30 @@
+# Dynamic Theme Extraction Walkthrough
+
+I have successfully extracted the central color logic into a reusable theme hook, and built the foundation for Dark Mode!
+
+## What changed
+
+### 1. Centralized Theme (`Colors.ts`)
+Created [Colors.ts](file:///c:/Users/Priscilla%20Anokye/InternLink/src/constants/Colors.ts). This file defines the exact same teal and white aesthetic you had before, but now contains a parallel Dark Mode palette (with darker backgrounds and lighter text).
+
+### 2. Auto-Detecting Theme Hook
+Created a custom hook [useThemeColor.ts](file:///c:/Users/Priscilla%20Anokye/InternLink/src/hooks/useThemeColor.ts). This hook checks `useColorScheme()` to see if the user's phone is in Dark or Light mode, and instantly serves the correct color palette to your screen.
+
+### 3. PrimaryButton Component
+Instead of copying and pasting the complex button styling 40 times, we now have a clean [PrimaryButton.tsx](file:///c:/Users/Priscilla%20Anokye/InternLink/src/components/PrimaryButton.tsx). It uses the central colors and even handles "loading" states natively!
+
+### 4. Refactored Screens
+I proved the concept works by refactoring two screens:
+- **[LoginScreen.tsx](file:///c:/Users/Priscilla%20Anokye/InternLink/app/AuthScreens/LoginScreen.tsx)**: Replaced the large "Login" button with `<PrimaryButton title="Login →" />`.
+- **[AboutScreen.tsx](file:///c:/Users/Priscilla%20Anokye/InternLink/app/SettingsComponents/AboutScreen.tsx)**: Rewrote the `StyleSheet` to dynamically pull colors from `useThemeColor()`.
+
+## Validation Results
+
+- A full TypeScript type-check was performed using `npx tsc --noEmit`. 
+- **Result:** Successfully compiled with `0` errors. The new imports and types are perfectly valid.
+
+## Try it out!
+
+You can now use `const colors = useThemeColor();` on any of your 36 other screens to make them Dark Mode compatible! 
+
+If you start your app and toggle your device/simulator's Dark Mode setting, you will see the **Login** and **About** screens automatically invert their backgrounds to dark grey, and text to white, without writing a single `if` statement!

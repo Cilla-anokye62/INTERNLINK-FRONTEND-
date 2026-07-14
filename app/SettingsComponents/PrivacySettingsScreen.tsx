@@ -20,7 +20,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,37 +32,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  sectionHeader: '#4A7C75',
-  rowText:       '#0D3B47',
-  iconBg:        '#E8F8F5',
-  icon:          '#2CACAD',
-  switchTrack:   '#E5F2F0',
-  switchThumb:   '#FFFFFF',
-  switchActive:  '#2CACAD',
-  pillIdle:      '#F0F6F5',
-  pillIdleText:  '#4A7C75',
-  pillActive:    '#2CACAD',
-  pillActiveText: '#FFFFFF',
-};
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -83,6 +53,8 @@ const PRIVACY_SETTINGS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PrivacySettingsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Profile visibility: 'public' or 'university'
   const [visibility, setVisibility] = useState<'public' | 'university'>('university');
@@ -116,7 +88,7 @@ export default function PrivacySettingsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -133,7 +105,7 @@ export default function PrivacySettingsScreen({ navigation }: any) {
             <Ionicons
               name="arrow-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Privacy</Text>
@@ -204,7 +176,7 @@ export default function PrivacySettingsScreen({ navigation }: any) {
                 <Ionicons
                   name={item.icon as any}
                   size={18}
-                  color={COLORS.icon}
+                  color={colors.icon}
                 />
               </View>
 
@@ -215,9 +187,9 @@ export default function PrivacySettingsScreen({ navigation }: any) {
               <Switch
                 value={privacySettings[item.id]}
                 onValueChange={() => togglePrivacySetting(item.id)}
-                trackColor={{ false: COLORS.switchTrack, true: COLORS.switchActive }}
-                thumbColor={COLORS.switchThumb}
-                ios_backgroundColor={COLORS.switchTrack}
+                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
+                thumbColor={colors.switchThumb}
+                ios_backgroundColor={colors.switchTrack}
               />
             </View>
           ))}
@@ -238,14 +210,14 @@ export default function PrivacySettingsScreen({ navigation }: any) {
               <Ionicons
                 name="person-remove-outline"
                 size={20}
-                color={COLORS.icon}
+                color={colors.icon}
               />
             </View>
             <Text style={styles.blockedText}>Blocked Users ({blockedCount})</Text>
             <Ionicons
               name="chevron-forward-outline"
               size={18}
-              color={COLORS.chevron}
+              color={colors.chevron}
             />
           </TouchableOpacity>
         </View>
@@ -258,11 +230,11 @@ export default function PrivacySettingsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -281,7 +253,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -294,12 +266,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Section Cards ─────────────────────────────────────────────
   sectionCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 16,
     marginBottom: 20,
@@ -312,7 +284,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.sectionHeader,
+    color: colors.sectionHeader,
     letterSpacing: 1,
     marginBottom: 12,
   },
@@ -324,7 +296,7 @@ const styles = StyleSheet.create({
   visibilityLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.rowText,
+    color: colors.rowText,
   },
   pillsRow: {
     flexDirection: 'row',
@@ -334,22 +306,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.pillIdle,
+    backgroundColor: colors.pillIdle,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.pillIdle,
+    borderColor: colors.pillIdle,
   },
   visibilityPillActive: {
-    backgroundColor: COLORS.pillActive,
-    borderColor: COLORS.pillActive,
+    backgroundColor: colors.pillActive,
+    borderColor: colors.pillActive,
   },
   visibilityPillText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.pillIdleText,
+    color: colors.pillIdleText,
   },
   visibilityPillTextActive: {
-    color: COLORS.pillActiveText,
+    color: colors.pillActiveText,
   },
 
   // ── Setting Row ───────────────────────────────────────────────
@@ -361,13 +333,13 @@ const styles = StyleSheet.create({
   },
   settingRowNotLast: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowBorder,
+    borderBottomColor: colors.rowBorder,
   },
   iconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.iconBg,
+    backgroundColor: colors.iconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -376,7 +348,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.rowText,
+    color: colors.rowText,
   },
 
   // ── Blocked Users Row ─────────────────────────────────────────
@@ -389,7 +361,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.iconBg,
+    backgroundColor: colors.iconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -398,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.rowText,
+    color: colors.rowText,
   },
 
 });

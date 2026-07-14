@@ -38,38 +38,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-// Same teal/mint family used across the onboarding flow for consistency.
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  card:              'transparent', // transparent card
-  progressTrack:     '#B2DDD8', // unfilled part of progress bar
-  progressFill:      '#2CACAD', // filled part of progress bar
-  stepLabel:         '#64748B', // "University setup · Step 3 of 4"
-  stepPercent:       '#2CACAD', // "75%" text
-  title:             '#024D60', // "Career services setup"
-  subtitle:          '#64748B', // "Who do employers reach out to?"
-
-  label:             '#024D60', // field labels
-  inputBg:           '#FFFFFF', // input box background
-  inputBorder:       'transparent', // idle border
-  inputBorderFocus:  '#2CACAD', // focused border
-  inputText:         '#024D60', // text the user types
-  placeholder:       '#94A3B8', // placeholder text
-  inputIcon:         '#94A3B8', // icon inside single-line inputs
-
-  // The "Placement Office" multi-line info box has its own slightly
-  // different styling since it shows 3 stacked rows instead of one input
-  infoBoxBg:         '#FFFFFF',
-  infoBoxBorder:     '#C5E8E3',
-  infoBoxIcon:       '#2CACAD', // location/phone/clock icons are teal here
-  infoBoxText:       '#024D60',
-
-  continueBtn:       '#2CACAD', // Continue button
-  continueBtnText:   '#FFFFFF',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA: simple text fields ────────────────────────────────────
@@ -124,6 +93,9 @@ const PLACEMENT_INFO_ROWS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function CareerServicesSetupScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Single state object holding every text field's value.
   // The key is the field's id (e.g. 'contactName', 'departmentEmail').
@@ -167,13 +139,13 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
         <Ionicons
           name={field.icon as any}
           size={18}
-          color={COLORS.inputIcon}
+          color={colors.inputIcon}
           style={styles.inputIcon}
         />
         <TextInput
           style={styles.input}
           placeholder={field.placeholder}
-          placeholderTextColor={COLORS.placeholder}
+          placeholderTextColor={colors.placeholder}
           value={formValues[field.id]}
           onChangeText={(value) => handleChange(field.id, value)}
           keyboardType={field.keyboardType}
@@ -187,7 +159,7 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -250,7 +222,7 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
                     <Ionicons
                       name={row.icon as any}
                       size={15}
-                      color={COLORS.infoBoxIcon}
+                      color={colors.infoBoxIcon}
                       style={styles.infoRowIcon}
                     />
                     <Text style={styles.infoRowText}>{row.text}</Text>
@@ -285,7 +257,7 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   flex: {
     flex: 1,
@@ -294,7 +266,7 @@ const styles = StyleSheet.create({
   // Full mint background
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ScrollView keeps mint visible around the white card
@@ -303,7 +275,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ── Progress header (outside card, on mint) ───────────────────────
@@ -315,32 +287,32 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: COLORS.stepLabel,
+    color: colors.stepLabel,
     fontWeight: '500',
     letterSpacing: 0.2,
   },
   stepPercent: {
     fontSize: 12,
-    color: COLORS.stepPercent,
+    color: colors.stepPercent,
     fontWeight: '700',
   },
   progressTrack: {
     width: '100%',
     height: 5,
-    backgroundColor: COLORS.progressTrack,
+    backgroundColor: colors.progressTrack,
     borderRadius: 3,
     marginBottom: 20,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.progressFill,
+    backgroundColor: colors.progressFill,
     borderRadius: 3,
   },
 
   // ── Card ──────────────────────────────────────────────────
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 0,
   },
@@ -349,12 +321,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     lineHeight: 20,
     marginBottom: 22,
   },
@@ -366,16 +338,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 16,
     height: 52,
     marginBottom: 16,
@@ -386,7 +358,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputWrapperFocused: {
-    borderColor: COLORS.inputBorderFocus,
+    borderColor: colors.inputBorderFocus,
   },
   inputIcon: {
     marginRight: 10,
@@ -394,16 +366,16 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.inputText,
+    color: colors.inputText,
   },
 
   // ── Placement Office info box ──────────────────────────────────
   // A bordered box containing 3 stacked rows (location, phone, hours)
   infoBox: {
-    backgroundColor: COLORS.infoBoxBg,
+    backgroundColor: colors.infoBoxBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.infoBoxBorder,
+    borderColor: colors.infoBoxBorder,
     paddingHorizontal: 14,
     paddingVertical: 4,
   },
@@ -426,12 +398,12 @@ const styles = StyleSheet.create({
   infoRowText: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.infoBoxText,
+    color: colors.infoBoxText,
   },
 
   // ── Continue button ────────────────────────────────────────────
   continueBtn: {
-    backgroundColor: COLORS.continueBtn,
+    backgroundColor: colors.continueBtn,
     borderRadius: 30, // pill shape
     paddingVertical: 16,
     alignItems: 'center',
@@ -440,7 +412,7 @@ const styles = StyleSheet.create({
   continueBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.continueBtnText,
+    color: colors.continueBtnText,
   },
 
 });

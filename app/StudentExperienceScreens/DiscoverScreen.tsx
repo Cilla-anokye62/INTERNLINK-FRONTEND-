@@ -1,6 +1,8 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, FlatList } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +18,9 @@ const INTERNSHIPS = [
 ];
 
 export default function DiscoverScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [savedItems, setSavedItems] = useState<string[]>(['1']);
@@ -33,9 +38,6 @@ export default function DiscoverScreen({ navigation }: any) {
     return matchesSearch;
   });
 
-  // Clears the search box and resets the category filter back to "All".
-  // This is what the empty state's "Browse All" button calls — it's
-  
   const handleBrowseAll = () => {
     setSearch('');
     setActiveCategory('All');
@@ -62,7 +64,7 @@ export default function DiscoverScreen({ navigation }: any) {
           <TextInput
             style={styles.searchInput}
             placeholder="React, design, remote..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
           />
@@ -92,56 +94,30 @@ export default function DiscoverScreen({ navigation }: any) {
         ))}
       </ScrollView>
 
-      {/*
-        ── EMPTY STATE vs. RESULTS LIST ──────────────────────────
-        This is the new piece: instead of always rendering the
-        FlatList, we check filtered.length first.
-
-        - filtered.length === 0  → user searched/filtered and got
-          NOTHING back → show the "Nothing here yet" empty state
-        - filtered.length > 0    → show the normal results list,
-          exactly as before
-
-        Because `filtered` is recalculated every render based on
-        `search` and `activeCategory`, this empty state will appear
-        and disappear automatically as the user types or changes
-        category — no extra state needed to track "is it empty".
-      */}
       {filtered.length === 0 ? (
 
         // ── EMPTY STATE ──────────────────────────────────────────
         <View style={styles.emptyState}>
-
           <View style={styles.illustrationCard}>
-            {/*
-              TODO: replace this emoji combo with an actual illustration
-              image, e.g.:
-              <Image source={require('../assets/empty-search-box.png')} style={styles.illustrationImage} />
-            */}
             <Text style={styles.illustrationEmoji}>📦🔍</Text>
           </View>
-
           <Text style={styles.emptyHeadline}>Nothing here yet</Text>
-
           <Text style={styles.emptySubtext}>
             Try adjusting your filters or search terms to find what you're looking for.
           </Text>
-
           <TouchableOpacity
             style={styles.browseBtn}
             onPress={handleBrowseAll}
             activeOpacity={0.85}
           >
-            {/* TODO: swap for <Ionicons name="refresh" size={16} color="#FFFFFF" /> */}
             <Text style={styles.browseBtnIcon}>↻</Text>
             <Text style={styles.browseBtnText}>Browse All</Text>
           </TouchableOpacity>
-
         </View>
 
       ) : (
 
-        // ── RESULTS LIST (unchanged from before) ──────────────────
+        // ── RESULTS LIST ──────────────────────────────────────
         <FlatList
           data={filtered}
           keyExtractor={item => item.id}
@@ -194,10 +170,10 @@ export default function DiscoverScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
 
   // Header
@@ -212,24 +188,24 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   headerSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginTop: 2,
   },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuDots: {
     fontSize: 18,
-    color: '#024D60',
+    color: colors.menuBtnIcon,
     fontWeight: 'bold',
     letterSpacing: 2,
   },
@@ -246,34 +222,34 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBg,
     borderRadius: 30,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   searchIcon: {
     fontSize: 14,
     marginRight: 8,
-    color: '#94A3B8',
+    color: colors.searchIcon,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
   filterButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   filterIcon: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
 
   // Categories
@@ -286,21 +262,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   categoryChipActive: {
-    backgroundColor: '#2CACAD',
-    borderColor: '#2CACAD',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   categoryText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     fontWeight: '500',
   },
   categoryTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '700',
   },
 
@@ -315,7 +291,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -343,12 +319,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   cardCompany: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 4,
   },
   locationRow: {
@@ -362,7 +338,7 @@ const styles = StyleSheet.create({
   },
   cardLocation: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -370,25 +346,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   matchBadge: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.matchPillBg,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   matchText: {
     fontSize: 11,
-    color: '#2CACAD',
+    color: colors.matchPillText,
     fontWeight: '700',
   },
   tag: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.ratePillBg,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   tagText: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.ratePillText,
     fontWeight: '500',
   },
 
@@ -405,23 +381,18 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
 
-  // ── Empty state ──────────────────────────────────────────────
-  // Everything below here is NEW — added to support the "Nothing
-  // here yet" design. Colors are matched to this file's existing
-  // palette (#024D60 dark teal, #2CACAD accent teal, #64748B grey)
-  // instead of the separate mint palette used elsewhere in the app,
-  // so this empty state blends seamlessly into THIS screen.
+  // Empty state
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    paddingBottom: 60, // nudges content up slightly above true center
+    paddingBottom: 60,
   },
   illustrationCard: {
     width: 160,
     height: 160,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -438,13 +409,13 @@ const styles = StyleSheet.create({
   emptyHeadline: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#024D60',
+    color: colors.title,
     textAlign: 'center',
     marginBottom: 10,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 22,
@@ -453,20 +424,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2CACAD',
-    borderRadius: 30, // pill shape, matching this screen's other rounded elements
+    backgroundColor: colors.accent,
+    borderRadius: 30,
     paddingVertical: 13,
     paddingHorizontal: 26,
   },
   browseBtnIcon: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     marginRight: 8,
     fontWeight: '700',
   },
   browseBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
 });

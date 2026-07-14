@@ -1,7 +1,9 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -18,10 +20,12 @@ const ACTIVITY = [
 ];
 
 export default function HomeDashboardScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
-  // Load user data on mount
   useEffect(() => {
     loadUserData();
   }, []);
@@ -30,7 +34,6 @@ export default function HomeDashboardScreen({ navigation }: any) {
     try {
       const savedUsername = await AsyncStorage.getItem('username');
       const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
-      
       if (savedUsername) setUsername(savedUsername);
       if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
     } catch (error) {
@@ -58,12 +61,7 @@ export default function HomeDashboardScreen({ navigation }: any) {
             <Text style={styles.greetingSub}>Let's find your perfect role</Text>
           </View>
 
-          {/* Bell button — navigates to Notifications */}
-          <TouchableOpacity
-            style={styles.bellButton}
-            onPress={() => navigation.navigate('Notifications')}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.bellButton} activeOpacity={0.7}>
             <Text style={styles.bellIcon}>🔔</Text>
           </TouchableOpacity>
         </View>
@@ -74,11 +72,11 @@ export default function HomeDashboardScreen({ navigation }: any) {
           <TextInput
             style={styles.searchInput}
             placeholder="Search internships, companies..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.placeholder}
           />
         </View>
 
-        {/* AI Match banner */}
+        {/* AI Match banner — intentionally dark-teal regardless of theme for visual pop */}
         <View style={styles.aiBanner}>
           <View style={styles.aiBannerContent}>
             <View style={styles.aiMatchBadge}>
@@ -156,10 +154,10 @@ export default function HomeDashboardScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -175,13 +173,13 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -191,17 +189,17 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   greetingSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
   },
   bellButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -211,24 +209,25 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBg,
     borderRadius: 30,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     marginBottom: 20,
   },
   searchIcon: {
     fontSize: 14,
     marginRight: 8,
-    color: '#94A3B8',
+    color: colors.searchIcon,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
+  // AI banner stays dark-teal for visual impact in both modes
   aiBanner: {
     backgroundColor: '#024D60',
     borderRadius: 20,
@@ -299,12 +298,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 14,
   },
   seeAll: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   horizontalScroll: {
@@ -312,7 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   recommendCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     width: width * 0.55,
@@ -337,7 +336,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   matchBadge: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.matchPillBg,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -346,18 +345,18 @@ const styles = StyleSheet.create({
   },
   matchBadgeText: {
     fontSize: 11,
-    color: '#2CACAD',
+    color: colors.matchPillText,
     fontWeight: '700',
   },
   recommendTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 4,
   },
   recommendCompany: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 12,
   },
   recommendFooter: {
@@ -366,19 +365,19 @@ const styles = StyleSheet.create({
   },
   recommendPay: {
     fontSize: 12,
-    color: '#024D60',
+    color: colors.text,
     fontWeight: '600',
   },
   recommendDot: {
-    color: '#94A3B8',
+    color: colors.placeholder,
     fontSize: 12,
   },
   recommendDuration: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   activityCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     paddingHorizontal: 16,
   },
@@ -389,13 +388,13 @@ const styles = StyleSheet.create({
   },
   activityItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   activityIconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -414,7 +413,7 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.text,
     marginRight: 6,
   },
   activityDot: {
@@ -424,10 +423,10 @@ const styles = StyleSheet.create({
   },
   activitySubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
   },
   activityTime: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
 });

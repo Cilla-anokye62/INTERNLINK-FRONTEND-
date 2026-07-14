@@ -12,7 +12,11 @@ import {
 
 type CompanySize = '1-10' | '11-50' | '51-200' | '200+';
 
-const CompanyDetailsScreen: React.FC = () => {
+type Props = {
+  navigation: any;
+};
+
+const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
   const [industry, setIndustry] = useState<string>('Software & SaaS');
   const [selectedSize, setSelectedSize] = useState<CompanySize>('51-200');
   const [headquarters, setHeadquarters] = useState<string>('San Francisco, CA');
@@ -23,8 +27,7 @@ const CompanyDetailsScreen: React.FC = () => {
   const companySizes: CompanySize[] = ['1-10', '11-50', '51-200', '200+'];
 
   const handleContinue = (): void => {
-    console.log({ industry, selectedSize, headquarters, description });
-    // Add your navigation here
+    navigation.navigate('RecruitmentPreferences');
   };
 
   return (
