@@ -2,8 +2,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from 'react';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 
 // First screens
@@ -45,7 +44,6 @@ import NewInternshipDetailsScreen from './app/CompanyExperienceScreens/NewIntern
 import ApplicantsScreen from './app/CompanyExperienceScreens/ApplicantsScreen';
 import ApplicantDetailScreen from './app/CompanyExperienceScreens/ApplicantDetailScreen';
 //University experience screens
-import UniversityDashboardScreen from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
 
@@ -75,28 +73,24 @@ import LanguageSettingsScreen from './app/SettingsComponents/LanguageSettingsScr
 import AppearanceSettingsScreen from './app/SettingsComponents/AppearanceSettingsScreen';
 import HelpCenterScreen from './app/SettingsComponents/HelpCenterScreen';
 import SendFeedbackScreen from './app/SettingsComponents/SendFeedbackScreen';
+import TermsOfServiceScreen from './app/SettingsComponents/TermsOfServiceScreen';
+import PrivacyPolicyScreen from './app/SettingsComponents/PrivacyPolicyScreen';
+import DeleteAccountScreen from './app/SettingsComponents/DeleteAccountScreen';
+import JobPreferencesScreen from './app/SettingsComponents/JobPreferencesScreen';
+import DataStorageScreen from './app/SettingsComponents/DataStorageScreen';
+import AccessibilityScreen from './app/SettingsComponents/AccessibilityScreen';
+import CalendarSyncScreen from './app/SettingsComponents/CalendarSyncScreen';
+import ReportProblemScreen from './app/SettingsComponents/ReportProblemScreen';
+import AboutScreen from './app/SettingsComponents/AboutScreen';
 
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  // Clear AsyncStorage on app start for testing purposes
-  // Remove this in production
-  useEffect(() => {
-    const clearData = async () => {
-      try {
-        await AsyncStorage.clear();
-        console.log('AsyncStorage cleared for testing');
-      } catch (error) {
-        console.error('Error clearing AsyncStorage:', error);
-      }
-    };
-    clearData();
-  }, []);
-
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <ThemeProvider>
+        <NavigationContainer>
         <StatusBar style="auto" />
         <Stack.Navigator 
   screenOptions={{ 
@@ -177,11 +171,21 @@ export default function App() {
           <Stack.Screen name="AppearanceSettings" component={AppearanceSettingsScreen} />
           <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
           <Stack.Screen name="SendFeedback" component={SendFeedbackScreen} />
+          <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+          <Stack.Screen name="JobPreferences" component={JobPreferencesScreen} />
+          <Stack.Screen name="DataStorage" component={DataStorageScreen} />
+          <Stack.Screen name="Accessibility" component={AccessibilityScreen} />
+          <Stack.Screen name="CalendarSync" component={CalendarSyncScreen} />
+          <Stack.Screen name="ReportProblem" component={ReportProblemScreen} />
+          <Stack.Screen name="About" component={AboutScreen} />
           {/* Employer onboarding — add when CompanyInfoScreen is ready */}
           {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
 
         </Stack.Navigator>
       </NavigationContainer>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

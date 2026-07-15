@@ -20,7 +20,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,33 +32,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  sectionHeader: '#4A7C75',
-  rowText:       '#0D3B47',
-  iconBg:        '#E8F8F5',
-  icon:          '#2CACAD',
-  switchTrack:   '#E5F2F0',
-  switchThumb:   '#FFFFFF',
-  switchActive:  '#2CACAD',
-};
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -98,6 +72,8 @@ const EMAIL_NOTIFICATIONS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function NotificationSettingsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Push notification toggle states
   const [pushSettings, setPushSettings] = useState<Record<string, boolean>>({
@@ -136,7 +112,7 @@ export default function NotificationSettingsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -153,7 +129,7 @@ export default function NotificationSettingsScreen({ navigation }: any) {
             <Ionicons
               name="arrow-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
@@ -178,7 +154,7 @@ export default function NotificationSettingsScreen({ navigation }: any) {
                 <Ionicons
                   name={item.icon as any}
                   size={18}
-                  color={COLORS.icon}
+                  color={colors.icon}
                 />
               </View>
 
@@ -189,9 +165,9 @@ export default function NotificationSettingsScreen({ navigation }: any) {
               <Switch
                 value={pushSettings[item.id]}
                 onValueChange={() => togglePushSetting(item.id)}
-                trackColor={{ false: COLORS.switchTrack, true: COLORS.switchActive }}
-                thumbColor={COLORS.switchThumb}
-                ios_backgroundColor={COLORS.switchTrack}
+                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
+                thumbColor={colors.switchThumb}
+                ios_backgroundColor={colors.switchTrack}
               />
             </View>
           ))}
@@ -216,7 +192,7 @@ export default function NotificationSettingsScreen({ navigation }: any) {
                 <Ionicons
                   name={item.icon as any}
                   size={18}
-                  color={COLORS.icon}
+                  color={colors.icon}
                 />
               </View>
 
@@ -227,9 +203,9 @@ export default function NotificationSettingsScreen({ navigation }: any) {
               <Switch
                 value={emailSettings[item.id]}
                 onValueChange={() => toggleEmailSetting(item.id)}
-                trackColor={{ false: COLORS.switchTrack, true: COLORS.switchActive }}
-                thumbColor={COLORS.switchThumb}
-                ios_backgroundColor={COLORS.switchTrack}
+                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
+                thumbColor={colors.switchThumb}
+                ios_backgroundColor={colors.switchTrack}
               />
             </View>
           ))}
@@ -243,11 +219,11 @@ export default function NotificationSettingsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -266,7 +242,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -279,12 +255,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Section Cards ─────────────────────────────────────────────
   sectionCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 8,
     marginBottom: 20,
@@ -297,7 +273,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.sectionHeader,
+    color: colors.sectionHeader,
     letterSpacing: 1,
     marginBottom: 12,
     marginLeft: 12,
@@ -313,13 +289,13 @@ const styles = StyleSheet.create({
   },
   settingRowNotLast: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowBorder,
+    borderBottomColor: colors.rowBorder,
   },
   iconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.iconBg,
+    backgroundColor: colors.iconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -328,7 +304,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.rowText,
+    color: colors.rowText,
   },
 
 });

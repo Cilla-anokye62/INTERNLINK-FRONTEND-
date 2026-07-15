@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import React, { useState } from 'react';
 import {
   View,
@@ -15,30 +16,12 @@ import {
 
 const { height } = Dimensions.get('window');
 
-const COLORS = {
-  background: '#F5FBFA',
-  title: '#0D3B47',
-  subtitle: '#4A7C75',
-  label: '#0D3B47',
-  inputBg: '#FFFFFF',
-  inputBorder: '#C5E8E3',
-  inputBorderFocus: '#2EC4B6',
-  inputText: '#0D3B47',
-  placeholder: '#9BB8B4',
-  icon: '#9BB8B4',
-  buttonBg: '#329891',
-  buttonText: '#FFFFFF',
-  Password: '#329891',
-  dividerLine: '#B2D8D2',
-  dividerText: '#7AADA6',
-  googleBtn: '#FFFFFF',
-  googleBtnBorder: '#C5E8E3',
-  googleBtnText: '#0D3B47',
-  footerText: '#4A7C75',
-  signUpText: '#329891',
-};
+
 
 export default function LoginScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -54,7 +37,7 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -87,7 +70,7 @@ export default function LoginScreen({ navigation }: any) {
                 <TextInput
                   style={styles.input}
                   placeholder="student@university.edu"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -109,7 +92,7 @@ export default function LoginScreen({ navigation }: any) {
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -175,13 +158,13 @@ export default function LoginScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   flex: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -196,12 +179,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -214,31 +197,31 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     height: 52,
   },
   inputWrapperFocused: {
-    borderColor: COLORS.inputBorderFocus,
+    borderColor: colors.inputBorderFocus,
   },
   inputIcon: {
     fontSize: 16,
     marginRight: 10,
-    color: COLORS.icon,
+    color: colors.icon,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: COLORS.inputText,
+    color: colors.inputText,
   },
   eyeBtn: {
     padding: 4,
@@ -253,12 +236,12 @@ const styles = StyleSheet.create({
     color: '#2CACAD',
   },
   loginBtn: {
-    backgroundColor: COLORS.buttonBg,
+    backgroundColor: colors.buttonBg,
     borderRadius: 50,
     paddingVertical: 17,
     alignItems: 'center',
     marginBottom: height * 0.035,     // relative instead of fixed 28
-    shadowColor: COLORS.buttonBg,
+    shadowColor: colors.buttonBg,
     shadowOpacity: 0.45,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
@@ -267,7 +250,7 @@ const styles = StyleSheet.create({
   loginBtnText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.buttonText,
+    color: colors.buttonText,
     letterSpacing: 0.5,
   },
   divider: {
@@ -278,22 +261,22 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.dividerLine,
+    backgroundColor: colors.dividerLine,
   },
   dividerText: {
     marginHorizontal: 12,
     fontSize: 13,
-    color: COLORS.dividerText,
+    color: colors.dividerText,
     fontWeight: '500',
   },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.googleBtn,
+    backgroundColor: colors.googleBtn,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.googleBtnBorder,
+    borderColor: colors.googleBtnBorder,
     paddingVertical: 15,
     marginBottom: height * 0.04,      // relative instead of fixed 32
     shadowColor: '#000',
@@ -311,7 +294,7 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.googleBtnText,
+    color: colors.googleBtnText,
   },
   footer: {
     flexDirection: 'row',
@@ -320,11 +303,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: COLORS.footerText,
+    color: colors.footerText,
   },
   signUpText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.signUpText,
+    color: colors.signUpText,
   },
 });

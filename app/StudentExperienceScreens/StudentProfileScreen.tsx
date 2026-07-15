@@ -1,11 +1,11 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
-
-const SKILLS = ['React', 'TypeScript', 'Python', 'Figma', 'Tailwind', 'GraphQL', 'Node.js'];
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const EXPERIENCE = [
   {
@@ -30,6 +30,9 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     'CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.';
   const initialSkills = route.params?.skills || SKILLS;
 
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [aboutText, setAboutText] = useState(initialBio);
@@ -37,18 +40,15 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const [experience, setExperience] = useState(EXPERIENCE);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
-  const [editingExperience, setEditingExperience] = useState<any>(null);
   const [newExperienceTitle, setNewExperienceTitle] = useState('');
   const [newExperienceSubtitle, setNewExperienceSubtitle] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
-  // Load saved data on mount
   useEffect(() => {
     loadSavedData();
   }, []);
 
-  // Reload data when screen gains focus (after returning from SkillsScreen)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       loadSavedData();
@@ -56,7 +56,6 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     return unsubscribe;
   }, [navigation]);
 
-  // Load data from AsyncStorage
   const loadSavedData = async () => {
     try {
       const savedUsername = await AsyncStorage.getItem('username');
@@ -65,6 +64,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
       const savedBio = await AsyncStorage.getItem('userBio');
       const savedSkills = await AsyncStorage.getItem('userSkills');
       const savedExperience = await AsyncStorage.getItem('userExperience');
+
 
       if (savedUsername) setUsername(savedUsername);
       if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
@@ -77,7 +77,6 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     }
   };
 
-  // Save data to AsyncStorage
   const saveData = async () => {
     try {
       await AsyncStorage.setItem('username', username);
@@ -88,9 +87,6 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     } catch (error) {
       console.error('Error saving data:', error);
     }
-  };
-  const handleAboutEdit = () => {
-    setShowAboutModal(true);
   };
 
   const handleAboutSave = () => {
@@ -108,6 +104,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
 
   const handleExperienceEdit = () => {
     setShowExperienceModal(true);
+    navigation.navigate('StudentOnboarding', { screen: 'Skills', params: { isEditing: true, initialSkills: skills, fromProfile: true } });
   };
 
   const handleAddExperience = () => {
@@ -129,11 +126,9 @@ export default function StudentProfileScreen({ navigation, route }: any) {
 
   const handleEditProfileToggle = () => {
     if (isEditMode) {
-      // Exit edit mode - save all changes
       saveData();
       setIsEditMode(false);
     } else {
-      // Enter edit mode
       setIsEditMode(true);
     }
   };
@@ -144,24 +139,18 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     Alert.alert('Link Copied', 'Profile link copied to clipboard!');
   };
 
-  const handlePhotoOptions = () => {
-    setShowPhotoOptions(true);
-  };
-
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'We need camera roll permissions to make this work!');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets && result.assets[0]) {
       setProfilePhoto(result.assets[0].uri);
       await AsyncStorage.setItem('userProfilePhoto', result.assets[0].uri);
@@ -186,7 +175,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity
             style={styles.settingsButton}
-            onPress={() => navigation.navigate('Settings', { role: 'student' })}
+            onPress={() => navigation.navigate('SettingsNav', { screen: 'Settings', params: { role: 'student' } })}
           >
             <Text style={styles.settingsIcon}>⚙</Text>
           </TouchableOpacity>
@@ -194,7 +183,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
 
         {/* Profile card */}
         <View style={styles.profileCard}>
-          <TouchableOpacity onPress={isEditMode ? handlePhotoOptions : undefined} activeOpacity={0.85}>
+          <TouchableOpacity onPress={isEditMode ? () => setShowPhotoOptions(true) : undefined} activeOpacity={0.85}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.avatar} />
             ) : (
@@ -240,15 +229,13 @@ export default function StudentProfileScreen({ navigation, route }: any) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>About</Text>
           {isEditMode && (
-            <TouchableOpacity onPress={handleAboutEdit}>
+            <TouchableOpacity onPress={() => setShowAboutModal(true)}>
               <Text style={styles.editLink}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
         <View style={styles.card}>
-          <Text style={styles.aboutText}>
-            {aboutText}
-          </Text>
+          <Text style={styles.aboutText}>{aboutText}</Text>
         </View>
 
         {/* Skills section */}
@@ -274,7 +261,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Experience</Text>
           {isEditMode && (
-            <TouchableOpacity onPress={handleExperienceEdit}>
+            <TouchableOpacity onPress={() => setShowExperienceModal(true)}>
               <Text style={styles.editLink}>Edit</Text>
             </TouchableOpacity>
           )}
@@ -320,6 +307,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
                 numberOfLines={6}
                 textAlignVertical="top"
                 placeholder="Tell employers about yourself..."
+                placeholderTextColor={colors.placeholder}
               />
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -356,12 +344,14 @@ export default function StudentProfileScreen({ navigation, route }: any) {
                 value={newExperienceTitle}
                 onChangeText={setNewExperienceTitle}
                 placeholder="Job title"
+                placeholderTextColor={colors.placeholder}
               />
               <TextInput
                 style={styles.modalInput}
                 value={newExperienceSubtitle}
                 onChangeText={setNewExperienceSubtitle}
                 placeholder="Company · Duration"
+                placeholderTextColor={colors.placeholder}
               />
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -418,10 +408,10 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -437,13 +427,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   settingsButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -451,7 +441,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   profileCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
@@ -461,25 +451,25 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: 'bold',
     fontSize: 26,
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 12,
   },
   badgesRow: {
@@ -488,61 +478,43 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   verifiedBadge: {
-    backgroundColor: '#D4F0EE',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   verifiedText: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
-  locationBadge: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  locationText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  statsRow: {
+  buttonRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
+    gap: 8,
   },
-  statItem: {
+  shareButton: {
     flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.accent,
   },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#024D60',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#F0F0F0',
+  shareButtonText: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontSize: 14,
   },
   editButton: {
     flex: 1,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 20,
     paddingVertical: 12,
     alignItems: 'center',
   },
   editButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '600',
     fontSize: 14,
   },
@@ -555,22 +527,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   editLink: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
   },
   aboutText: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     lineHeight: 22,
   },
   skillsRow: {
@@ -579,16 +551,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skillChip: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#C8E6E4',
+    borderColor: colors.inputBorder,
   },
   skillText: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   experienceItem: {
@@ -598,7 +570,7 @@ const styles = StyleSheet.create({
   },
   experienceItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   experienceIcon: {
     width: 40,
@@ -619,12 +591,30 @@ const styles = StyleSheet.create({
   experienceTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   experienceSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
+  },
+  editPhotoBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.card,
+  },
+  editPhotoBadgeText: {
+    color: colors.onPrimary,
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 
   // Modal styles
@@ -636,7 +626,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -645,17 +635,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 16,
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
+    backgroundColor: colors.inputBg,
     marginBottom: 12,
   },
   modalTextArea: {
@@ -672,58 +663,22 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     fontWeight: '600',
   },
   modalSaveButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   modalSaveText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '600',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  shareButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#2CACAD',
-  },
-  shareButtonText: {
-    color: '#2CACAD',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  editPhotoBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#2CACAD',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  editPhotoBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   photoOptionsContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -732,22 +687,22 @@ const styles = StyleSheet.create({
   photoOptionsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 16,
     textAlign: 'center',
   },
   photoOption: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   photoOptionText: {
     fontSize: 16,
-    color: '#024D60',
+    color: colors.title,
     textAlign: 'center',
   },
   removePhotoText: {
-    color: '#E0524C',
+    color: colors.danger,
   },
   cancelOption: {
     borderBottomWidth: 0,
@@ -755,7 +710,7 @@ const styles = StyleSheet.create({
   },
   cancelOptionText: {
     fontSize: 16,
-    color: '#94A3B8',
+    color: colors.placeholder,
     textAlign: 'center',
   },
 });

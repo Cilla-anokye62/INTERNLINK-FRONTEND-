@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -40,40 +40,43 @@ interface Listing {
 interface QuickActionCardProps {
   action: QuickAction;
   onPress: () => void;
+  colors: any;
 }
 
-const QuickActionCard: React.FC<QuickActionCardProps> = ({ action, onPress }) => {
+const QuickActionCard: React.FC<QuickActionCardProps> = ({ action, onPress, colors }) => {
   return (
     <TouchableOpacity
       style={[
-        styles.quickActionCard,
-        action.highlighted && styles.quickActionCardHighlighted,
+        {
+          width: '48%',
+          backgroundColor: action.highlighted ? colors.accent : colors.card,
+          borderRadius: 16,
+          padding: 14,
+          marginBottom: 12,
+        },
       ]}
       onPress={onPress}
       activeOpacity={0.8}
     >
       <View
-        style={[
-          styles.quickActionIconWrap,
-          action.highlighted && styles.quickActionIconWrapHighlighted,
-        ]}
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          backgroundColor: action.highlighted ? 'rgba(255,255,255,0.25)' : colors.iconCircle,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 10,
+        }}
       >
-        <Text style={styles.quickActionIcon}>{action.icon}</Text>
+        <Text style={{ fontSize: 15, color: action.highlighted ? '#FFFFFF' : colors.accent, fontWeight: '700' }}>
+          {action.icon}
+        </Text>
       </View>
-      <Text
-        style={[
-          styles.quickActionTitle,
-          action.highlighted && styles.quickActionTitleHighlighted,
-        ]}
-      >
+      <Text style={{ fontSize: 13, fontWeight: '700', color: action.highlighted ? '#FFFFFF' : colors.cardTitle, marginBottom: 2 }}>
         {action.title}
       </Text>
-      <Text
-        style={[
-          styles.quickActionSubtitle,
-          action.highlighted && styles.quickActionSubtitleHighlighted,
-        ]}
-      >
+      <Text style={{ fontSize: 11, color: action.highlighted ? 'rgba(255,255,255,0.8)' : colors.subtitle }}>
         {action.subtitle}
       </Text>
     </TouchableOpacity>
@@ -83,32 +86,40 @@ const QuickActionCard: React.FC<QuickActionCardProps> = ({ action, onPress }) =>
 // ---------- Listing Card ----------
 interface ListingCardProps {
   listing: Listing;
+  colors: any;
 }
 
-const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
+const ListingCard: React.FC<ListingCardProps> = ({ listing, colors }) => {
   return (
-    <View style={styles.listingCard}>
-      <View style={styles.listingHeader}>
-        <View style={styles.listingHeaderText}>
-          <Text style={styles.listingTitle}>{listing.title}</Text>
-          <Text style={styles.listingSubtitle}>{listing.applicantsSummary}</Text>
+    <View style={{
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
+      padding: 14,
+      marginBottom: 12,
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.cardTitle, marginBottom: 2 }}>{listing.title}</Text>
+          <Text style={{ fontSize: 12, color: colors.subtitle }}>{listing.applicantsSummary}</Text>
         </View>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusBadgeText}>{listing.status}</Text>
+        <View style={{ backgroundColor: colors.iconCircle, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12 }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>{listing.status}</Text>
         </View>
       </View>
 
-      <View style={styles.listingMetricsRow}>
+      <View style={{ flexDirection: 'row', backgroundColor: colors.background, borderRadius: 12, paddingVertical: 10 }}>
         {listing.metrics.map((metric, index) => (
           <View
             key={metric.label}
             style={[
-              styles.metricBox,
-              index < listing.metrics.length - 1 && styles.metricBoxDivider,
+              { flex: 1, alignItems: 'center' },
+              index < listing.metrics.length - 1 && { borderRightWidth: 1, borderRightColor: colors.cardBorder },
             ]}
           >
-            <Text style={styles.metricLabel}>{metric.label}</Text>
-            <Text style={styles.metricValue}>{metric.value}</Text>
+            <Text style={{ fontSize: 11, color: colors.subtitle, marginBottom: 4 }}>{metric.label}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.cardTitle }}>{metric.value}</Text>
           </View>
         ))}
       </View>
@@ -117,7 +128,9 @@ const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
 };
 
 // ---------- Main Screen ----------
-const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
+const EmployerDashboardScreen: React.FC = () => {
+  const { colors } = useAppTheme();
+
   const stats: StatItem[] = [
     { label: 'Active', value: '6' },
     { label: 'Interviews', value: '24' },
@@ -125,30 +138,10 @@ const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
   ];
 
   const quickActions: QuickAction[] = [
-    {
-      icon: '+',
-      title: 'Post internship',
-      subtitle: 'Reach 12K students',
-      highlighted: true,
-    },
-    {
-      icon: '👥',
-      title: 'Review applicants',
-      subtitle: '32 new',
-      highlighted: false,
-    },
-    {
-      icon: '💬',
-      title: 'Messages',
-      subtitle: '4 unread',
-      highlighted: false,
-    },
-    {
-      icon: '📊',
-      title: 'Insights',
-      subtitle: 'View report',
-      highlighted: false,
-    },
+    { icon: '+', title: 'Post internship', subtitle: 'Reach 12K students', highlighted: true },
+    { icon: '👥', title: 'Review applicants', subtitle: '32 new', highlighted: false },
+    { icon: '💬', title: 'Messages', subtitle: '4 unread', highlighted: false },
+    { icon: '📊', title: 'Insights', subtitle: 'View report', highlighted: false },
   ];
 
   const listings: Listing[] = [
@@ -184,17 +177,7 @@ const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
     },
   ];
 
-  const handleQuickActionPress = (title: string): void => {
-    console.log('Quick action pressed:', title);
-  };
-
-  const handleManagePress = (): void => {
-    console.log('Manage pressed');
-  };
-
-  const handleNotificationPress = (): void => {
-    console.log('Notification bell pressed');
-  };
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -215,16 +198,12 @@ const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={handleNotificationPress}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
             <Text style={styles.notificationIcon}>🔔</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stats card */}
+        {/* Stats card — intentionally stays branded teal in both modes */}
         <View style={styles.statsCard}>
           <Text style={styles.statsCardLabel}>This month</Text>
           <Text style={styles.statsCardValue}>412 applicants</Text>
@@ -253,7 +232,8 @@ const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
             <QuickActionCard
               key={action.title}
               action={action}
-              onPress={() => handleQuickActionPress(action.title)}
+              onPress={() => {}}
+              colors={colors}
             />
           ))}
         </View>
@@ -261,36 +241,27 @@ const EmployerDashboardScreen: React.FC<Props> = ({ navigation }) => {
         {/* Active listings */}
         <View style={styles.listingsHeaderRow}>
           <Text style={styles.sectionTitle}>Active listings</Text>
-          <TouchableOpacity onPress={handleManagePress} activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7}>
             <Text style={styles.manageLink}>Manage</Text>
           </TouchableOpacity>
         </View>
 
         {listings.map((listing) => (
-          <ListingCard key={listing.title} listing={listing} />
+          <ListingCard key={listing.title} listing={listing} colors={colors} />
         ))}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEAL_LIGHT = '#E6F5F4';
-const BG_LIGHT = '#F2FBFA';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BG_LIGHT,
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: BG_LIGHT,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -311,38 +282,39 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   companyAvatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   companyName: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   companySubtitle: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   notificationButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   notificationIcon: {
     fontSize: 16,
   },
+  // Stats card stays branded teal regardless of theme
   statsCard: {
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.gradientStart,
     borderRadius: 18,
     padding: 18,
     marginBottom: 24,
@@ -390,7 +362,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 12,
   },
   quickActionsGrid: {
@@ -399,49 +371,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 24,
   },
-  quickActionCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-  },
-  quickActionCardHighlighted: {
-    backgroundColor: TEAL,
-  },
-  quickActionIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: TEAL_LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  quickActionIconWrapHighlighted: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-  },
-  quickActionIcon: {
-    fontSize: 15,
-    color: TEAL_DARK,
-    fontWeight: '700',
-  },
-  quickActionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: TEXT_DARK,
-    marginBottom: 2,
-  },
-  quickActionTitleHighlighted: {
-    color: '#FFFFFF',
-  },
-  quickActionSubtitle: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-  },
-  quickActionSubtitleHighlighted: {
-    color: '#E6F5F4',
-  },
   listingsHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -449,72 +378,9 @@ const styles = StyleSheet.create({
   },
   manageLink: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '600',
     marginBottom: 12,
-  },
-  listingCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    padding: 14,
-    marginBottom: 12,
-  },
-  listingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  listingHeaderText: {
-    flex: 1,
-    marginRight: 8,
-  },
-  listingTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: TEXT_DARK,
-    marginBottom: 2,
-  },
-  listingSubtitle: {
-    fontSize: 12,
-    color: TEXT_GRAY,
-  },
-  statusBadge: {
-    backgroundColor: TEAL_LIGHT,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: TEAL_DARK,
-  },
-  listingMetricsRow: {
-    flexDirection: 'row',
-    backgroundColor: BG_LIGHT,
-    borderRadius: 12,
-    paddingVertical: 10,
-  },
-  metricBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  metricBoxDivider: {
-    borderRightWidth: 1,
-    borderRightColor: BORDER_COLOR,
-  },
-  metricLabel: {
-    fontSize: 11,
-    color: TEXT_GRAY,
-    marginBottom: 4,
-  },
-  metricValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: TEXT_DARK,
   },
 });
 

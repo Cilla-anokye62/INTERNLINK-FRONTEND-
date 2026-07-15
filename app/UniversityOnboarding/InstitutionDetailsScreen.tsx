@@ -37,49 +37,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  card:              'transparent', // transparent card
-  progressTrack:     '#B2DDD8', // unfilled part of progress bar
-  progressFill:      '#2CACAD', // filled part of progress bar
-  stepLabel:         '#64748B', // "University setup · Step 2 of 4"
-  stepPercent:       '#2CACAD', // "50%" text
-  title:             '#024D60', // "Institution details"
-  subtitle:          '#64748B', // "Tell employers about your campus."
-
-  label:             '#024D60', // field labels
-
-  // Institution Type pill buttons (Public / Private / Hybrid)
-  typeIdleBg:        '#FFFFFF',
-  typeIdleBorder:    '#C5E8E3',
-  typeIdleText:      '#4A7C75',
-  typeActiveBg:      '#2CACAD', // selected pill (e.g. "Private")
-  typeActiveText:    '#FFFFFF',
-
-  // Regular text inputs (Country, City, Number of Students)
-  inputBg:           '#FFFFFF',
-  inputBorder:       'transparent',
-  inputBorderFocus:  '#2CACAD',
-  inputText:         '#024D60',
-  placeholder:       '#94A3B8',
-  inputIcon:         '#94A3B8',
-
-  // Academic Programs box + chips
-  programsBoxBg:     '#FFFFFF',
-  programsBoxBorder: '#C5E8E3',
-  programsHint:      '#94A3B8', // "Select all that apply"
-  chipIdleBg:        '#FFFFFF',
-  chipIdleBorder:    '#D8E8E5',
-  chipIdleText:      '#4A7C75',
-  chipActiveBg:      '#2CACAD', // selected chip (e.g. "Computer Science")
-  chipActiveText:    '#FFFFFF',
-
-  continueBtn:       '#2CACAD',
-  continueBtnText:   '#FFFFFF',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -105,6 +63,9 @@ const ACADEMIC_PROGRAMS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function InstitutionDetailsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Which Institution Type pill is currently selected (starts as 'Private'
   // to match the design's example — change to null if you want nothing
@@ -154,7 +115,7 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -235,13 +196,13 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                   <Ionicons
                     name="location-outline"
                     size={18}
-                    color={COLORS.inputIcon}
+                    color={colors.inputIcon}
                     style={styles.inputIcon}
                   />
                   <TextInput
                     style={styles.input}
                     placeholder="United States"
-                    placeholderTextColor={COLORS.placeholder}
+                    placeholderTextColor={colors.placeholder}
                     value={country}
                     onChangeText={setCountry}
                     onFocus={() => setFocusedInput('country')}
@@ -263,7 +224,7 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                   <TextInput
                     style={styles.input}
                     placeholder="Cambridge, MA"
-                    placeholderTextColor={COLORS.placeholder}
+                    placeholderTextColor={colors.placeholder}
                     value={city}
                     onChangeText={setCity}
                     onFocus={() => setFocusedInput('city')}
@@ -286,13 +247,13 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                   <Ionicons
                     name="people-outline"
                     size={18}
-                    color={COLORS.inputIcon}
+                    color={colors.inputIcon}
                     style={styles.inputIcon}
                   />
                 <TextInput
                   style={styles.input}
                   placeholder="11,520 students"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={studentCount}
                   onChangeText={setStudentCount}
                   keyboardType="default"
@@ -334,7 +295,7 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
                           <Ionicons
                             name="checkmark"
                             size={12}
-                            color={COLORS.chipActiveText}
+                            color={colors.chipActiveText}
                             style={{ marginRight: 2 }}
                           />
                         )}
@@ -373,7 +334,7 @@ export default function InstitutionDetailsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   flex: {
     flex: 1,
@@ -381,7 +342,7 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -389,7 +350,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ── Progress header ────────────────────────────────────────────
@@ -401,32 +362,32 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: COLORS.stepLabel,
+    color: colors.stepLabel,
     fontWeight: '500',
     letterSpacing: 0.2,
   },
   stepPercent: {
     fontSize: 12,
-    color: COLORS.stepPercent,
+    color: colors.stepPercent,
     fontWeight: '700',
   },
   progressTrack: {
     width: '100%',
     height: 5,
-    backgroundColor: COLORS.progressTrack,
+    backgroundColor: colors.progressTrack,
     borderRadius: 3,
     marginBottom: 20,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.progressFill,
+    backgroundColor: colors.progressFill,
     borderRadius: 3,
   },
 
   // ── Card ──────────────────────────────────────────────────
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 0,
   },
@@ -435,12 +396,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     lineHeight: 20,
     marginBottom: 22,
   },
@@ -452,7 +413,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 6,
   },
 
@@ -463,24 +424,24 @@ const styles = StyleSheet.create({
   },
   typePill: {
     flex: 1, // all three pills share equal width
-    backgroundColor: COLORS.typeIdleBg,
+    backgroundColor: colors.typeIdleBg,
     borderWidth: 1.5,
-    borderColor: COLORS.typeIdleBorder,
+    borderColor: colors.typeIdleBorder,
     borderRadius: 50,
     paddingVertical: 12,
     alignItems: 'center',
   },
   typePillActive: {
-    backgroundColor: COLORS.typeActiveBg,
-    borderColor: COLORS.typeActiveBg,
+    backgroundColor: colors.typeActiveBg,
+    borderColor: colors.typeActiveBg,
   },
   typePillText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.typeIdleText,
+    color: colors.typeIdleText,
   },
   typePillTextActive: {
-    color: COLORS.typeActiveText,
+    color: colors.typeActiveText,
     fontWeight: '700',
   },
 
@@ -500,10 +461,10 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 16,
     height: 52,
     marginBottom: 16,
@@ -514,7 +475,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputWrapperFocused: {
-    borderColor: COLORS.inputBorderFocus,
+    borderColor: colors.inputBorderFocus,
   },
   inputIcon: {
     marginRight: 10,
@@ -522,20 +483,20 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.inputText,
+    color: colors.inputText,
   },
 
   // ── Academic Programs box ──────────────────────────────────────
   programsBox: {
-    backgroundColor: COLORS.programsBoxBg,
+    backgroundColor: colors.programsBoxBg,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: COLORS.programsBoxBorder,
+    borderColor: colors.programsBoxBorder,
     padding: 14,
   },
   programsHint: {
     fontSize: 12,
-    color: COLORS.programsHint,
+    color: colors.programsHint,
     marginBottom: 10,
   },
   // flexWrap lets chips automatically flow onto new lines as needed
@@ -547,30 +508,30 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.chipIdleBg,
+    backgroundColor: colors.chipIdleBg,
     borderWidth: 1.5,
-    borderColor: COLORS.chipIdleBorder,
+    borderColor: colors.chipIdleBorder,
     borderRadius: 50,
     paddingVertical: 8,
     paddingHorizontal: 14,
   },
   chipActive: {
-    backgroundColor: COLORS.chipActiveBg,
-    borderColor: COLORS.chipActiveBg,
+    backgroundColor: colors.chipActiveBg,
+    borderColor: colors.chipActiveBg,
   },
   chipText: {
     fontSize: 13,
-    color: COLORS.chipIdleText,
+    color: colors.chipIdleText,
     fontWeight: '500',
   },
   chipTextActive: {
-    color: COLORS.chipActiveText,
+    color: colors.chipActiveText,
     fontWeight: '700',
   },
 
   // ── Continue button ────────────────────────────────────────────
   continueBtn: {
-    backgroundColor: COLORS.continueBtn,
+    backgroundColor: colors.continueBtn,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
@@ -579,7 +540,7 @@ const styles = StyleSheet.create({
   continueBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.continueBtnText,
+    color: colors.continueBtnText,
   },
 
 });

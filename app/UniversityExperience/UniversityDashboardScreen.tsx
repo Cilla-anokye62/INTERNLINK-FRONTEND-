@@ -39,53 +39,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'; // updated, non-deprecated version
 import { LinearGradient } from 'expo-linear-gradient'; // used for the teal gradient card
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  headerAvatarBg:    '#0D3B47', // dark teal circle with "M"
-  headerAvatarText:  '#FFFFFF',
-  headerTitle:       '#0D3B47', // "MIT Career Hub"
-  headerSubtitle:    '#4A7C75', // "Class of 2026 · Spring"
-  bellBg:            '#FFFFFF', // notification bell circle background
-  bellIcon:          '#0D3B47',
-
-  // Placement rate card (gradient teal)
-  gradientStart:     '#1E7A72',
-  gradientEnd:       '#2EC4B6',
-  placementLabel:    'rgba(255,255,255,0.85)',
-  placementPercent:  '#FFFFFF',
-  placementYoY:      'rgba(255,255,255,0.85)',
-  progressTrack:     'rgba(255,255,255,0.25)',
-  progressFill:      '#FFFFFF',
-  statLabel:         'rgba(255,255,255,0.75)',
-  statValue:         '#FFFFFF',
-  statDivider:       'rgba(255,255,255,0.2)',
-
-  // Quick access grid cards
-  gridCardBg:        '#FFFFFF',
-  gridIconBg:        '#E8F8F5',
-  gridIcon:          '#2EC4B6',
-  gridTitle:         '#0D3B47',
-  gridSubtitle:      '#9BB8B4',
-
-  // Top placements section
-  sectionTitle:      '#0D3B47',
-  viewAllText:       '#2EC4B6',
-  placementRowBg:    '#FFFFFF',
-  placementRowBorder:'#E8F4F2',
-  companyLogoText:   '#FFFFFF',
-  companyName:       '#0D3B47',
-  companyDetail:     '#9BB8B4',
-  arrowIcon:         '#2EC4B6',
-
-  // Bottom tab bar
-  tabBarBg:          '#FFFFFF',
-  tabActive:         '#2EC4B6',
-  tabInactive:       '#9BB8B4',
-};
-
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── DATA ─────────────────────────────────────────────────────────
 
@@ -130,6 +84,9 @@ const TOP_PLACEMENTS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function UniversityDashboardScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Tracks which bottom tab is currently active so we can highlight it.
   // Starts on 'overview' since that's this screen.
@@ -157,7 +114,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Main scrollable content sits above the fixed bottom tab bar */}
       <ScrollView
@@ -188,7 +145,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
             <Ionicons
               name="notifications-outline"
               size={20}
-              color={COLORS.bellIcon}
+              color={colors.bellIcon}
             />
           </TouchableOpacity>
 
@@ -199,7 +156,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
         {/* ── PLACEMENT RATE CARD (gradient) ──────────────────────── */}
         {/* LinearGradient creates the dark-to-light teal background */}
         <LinearGradient
-          colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+          colors={[colors.gradientStart, colors.gradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.placementCard}
@@ -266,7 +223,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
                 <Ionicons
                   name={card.icon as any}
                   size={18}
-                  color={COLORS.gridIcon}
+                  color={colors.gridIcon}
                 />
               </View>
 
@@ -315,7 +272,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
             <Ionicons
               name="arrow-forward-outline"
               size={18}
-              color={COLORS.arrowIcon}
+              color={colors.arrowIcon}
             />
           </TouchableOpacity>
         ))}
@@ -335,11 +292,11 @@ export default function UniversityDashboardScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // Scrollable content — leaves room at the bottom so the tab bar
@@ -360,7 +317,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.headerAvatarBg,
+    backgroundColor: colors.headerAvatarBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -368,7 +325,7 @@ const styles = StyleSheet.create({
   headerAvatarText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.headerAvatarText,
+    color: colors.headerAvatarText,
   },
   headerTextBlock: {
     flex: 1, // fills the space between avatar and bell
@@ -376,18 +333,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
     marginTop: 2,
   },
   bellBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.bellBg,
+    backgroundColor: colors.bellBg,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -405,7 +362,7 @@ const styles = StyleSheet.create({
   },
   placementLabel: {
     fontSize: 13,
-    color: COLORS.placementLabel,
+    color: colors.placementLabel,
     marginBottom: 6,
   },
   placementPercentRow: {
@@ -416,25 +373,25 @@ const styles = StyleSheet.create({
   placementPercent: {
     fontSize: 38,
     fontWeight: '800',
-    color: COLORS.placementPercent,
+    color: colors.placementPercent,
     marginRight: 8,
   },
   placementYoY: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.placementYoY,
+    color: colors.placementYoY,
   },
   progressTrack: {
     width: '100%',
     height: 6,
-    backgroundColor: COLORS.progressTrack,
+    backgroundColor: colors.progressTrack,
     borderRadius: 3,
     marginBottom: 18,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.progressFill,
+    backgroundColor: colors.progressFill,
     borderRadius: 3,
   },
   statsRow: {
@@ -446,19 +403,19 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: COLORS.statLabel,
+    color: colors.statLabel,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.statValue,
+    color: colors.statValue,
   },
   // Thin vertical line between stat columns
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: COLORS.statDivider,
+    backgroundColor: colors.statDivider,
     marginHorizontal: 12,
   },
 
@@ -471,7 +428,7 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '48%', // two cards per row with a small gap between them
-    backgroundColor: COLORS.gridCardBg,
+    backgroundColor: colors.gridCardBg,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12, // space between rows
@@ -485,7 +442,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.gridIconBg,
+    backgroundColor: colors.gridIconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -493,12 +450,12 @@ const styles = StyleSheet.create({
   gridTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.gridTitle,
+    color: colors.gridTitle,
     marginBottom: 2,
   },
   gridSubtitle: {
     fontSize: 12,
-    color: COLORS.gridSubtitle,
+    color: colors.gridSubtitle,
   },
 
   // ── Top placements section ──────────────────────────────────────
@@ -511,20 +468,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: COLORS.sectionTitle,
+    color: colors.sectionTitle,
   },
   viewAllText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.viewAllText,
+    color: colors.viewAllText,
   },
   placementRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.placementRowBg,
+    backgroundColor: colors.placementRowBg,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.placementRowBorder,
+    borderColor: colors.placementRowBorder,
     padding: 14,
     marginBottom: 10,
   },
@@ -539,7 +496,7 @@ const styles = StyleSheet.create({
   companyLogoText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.companyLogoText,
+    color: colors.companyLogoText,
   },
   companyTextBlock: {
     flex: 1, // fills space between logo and arrow
@@ -547,12 +504,12 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.companyName,
+    color: colors.companyName,
     marginBottom: 2,
   },
   companyDetail: {
     fontSize: 12,
-    color: COLORS.companyDetail,
+    color: colors.companyDetail,
   },
 
 });

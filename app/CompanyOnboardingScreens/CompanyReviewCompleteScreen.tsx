@@ -41,7 +41,7 @@ const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit }) => {
 };
 
 // ---------- Main Screen ----------
-const CompanyReviewCompleteScreen: React.FC = () => {
+const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const summaryRows: SummaryRow[] = [
     {
       icon: '🏢',
@@ -71,8 +71,10 @@ const CompanyReviewCompleteScreen: React.FC = () => {
   };
 
   const handleCompleteSetup = (): void => {
-    console.log('Complete setup pressed');
-    // TODO: submit company profile
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'CompanyTabs' }],
+    });
   };
 
   const handleSaveAndFinishLater = (): void => {

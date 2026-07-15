@@ -3,14 +3,9 @@ import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import EmployerDashboardScreen from './EmployerDashboardScreen';
 import SettingsScreen from '../SettingsComponents/SettingsScreen';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
-import CompanyProfileScreen from './CompanyProfileScreen';
-import ListingsScreen from './ListingsScreen';
-import ApplicantsScreen from './ApplicantsScreen';
-
-
-
-
+// ---------- Types ----------
 export type CompanyTabParamList = {
   Dashboard: undefined;
   Listings: undefined;
@@ -32,17 +27,18 @@ const TabIcon: React.FC<TabIconProps> = ({ icon, focused }) => {
 
 const Tab = createBottomTabNavigator<CompanyTabParamList>();
 
-const TEAL = '#2BA9A0';
-const TEXT_GRAY = '#6B7280';
-
 const CompanyTabs: React.FC = () => {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: TEAL,
-        tabBarInactiveTintColor: TEXT_GRAY,
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
+          backgroundColor: colors.tabBarBg,
+          borderTopColor: colors.tabBarBorder,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,

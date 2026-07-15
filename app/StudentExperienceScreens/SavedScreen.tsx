@@ -1,6 +1,8 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const FILTERS = ['All (14)', 'Engineering (8)', 'Design (4)', 'Closing soon'];
 
@@ -12,6 +14,9 @@ const SAVED_INTERNSHIPS = [
 ];
 
 export default function SavedScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [activeFilter, setActiveFilter] = useState('All (14)');
   const [savedItems, setSavedItems] = useState<string[]>(['1', '2', '3', '4']);
 
@@ -98,10 +103,10 @@ export default function SavedScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
 
   // Header
@@ -116,24 +121,24 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   headerSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginTop: 2,
   },
   menuButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuDots: {
     fontSize: 18,
-    color: '#024D60',
+    color: colors.menuBtnIcon,
     fontWeight: 'bold',
     letterSpacing: 2,
   },
@@ -148,21 +153,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   filterChipActive: {
-    backgroundColor: '#2CACAD',
-    borderColor: '#2CACAD',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   filterText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     fontWeight: '500',
   },
   filterTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '700',
   },
 
@@ -177,7 +182,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -205,12 +210,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   cardCompany: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 8,
   },
   tagsRow: {
@@ -234,14 +239,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   locationTag: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.ratePillBg,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   locationText: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.ratePillText,
     fontWeight: '500',
   },
 
@@ -252,6 +257,6 @@ const styles = StyleSheet.create({
   },
   saveIcon: {
     fontSize: 18,
-    color: '#2CACAD',
+    color: colors.accent,
   },
 });

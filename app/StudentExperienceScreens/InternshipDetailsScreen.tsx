@@ -1,9 +1,14 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
 export default function InternshipDetailsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -101,7 +106,6 @@ export default function InternshipDetailsScreen({ navigation }: any) {
           <Text style={styles.saveBtnText}>Save</Text>
         </TouchableOpacity>
 
-        {/* Apply Now button — navigates to ApplicationSent screen */}
         <TouchableOpacity
           style={styles.applyBtn}
           onPress={() => navigation.navigate('ApplicationSent')}
@@ -115,10 +119,10 @@ export default function InternshipDetailsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -132,20 +136,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backArrow: {
     fontSize: 18,
-    color: '#024D60',
+    color: colors.title,
     fontWeight: 'bold',
   },
   saveButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -173,12 +177,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 6,
   },
   company: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 14,
   },
   tagsRow: {
@@ -188,30 +192,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   matchBadge: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.matchPillBg,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   matchText: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.matchPillText,
     fontWeight: '700',
   },
   tag: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.ratePillBg,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
   tagText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.ratePillText,
     fontWeight: '500',
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -225,28 +229,28 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   statDivider: {
     width: 1,
     height: 36,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.rowBorder,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 10,
     marginTop: 4,
   },
   bodyText: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     lineHeight: 22,
     marginBottom: 20,
   },
@@ -257,16 +261,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   skillChip: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#C8E6E4',
+    borderColor: colors.inputBorder,
   },
   skillText: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   bulletRow: {
@@ -276,7 +280,7 @@ const styles = StyleSheet.create({
   },
   bulletIcon: {
     fontSize: 14,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: 'bold',
     marginRight: 10,
     marginTop: 2,
@@ -284,7 +288,7 @@ const styles = StyleSheet.create({
   bulletText: {
     flex: 1,
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     lineHeight: 22,
   },
   bottomBar: {
@@ -292,8 +296,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: height * 0.03,
     paddingTop: 12,
-    backgroundColor: '#F0FAFA',
+    backgroundColor: colors.background,
     gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.rowBorder,
   },
   saveBtn: {
     flex: 1,
@@ -301,11 +307,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#2CACAD',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.accent,
+    backgroundColor: colors.card,
   },
   saveBtnText: {
-    color: '#2CACAD',
+    color: colors.accent,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -314,10 +320,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
   },
   applyBtnText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

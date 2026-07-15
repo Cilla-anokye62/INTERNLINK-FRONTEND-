@@ -38,18 +38,7 @@ import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
 import SettingsScreen from '../SettingsComponents/SettingsScreen';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-// Same teal/mint colors used as the active/inactive tab colors
-// across your custom tab bars, so the look stays identical.
-const COLORS = {
-  tabBarBg:      '#FFFFFF',
-  tabActive:     '#2EC4B6',
-  tabInactive:   '#9BB8B4',
-  tabBarBorder:  '#EAF5F3',
-};
-
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── TAB ICON DATA ────────────────────────────────────────────────
 // Maps each route name to the Ionicons name shown above its label.
@@ -72,6 +61,8 @@ const Tab = createBottomTabNavigator();
 
 // ─── MAIN TAB NAVIGATOR COMPONENT ─────────────────────────────────
 export default function UniversityTabs() {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       // screenOptions applies to EVERY tab screen at once, so you
@@ -80,14 +71,14 @@ export default function UniversityTabs() {
         headerShown: false, // each screen already has its own header content
 
         // Colors for the active vs inactive tab label + icon
-        tabBarActiveTintColor: COLORS.tabActive,
-        tabBarInactiveTintColor: COLORS.tabInactive,
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
 
         // Styling for the tab bar itself — matches your custom tabBar style
         tabBarStyle: {
-          backgroundColor: COLORS.tabBarBg,
+          backgroundColor: colors.tabBarBg,
           borderTopWidth: 1,
-          borderTopColor: COLORS.tabBarBorder,
+          borderTopColor: colors.tabBarBorder,
           height: 78,
           paddingTop: 8,
           paddingBottom: 18, // accounts for the phone's home indicator area

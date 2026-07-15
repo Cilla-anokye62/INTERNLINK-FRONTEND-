@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import React, { useState } from 'react';
 import {
   View,
@@ -40,31 +41,12 @@ const ROLES: RoleOption[] = [
   },
 ];
 
-const COLORS = {
-  background: '#F5FBFA',
-  card: '#FFFFFF',
-  cardBorderIdle: 'transparent',
-  cardBorderActive: '#329891',
-  iconCircle: 'rgba(46,196,182,0.18)',
-  iconCircleActive: '#2EC4B6',
-  iconIdle: '#2EC4B6',
-  iconSelected: '#FFFFFF',
-  titleText: '#0D3B47',
-  subtitleText: '#4A7C75',
-  cardTitle: '#0D3B47',
-  cardDescription: '#4A7C75',
-  checkmark: '#FFFFFF',
-  buttonActive: '#2CACAD',
-  buttonInactive: 'rgba(13,59,71,0.20)',
-  buttonTextActive: '#FFFFFF',
-  buttonTextInact: '#6B9E99',
-  backButton: '#FFFFFF',
-  backArrow: '#0D3B47',
-};
-
 const { width, height } = Dimensions.get('window');
 
 export default function RoleSelectionScreen({ navigation }: any) {
+  const { colors, theme } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const handleContinue = () => {
@@ -74,7 +56,7 @@ export default function RoleSelectionScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <View style={styles.screen}>
 
@@ -85,7 +67,7 @@ export default function RoleSelectionScreen({ navigation }: any) {
             activeOpacity={0.7}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="chevron-back" size={24} color={COLORS.backArrow} />
+            <Ionicons name="chevron-back" size={24} color={colors.backArrow} />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -109,7 +91,7 @@ export default function RoleSelectionScreen({ navigation }: any) {
                   <Ionicons
                     name={role.icon}
                     size={26}
-                    color={isSelected ? COLORS.iconSelected : COLORS.iconIdle}
+                    color={isSelected ? colors.iconSelected : colors.iconIdle}
                   />
                 </View>
 
@@ -151,10 +133,10 @@ export default function RoleSelectionScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   screen: {
     flex: 1,
@@ -173,7 +155,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: COLORS.backButton,
+    backgroundColor: colors.backButton,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -189,12 +171,12 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.titleText,
+    color: colors.titleText,
     letterSpacing: 0.2,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: COLORS.subtitleText,
+    color: colors.subtitleText,
     marginTop: 3,
   },
   cardsWrapper: {
@@ -205,11 +187,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 20,
     borderWidth: 2,
-    borderColor: COLORS.cardBorderIdle,
+    borderColor: colors.cardBorderIdle,
     shadowColor: '#000',
     shadowOpacity: 0.18,
     shadowRadius: 12,
@@ -217,19 +199,19 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   cardSelected: {
-    borderColor: COLORS.cardBorderActive,
+    borderColor: colors.cardBorderActive,
   },
   iconCircle: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: COLORS.iconCircle,
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
   },
   iconCircleSelected: {
-    backgroundColor: COLORS.iconCircleActive,
+    backgroundColor: colors.iconCircleActive,
   },
   cardTextBlock: {
     flex: 1,
@@ -237,25 +219,25 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.cardTitle,
+    color: colors.cardTitle,
     marginBottom: 5,
   },
   cardDescription: {
     fontSize: 13,
-    color: COLORS.cardDescription,
+    color: colors.cardDescription,
     lineHeight: 19,
   },
   checkmarkBadge: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: COLORS.cardBorderActive,
+    backgroundColor: colors.cardBorderActive,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
   },
   checkmarkText: {
-    color: COLORS.checkmark,
+    color: colors.checkmark,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -266,15 +248,15 @@ const styles = StyleSheet.create({
     marginTop: height * 0.02,
   },
   continueBtnActive: {
-    backgroundColor: '#2CACAD',
-    shadowColor: '#2CACAD',
+    backgroundColor: colors.buttonActive,
+    shadowColor: colors.buttonActive,
     shadowOpacity: 0.5,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 5 },
     elevation: 8,
   },
   continueBtnInactive: {
-    backgroundColor: COLORS.buttonInactive,
+    backgroundColor: colors.buttonInactive,
   },
   continueBtnText: {
     fontSize: 17,
@@ -282,9 +264,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   continueBtnTextActive: {
-    color: COLORS.buttonTextActive,
+    color: colors.buttonTextActive,
   },
   continueBtnTextInactive: {
-    color: COLORS.buttonTextInact,
+    color: colors.buttonTextInact,
   },
 });

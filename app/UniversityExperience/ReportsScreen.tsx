@@ -33,31 +33,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background: '#F5FBFA', // mint — full screen background
-  headerTitle: '#0D3B47', // "Reports"
-  headerSubtitle: '#4A7C75', // "Generate & export"
-  addBtnBg: '#2EC4B6', // circular "+" button
-  addBtnIcon: '#FFFFFF',
-
-  // Report rows
-  rowBg: '#FFFFFF',
-  iconCircleBg: '#E8F8F5', // light teal circle behind the file icon
-  fileIcon: '#2EC4B6',
-  reportTitle: '#0D3B47',
-  reportDetail: '#9BB8B4',
-  downloadIcon: '#2EC4B6',
-  newDot: '#2EC4B6', // small dot indicating a new/unread report
-
-  // Bottom tab bar
-  tabBarBg: '#FFFFFF',
-  tabActive: '#2EC4B6',
-  tabInactive: '#9BB8B4',
-};
-
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── DATA ─────────────────────────────────────────────────────────
 
@@ -103,6 +79,9 @@ const REPORTS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function ReportsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // This screen lives on the "Reports" tab, so it starts active
   const [setActiveTab] = useState('reports');
@@ -129,7 +108,7 @@ export default function ReportsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Main scrollable content sits above the fixed bottom tab bar */}
       <ScrollView
@@ -152,7 +131,7 @@ export default function ReportsScreen({ navigation }: any) {
             <Ionicons
               name="add"
               size={22}
-              color={COLORS.addBtnIcon}
+              color={colors.addBtnIcon}
             />
           </TouchableOpacity>
         </View>
@@ -177,7 +156,7 @@ export default function ReportsScreen({ navigation }: any) {
               <Ionicons
                 name="document-text-outline"
                 size={20}
-                color={COLORS.fileIcon}
+                color={colors.fileIcon}
               />
             </View>
 
@@ -202,7 +181,7 @@ export default function ReportsScreen({ navigation }: any) {
                 <Ionicons
                   name="download-outline"
                   size={18}
-                  color={COLORS.downloadIcon}
+                  color={colors.downloadIcon}
                 />
               </TouchableOpacity>
             </View>
@@ -221,11 +200,11 @@ export default function ReportsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // Scrollable content — leaves room at the bottom so the tab bar
@@ -249,22 +228,22 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
   },
   addBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.addBtnBg,
+    backgroundColor: colors.addBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     // Teal glow shadow to make this primary action stand out
-    shadowColor: COLORS.addBtnBg,
+    shadowColor: colors.addBtnBg,
     shadowOpacity: 0.4,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -275,7 +254,7 @@ const styles = StyleSheet.create({
   reportRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.rowBg,
+    backgroundColor: colors.rowBg,
     borderRadius: 16,
     padding: 14,
     marginBottom: 12, // space between each report's row
@@ -289,7 +268,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: COLORS.iconCircleBg,
+    backgroundColor: colors.iconCircleBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -302,14 +281,14 @@ const styles = StyleSheet.create({
   reportTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.reportTitle,
+    color: colors.reportTitle,
     marginBottom: 3,
     // No numberOfLines limit — title is allowed to wrap onto 2 lines
     // naturally for longer report names, matching the design.
   },
   reportDetail: {
     fontSize: 12,
-    color: COLORS.reportDetail,
+    color: colors.reportDetail,
   },
 
   // ── Download icon + optional "new" dot ─────────────────────────
@@ -322,7 +301,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COLORS.newDot,
+    backgroundColor: colors.newDot,
     marginBottom: 6,
   },
   downloadBtn: {

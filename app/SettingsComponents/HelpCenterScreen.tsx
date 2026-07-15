@@ -30,30 +30,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  faqQuestion:   '#0D3B47',
-  faqAnswer:     '#4A7C75',
-  searchIcon:    '#94A3B8',
-  supportEmail:  '#2CACAD',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -89,6 +66,9 @@ const FAQ_ITEMS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function HelpCenterScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Search query state
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,7 +111,7 @@ export default function HelpCenterScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -149,7 +129,7 @@ export default function HelpCenterScreen({ navigation }: any) {
             <Ionicons
               name="arrow-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Help Center</Text>
@@ -162,13 +142,13 @@ export default function HelpCenterScreen({ navigation }: any) {
           <Ionicons
             name="search-outline"
             size={18}
-            color={COLORS.searchIcon}
+            color={colors.searchIcon}
             style={{ marginRight: 10 }}
           />
           <TextInput
             style={styles.searchInput}
             placeholder="Search help articles..."
-            placeholderTextColor={COLORS.placeholder}
+            placeholderTextColor={colors.placeholder}
             value={searchQuery}
             onChangeText={handleSearch}
             autoCapitalize="none"
@@ -201,7 +181,7 @@ export default function HelpCenterScreen({ navigation }: any) {
                     <Ionicons
                       name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
                       size={20}
-                      color={COLORS.chevron}
+                      color={colors.chevron}
                     />
                   </TouchableOpacity>
 
@@ -233,7 +213,7 @@ export default function HelpCenterScreen({ navigation }: any) {
             <Ionicons
               name="mail-outline"
               size={24}
-              color={COLORS.supportEmail}
+              color={colors.supportEmail}
             />
           </View>
           <View style={styles.supportTextBlock}>
@@ -243,7 +223,7 @@ export default function HelpCenterScreen({ navigation }: any) {
           <Ionicons
             name="arrow-forward-outline"
             size={18}
-            color={COLORS.chevron}
+            color={colors.chevron}
           />
         </TouchableOpacity>
         {/* ── END CONTACT SUPPORT CARD ───────────────────────────── */}
@@ -255,11 +235,11 @@ export default function HelpCenterScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -278,7 +258,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -291,14 +271,14 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Search Bar ───────────────────────────────────────────────
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
@@ -312,12 +292,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── FAQ Card ─────────────────────────────────────────────────
   faqCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 8,
     marginBottom: 20,
@@ -334,7 +314,7 @@ const styles = StyleSheet.create({
   },
   faqRowNotLast: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowBorder,
+    borderBottomColor: colors.rowBorder,
   },
   questionRow: {
     flexDirection: 'row',
@@ -347,7 +327,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.faqQuestion,
+    color: colors.faqQuestion,
     marginRight: 12,
   },
   answerContainer: {
@@ -357,7 +337,7 @@ const styles = StyleSheet.create({
   faqAnswer: {
     fontSize: 13,
     lineHeight: 18,
-    color: COLORS.faqAnswer,
+    color: colors.faqAnswer,
   },
 
   // ── No Results ───────────────────────────────────────────────
@@ -367,14 +347,14 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
   },
 
   // ── Contact Support Card ─────────────────────────────────────
   supportCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -398,12 +378,12 @@ const styles = StyleSheet.create({
   supportTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 2,
   },
   supportEmail: {
     fontSize: 13,
-    color: COLORS.supportEmail,
+    color: colors.supportEmail,
   },
 
 });

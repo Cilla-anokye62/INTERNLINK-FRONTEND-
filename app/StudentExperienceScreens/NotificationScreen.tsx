@@ -1,5 +1,7 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const TODAY_NOTIFICATIONS = [
   {
@@ -48,6 +50,9 @@ const WEEK_NOTIFICATIONS = [
 ];
 
 export default function NotificationsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -107,10 +112,10 @@ export default function NotificationsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -128,16 +133,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
   },
   headerSub: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
     marginTop: 2,
   },
   markAllText: {
     fontSize: 13,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
 
@@ -145,7 +150,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.placeholder,
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 14,
   },
@@ -184,7 +189,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginRight: 6,
   },
   dot: {
@@ -194,6 +199,6 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
   },
 });

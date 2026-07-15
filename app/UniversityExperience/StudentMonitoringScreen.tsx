@@ -24,6 +24,7 @@
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
 import React, { useState } from 'react';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import {
   View,
   Text,
@@ -38,42 +39,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  headerTitle:       '#0D3B47', // "Students"
-  headerSubtitle:    '#4A7C75', // "1,476 total · 1,248 placed"
-  filterBtnBg:       '#FFFFFF', // filter icon circle background
-  filterIcon:        '#0D3B47',
-
-  // Search bar
-  searchBg:          '#FFFFFF',
-  searchBorder:      '#FFFFFF', // no visible border in the design, just a soft shadow
-  searchPlaceholder: '#9BB8B4',
-  searchIcon:        '#9BB8B4',
-
-  // Student rows
-  rowBg:             '#FFFFFF',
-  avatarBg:          '#0D3B47', // dark teal circle with initials
-  avatarText:        '#FFFFFF',
-  studentName:       '#0D3B47',
-  studentDetail:     '#9BB8B4',
-
-  // Status pill colors — each status has its own background + text color
-  statusPlacedBg:       '#D6F2E3',
-  statusPlacedText:     '#1E8E5A',
-  statusInterviewingBg: '#FBE6C8',
-  statusInterviewingText:'#B5750F',
-  statusAppliedBg:      '#D6EEF2',
-  statusAppliedText:    '#1B7E94',
-  statusSeekingBg:      '#FFFFFF',
-  statusSeekingBorder:  '#D8E4E2',
-  statusSeekingText:    '#7A9D98',
-
-  // Bottom tab bar
-  tabBarBg:          '#FFFFFF',
-  tabActive:         '#2EC4B6',
-  tabInactive:       '#9BB8B4',
-};
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -82,19 +47,19 @@ const COLORS = {
 // Storing the 4 possible statuses' styles here means the row rendering
 // logic below can just look up the right colors instead of using a
 // long if/else chain for every student.
-const STATUS_STYLES: Record<
+const getStatusStyles = (colors: any): Record<
   string,
   { bg: string; text: string; border?: string }
-> = {
-  Placed: { bg: COLORS.statusPlacedBg, text: COLORS.statusPlacedText },
-  Interviewing: { bg: COLORS.statusInterviewingBg, text: COLORS.statusInterviewingText },
-  Applied: { bg: COLORS.statusAppliedBg, text: COLORS.statusAppliedText },
+> => ({
+  Placed: { bg: colors.statusPlacedBg, text: colors.statusPlacedText },
+  Interviewing: { bg: colors.statusInterviewingBg, text: colors.statusInterviewingText },
+  Applied: { bg: colors.statusAppliedBg, text: colors.statusAppliedText },
   Seeking: {
-    bg: COLORS.statusSeekingBg,
-    text: COLORS.statusSeekingText,
-    border: COLORS.statusSeekingBorder,
+    bg: colors.statusSeekingBg,
+    text: colors.statusSeekingText,
+    border: colors.statusSeekingBorder,
   },
-};
+});
 
 // The student list. In the real app this would come from your backend —
 // for now it's hardcoded to match the design exactly.
@@ -143,6 +108,8 @@ const STUDENTS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function StudentMonitoringScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   // This screen lives on the "Students" tab, so it starts active
   const [setActiveTab] = useState('students');
@@ -173,7 +140,7 @@ export default function StudentMonitoringScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Main scrollable content sits above the fixed bottom tab bar */}
       <ScrollView
@@ -199,7 +166,7 @@ export default function StudentMonitoringScreen({ navigation }: any) {
             <Ionicons
               name="filter-outline"
               size={18}
-              color={COLORS.filterIcon}
+              color={colors.filterIcon}
             />
           </TouchableOpacity>
         </View>
@@ -211,13 +178,13 @@ export default function StudentMonitoringScreen({ navigation }: any) {
           <Ionicons
             name="search-outline"
             size={16}
-            color={COLORS.searchIcon}
+            color={colors.searchIcon}
             style={{ marginRight: 10 }}
           />
           <TextInput
             style={styles.searchInput}
             placeholder="Search students..."
-            placeholderTextColor={COLORS.searchPlaceholder}
+            placeholderTextColor={colors.searchPlaceholder}
             value={searchText}
             onChangeText={setSearchText}
             autoCapitalize="none"
@@ -236,7 +203,7 @@ export default function StudentMonitoringScreen({ navigation }: any) {
           // Look up the right pill colors for this student's status.
           // Falls back to the "Seeking" style if an unrecognized status
           // ever sneaks in, so the row never crashes from a missing color.
-          const statusStyle = STATUS_STYLES[student.status] ?? STATUS_STYLES.Seeking;
+          const statusStyle = getStatusStyles(colors)[student.status] ?? getStatusStyles(colors).Seeking;
 
           return (
             <TouchableOpacity
@@ -298,11 +265,11 @@ export default function StudentMonitoringScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // Scrollable content — leaves room at the bottom so the tab bar
@@ -326,18 +293,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
   },
   filterBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.filterBtnBg,
+    backgroundColor: colors.filterBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -351,7 +318,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.searchBg,
+    backgroundColor: colors.searchBg,
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 48,
@@ -365,14 +332,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
   },
 
   // ── Student rows ──────────────────────────────────────────────
   studentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.rowBg,
+    backgroundColor: colors.rowBg,
     borderRadius: 16,
     padding: 14,
     marginBottom: 12, // space between each student's row
@@ -386,7 +353,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: COLORS.avatarBg,
+    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -394,7 +361,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.avatarText,
+    color: colors.avatarText,
   },
   studentTextBlock: {
     flex: 1, // fills space between avatar and status pill
@@ -402,12 +369,12 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.studentName,
+    color: colors.studentName,
     marginBottom: 2,
   },
   studentDetail: {
     fontSize: 12,
-    color: COLORS.studentDetail,
+    color: colors.studentDetail,
   },
 
   // ── Status pill (color comes from STATUS_STYLES at render time) ───
@@ -426,7 +393,7 @@ const styles = StyleSheet.create({
   noResultsText: {
     textAlign: 'center',
     fontSize: 13,
-    color: COLORS.studentDetail,
+    color: colors.studentDetail,
     marginTop: 20,
   },
 

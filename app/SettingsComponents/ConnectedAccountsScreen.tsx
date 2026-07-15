@@ -28,31 +28,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  serviceName:    '#0D3B47',
-  connectPillBg: '#2CACAD',
-  connectPillText: '#FFFFFF',
-  disconnectPillBg: '#F0F6F5',
-  disconnectPillText: '#4A7C75',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -81,6 +57,9 @@ const ACCOUNTS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function ConnectedAccountsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Track which accounts are connected (2 connected, 1 not)
   const [connectedAccounts, setConnectedAccounts] = useState<Set<string>>(
@@ -108,7 +87,7 @@ export default function ConnectedAccountsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -125,7 +104,7 @@ export default function ConnectedAccountsScreen({ navigation }: any) {
             <Ionicons
               name="arrow-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Connected Accounts</Text>
@@ -151,7 +130,7 @@ export default function ConnectedAccountsScreen({ navigation }: any) {
                   <Ionicons
                     name={account.icon as any}
                     size={22}
-                    color={COLORS.accentText}
+                    color={colors.accentText}
                   />
                 </View>
 
@@ -187,11 +166,11 @@ export default function ConnectedAccountsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -210,7 +189,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -223,12 +202,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Accounts Card ─────────────────────────────────────────────
   accountsCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 8,
     shadowColor: '#000',
@@ -247,7 +226,7 @@ const styles = StyleSheet.create({
   },
   accountRowNotLast: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowBorder,
+    borderBottomColor: colors.rowBorder,
   },
   iconCircle: {
     width: 44,
@@ -261,7 +240,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.serviceName,
+    color: colors.serviceName,
   },
 
   // ── Connect/Disconnect Button ─────────────────────────────────
@@ -271,20 +250,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   connectBtnConnected: {
-    backgroundColor: COLORS.disconnectPillBg,
+    backgroundColor: colors.disconnectPillBg,
   },
   connectBtnDisconnected: {
-    backgroundColor: COLORS.connectPillBg,
+    backgroundColor: colors.connectPillBg,
   },
   connectBtnText: {
     fontSize: 13,
     fontWeight: '600',
   },
   connectBtnTextConnected: {
-    color: COLORS.disconnectPillText,
+    color: colors.disconnectPillText,
   },
   connectBtnTextDisconnected: {
-    color: COLORS.connectPillText,
+    color: colors.connectPillText,
   },
 
 });
