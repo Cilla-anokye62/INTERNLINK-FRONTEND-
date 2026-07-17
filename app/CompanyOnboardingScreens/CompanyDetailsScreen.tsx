@@ -9,6 +9,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 
 
@@ -18,6 +20,9 @@ type Props = NativeStackScreenProps<any, any>;
 
 // ---------- Main Screen ----------
 const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [industry, setIndustry] = useState<string>('Software & SaaS');
   const [selectedSize, setSelectedSize] = useState<CompanySize>('51-200');
   const [headquarters, setHeadquarters] = useState<string>('San Francisco, CA');
@@ -55,13 +60,13 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
         {/* Industry */}
         <Text style={styles.sectionLabel}>INDUSTRY</Text>
         <View style={styles.inputRow}>
-          <Text style={styles.inputIcon}>🏭</Text>
+          <Ionicons name="business-outline" size={16} color={colors.subtitle} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.input}
             value={industry}
             onChangeText={setIndustry}
             placeholder="e.g. Software & SaaS"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.placeholder}
           />
         </View>
 
@@ -93,13 +98,13 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
         {/* Headquarters */}
         <Text style={styles.sectionLabel}>HEADQUARTERS</Text>
         <View style={styles.inputRow}>
-          <Text style={styles.inputIcon}>📍</Text>
+          <Ionicons name="location-outline" size={16} color={colors.subtitle} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.input}
             value={headquarters}
             onChangeText={setHeadquarters}
             placeholder="e.g. San Francisco, CA"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.placeholder}
           />
         </View>
 
@@ -111,7 +116,7 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
             value={description}
             onChangeText={setDescription}
             placeholder="Tell students about your company..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={5}
             textAlignVertical="top"
@@ -132,16 +137,10 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -156,41 +155,41 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   stepPercent: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     fontWeight: '500',
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.inputBorder,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 20,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 24,
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: colors.placeholder,
     letterSpacing: 0.5,
     marginBottom: 8,
     marginTop: 4,
@@ -198,10 +197,10 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 20,
@@ -213,7 +212,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
   },
   sizeRow: {
     flexDirection: 'row',
@@ -225,44 +224,44 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
   },
   sizeButtonSelected: {
-    backgroundColor: TEAL,
-    borderColor: TEAL,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   sizeButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   sizeButtonTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   textAreaContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 32,
   },
   textArea: {
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
     minHeight: 120,
   },
   continueButton: {
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

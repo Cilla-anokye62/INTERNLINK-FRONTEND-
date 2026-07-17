@@ -3,7 +3,7 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 
 // Screens
 import CompanyInformation from '../../app/CompanyOnboardingScreens/CompanyInformation';
-import CompanyDetails from '../../app/CompanyOnboardingScreens/CompanyDetails';
+import CompanyDetailsScreen from '../../app/CompanyOnboardingScreens/CompanyDetailsScreen';
 import RecruitmentPreferencesScreen from '../../app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
 import CompanyReviewCompleteScreen from '../../app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
 
@@ -18,7 +18,7 @@ export default function CompanyOnboardingNavigator() {
       }}
     >
       <Stack.Screen name="CompanyInformation" component={CompanyInformation} />
-      <Stack.Screen name="CompanyDetails" component={CompanyDetails} />
+      <Stack.Screen name="CompanyDetails" component={CompanyDetailsScreen} />
       <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
       <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} />
     </Stack.Navigator>

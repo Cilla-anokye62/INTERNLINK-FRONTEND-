@@ -105,18 +105,12 @@ export default function UniversityInfoScreen({ navigation }: any) {
 
             {/* Upload row */}
             <View style={styles.uploadCard}>
-              <View style={styles.uploadIconCircle}>
-                {/*
-                  Upload arrow — swapped from the "⬆" emoji to a real
-                  Ionicons icon. Sized and colored the same way the
-                  emoji's Text style used to be (20px, colors.uploadIcon).
-                */}
-                <Ionicons
-                  name="cloud-upload-outline"
-                  size={20}
-                  color={colors.uploadIcon}
-                />
-              </View>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={20}
+                color={colors.uploadIcon}
+                style={{ marginRight: 14 }}
+              />
               <View style={styles.uploadTextBlock}>
                 <Text style={styles.uploadTitle}>Upload university logo</Text>
                 <Text style={styles.uploadSubtitle}>PNG or SVG · max 2MB · square</Text>
@@ -177,7 +171,7 @@ export default function UniversityInfoScreen({ navigation }: any) {
               <Text style={styles.nextBtnText}>Next</Text>
               {/* TODO icon ("→") replaced with a real arrow icon for consistency */}
               <Ionicons
-                name="arrow-forward"
+                name="arrow-forward-outline"
                 size={18}
                 color={colors.nextBtnText}
                 style={{ marginLeft: 6 }}

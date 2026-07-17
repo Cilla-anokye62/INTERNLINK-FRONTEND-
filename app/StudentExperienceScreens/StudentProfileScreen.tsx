@@ -6,6 +6,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
+import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const EXPERIENCE = [
   {
@@ -28,10 +32,11 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   // Get bio from route params if available (from ProfileCompletionScreen)
   const initialBio = route.params?.bio ||
     'CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.';
-  const initialSkills = route.params?.skills || SKILLS;
+  const initialSkills = route.params?.skills || [];
 
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const isPremium = useAppStore((state) => state.isPremium);
 
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -175,9 +180,9 @@ export default function StudentProfileScreen({ navigation, route }: any) {
           <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity
             style={styles.settingsButton}
-            onPress={() => navigation.navigate('SettingsNav', { screen: 'Settings', params: { role: 'student' } })}
+            onPress={() => navigation.navigate('Settings', { role: 'student' })}
           >
-            <Text style={styles.settingsIcon}>⚙</Text>
+            <Ionicons name="settings-outline" size={18} color={colors.title} />
           </TouchableOpacity>
         </View>
 
@@ -193,7 +198,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
             )}
             {isEditMode && (
               <View style={styles.editPhotoBadge}>
-                <Text style={styles.editPhotoBadgeText}>✎</Text>
+                <Ionicons name="create-outline" size={14} color={colors.onPrimary} />
               </View>
             )}
           </TouchableOpacity>
@@ -204,6 +209,12 @@ export default function StudentProfileScreen({ navigation, route }: any) {
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedText}>✓ Verified</Text>
             </View>
+            {isPremium && (
+              <View style={styles.premiumBadge}>
+                <Ionicons name="star" size={12} color={colors.premiumBadgeText} style={{ marginRight: 4 }} />
+                <Text style={styles.premiumBadgeText}>Premium</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -223,6 +234,31 @@ export default function StudentProfileScreen({ navigation, route }: any) {
             <Text style={styles.editButtonText}>{isEditMode ? 'Done' : 'Edit profile'}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Premium upgrade banner */}
+        {!isPremium && (
+          <TouchableOpacity
+            style={styles.premiumBanner}
+            onPress={() => navigation.navigate('PremiumPaywall')}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={[colors.premiumGradientStart, colors.premiumGradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.premiumBannerGradient}
+            >
+              <View style={styles.premiumBannerContent}>
+                <Ionicons name="star" size={22} color={colors.onPrimary} style={{marginRight: 12}} />
+                <View style={styles.premiumBannerTextBlock}>
+                  <Text style={styles.premiumBannerTitle}>Upgrade to Premium</Text>
+                  <Text style={styles.premiumBannerDesc}>Unlock unlimited applications & AI analysis</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.onPrimary} />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
 
         {/* About section */}
@@ -416,7 +452,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: TAB_BAR_BOTTOM_PADDING,
   },
   header: {
     flexDirection: 'row',
@@ -488,9 +524,30 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.premiumBadgeBg,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: colors.premiumGradientStart,
+  },
+  premiumBadgeText: {
+    fontSize: 12,
+    color: colors.premiumBadgeText,
+    fontWeight: '700',
+  },
+  premiumBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   buttonRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 16,
+    marginBottom: 20,
   },
   shareButton: {
     flex: 1,
@@ -712,5 +769,37 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     color: colors.placeholder,
     textAlign: 'center',
+  },
+  premiumBanner: {
+    borderRadius: 16,
+    marginTop: 16,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  premiumBannerGradient: {
+    padding: 16,
+  },
+  premiumBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  premiumBannerTextBlock: {
+    flex: 1,
+  },
+  premiumBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  premiumBannerDesc: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+  },
+  premiumBannerArrow: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

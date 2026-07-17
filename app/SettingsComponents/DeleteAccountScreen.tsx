@@ -123,7 +123,7 @@ const [confirmed, setConfirmed] = useState(false);
         {/* Confirmation Checkbox */}
         <TouchableOpacity style={styles.checkboxRow} onPress={() => setConfirmed(!confirmed)}>
           <View style={[styles.checkbox, confirmed && styles.checkboxChecked]}>
-            {confirmed && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            {confirmed && <Ionicons name="checkmark" size={14} color={colors.onPrimary} />}
           </View>
           <Text style={styles.checkboxText}>
             I understand that this action cannot be undone and I want to delete my account.

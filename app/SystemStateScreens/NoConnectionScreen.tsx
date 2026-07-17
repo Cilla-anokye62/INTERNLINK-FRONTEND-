@@ -40,6 +40,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -76,16 +77,7 @@ export default function NoConnectionScreen({ navigation }: any) {
 
         <View style={styles.card}>
 
-          {/* Icon circle with the "no connection" icon inside */}
-          <View style={styles.iconCircle}>
-            {/*
-              TODO: replace this Text with a real icon, e.g.:
-              <Ionicons name="cloud-offline-outline" size={36} color={colors.iconColor} />
-              The design shows a cloud with a slash through it.
-            */}
-            <Text style={styles.iconText}>☁️</Text>
-            <View style={styles.iconSlash} />
-          </View>
+          <Ionicons name="cloud-offline-outline" size={36} color={colors.iconColor} style={{ marginBottom: 24 }} />
 
           {/* Headline — allowed to wrap onto 2 lines, matching the design */}
           <Text style={styles.headline}>Oops! Something went wrong</Text>
@@ -101,8 +93,7 @@ export default function NoConnectionScreen({ navigation }: any) {
             onPress={handleRetry}
             activeOpacity={0.85}
           >
-            {/* TODO: replace with <Ionicons name="refresh" size={16} color="#FFFFFF" /> */}
-            <Text style={styles.retryIcon}>↻</Text>
+            <Ionicons name="refresh-outline" size={16} color={colors.retryBtnText} style={{ marginRight: 8 }} />
             <Text style={styles.retryBtnText}>Retry</Text>
           </TouchableOpacity>
 

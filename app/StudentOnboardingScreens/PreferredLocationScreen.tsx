@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, Scroll
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, G } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
@@ -132,7 +133,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
 
         {/* Location input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputIcon}>📍</Text>
+          <Ionicons name="location-outline" size={18} color={colors.placeholder} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.input}
             value={location}
@@ -153,7 +154,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
                 onPress={() => handleCitySelect(city)}
                 activeOpacity={0.7}
               >
-                {city === 'Remote' && <Text style={styles.chipIcon}>📶 </Text>}
+                {city === 'Remote' && <Ionicons name="wifi-outline" size={14} color={colors.accent} style={{ marginRight: 4 }} />}
                 {isSelected && city !== 'Remote' && <Text style={styles.chipCheck}>✓ </Text>}
                 <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
                   {city}

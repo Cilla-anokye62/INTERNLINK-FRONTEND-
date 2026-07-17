@@ -199,13 +199,12 @@ export default function ReviewCompleteScreen({ navigation }: any) {
               <View key={row.id} style={styles.row}>
 
                 {/* Left: icon circle */}
-                <View style={styles.rowIconCircle}>
-                  <Ionicons
+                <Ionicons
                     name={row.icon as any}
                     size={18}
                     color={colors.rowIcon}
+                    style={{ marginRight: 12 }}
                   />
-                </View>
 
                 {/* Middle: title + detail text, fills remaining space */}
                 <View style={styles.rowTextBlock}>
@@ -236,13 +235,12 @@ export default function ReviewCompleteScreen({ navigation }: any) {
               Light teal banner reminding the user about the review wait time.
           */}
           <View style={styles.banner}>
-            <View style={styles.bannerIconCircle}>
-              <Ionicons
+            <Ionicons
                 name="shield-checkmark-outline"
                 size={14}
                 color={colors.bannerIcon}
+                style={{ marginRight: 12 }}
               />
-            </View>
             <Text style={styles.bannerText}>
               Your profile will be reviewed within 24 hours before going live.
             </Text>

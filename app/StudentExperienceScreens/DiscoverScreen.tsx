@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, FlatList } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
 const { width } = Dimensions.get('window');
 
-const CATEGORIES = ['All', 'Engineering', 'Design', 'Data', 'Marketing', 'Finance'];
+const CATEGORIES = ['Recommended', 'All', 'Engineering', 'Design', 'Data', 'Business', 'Remote'];
 
 const INTERNSHIPS = [
   { id: '1', title: 'Software Engineering Intern', company: 'Airbnb', location: 'San Francisco, CA · Hybrid', match: 94, pay: 'GHS 48/hr', duration: "Summer '26", color: '#EF4444', saved: true },
@@ -22,7 +24,7 @@ export default function DiscoverScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('Recommended');
   const [savedItems, setSavedItems] = useState<string[]>(['1']);
 
   const toggleSave = (id: string) => {
@@ -35,7 +37,12 @@ export default function DiscoverScreen({ navigation }: any) {
     const matchesSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.company.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
+    const matchesCategory =
+      activeCategory === 'Recommended' ||
+      activeCategory === 'All' ||
+      item.title.toLowerCase().includes(activeCategory.toLowerCase()) ||
+      item.company.toLowerCase().includes(activeCategory.toLowerCase());
+    return matchesSearch && matchesCategory;
   });
 
   const handleBrowseAll = () => {
@@ -44,7 +51,7 @@ export default function DiscoverScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
 
       {/* Header */}
       <View style={styles.header}>
@@ -52,32 +59,27 @@ export default function DiscoverScreen({ navigation }: any) {
           <Text style={styles.headerTitle}>Discover</Text>
           <Text style={styles.headerSub}>248 open internships</Text>
         </View>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuDots}>···</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* Search + Filter row */}
+      {/* Search bar */}
       <View style={styles.searchRow}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search-outline" size={16} color={colors.searchIcon} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="React, design, remote..."
+            placeholder="Search internships..."
             placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
           />
         </View>
-        <TouchableOpacity style={styles.filterButton}>
-          <Text style={styles.filterIcon}>⚙</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Category chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.categoriesScroll}
         contentContainerStyle={styles.categoriesRow}
       >
         {CATEGORIES.map(cat => (
@@ -99,7 +101,7 @@ export default function DiscoverScreen({ navigation }: any) {
         // ── EMPTY STATE ──────────────────────────────────────────
         <View style={styles.emptyState}>
           <View style={styles.illustrationCard}>
-            <Text style={styles.illustrationEmoji}>📦🔍</Text>
+            <Ionicons name="search-outline" size={44} color={colors.placeholder} />
           </View>
           <Text style={styles.emptyHeadline}>Nothing here yet</Text>
           <Text style={styles.emptySubtext}>
@@ -135,7 +137,7 @@ export default function DiscoverScreen({ navigation }: any) {
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.cardCompany}>{item.company}</Text>
                 <View style={styles.locationRow}>
-                  <Text style={styles.locationIcon}>📍</Text>
+                  <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{marginRight: 4}} />
                   <Text style={styles.cardLocation}>{item.location}</Text>
                 </View>
                 <View style={styles.tagsRow}>
@@ -157,9 +159,11 @@ export default function DiscoverScreen({ navigation }: any) {
                 onPress={() => toggleSave(item.id)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.saveIcon, savedItems.includes(item.id) && styles.saveIconActive]}>
-                  {savedItems.includes(item.id) ? '🔖' : '🔖'}
-                </Text>
+                <Ionicons
+                  name={savedItems.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+                  size={18}
+                  color={savedItems.includes(item.id) ? colors.accent : colors.placeholder}
+                />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
@@ -195,31 +199,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.subtitle,
     marginTop: 2,
   },
-  menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuDots: {
-    fontSize: 18,
-    color: colors.menuBtnIcon,
-    fontWeight: 'bold',
-    letterSpacing: 2,
-  },
 
   // Search
   searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 24,
     marginBottom: 14,
-    gap: 10,
   },
   searchBar: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.inputBg,
@@ -230,60 +216,54 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderColor: colors.inputBorder,
   },
   searchIcon: {
-    fontSize: 14,
     marginRight: 8,
-    color: colors.searchIcon,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
     color: colors.text,
   },
-  filterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterIcon: {
-    fontSize: 20,
-    color: colors.onPrimary,
-  },
 
   // Categories
+  categoriesScroll: {
+    flexGrow: 0,
+    marginBottom: 14,
+  },
   categoriesRow: {
     paddingHorizontal: 24,
-    paddingBottom: 14,
+    alignItems: 'center',
     gap: 8,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 12,
     borderRadius: 30,
     backgroundColor: colors.card,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.inputBorder,
+    minHeight: 44,
+    flexShrink: 0,
   },
   categoryChipActive: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
   categoryText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.subtitle,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   categoryTextActive: {
-    color: colors.onPrimary,
+    color: '#FFFFFF',
     fontWeight: '700',
   },
 
   // List
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: TAB_BAR_BOTTOM_PADDING,
     gap: 12,
   },
 
@@ -332,10 +312,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  locationIcon: {
-    fontSize: 11,
-    marginRight: 4,
-  },
   cardLocation: {
     fontSize: 12,
     color: colors.placeholder,
@@ -373,13 +349,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginLeft: 8,
     padding: 4,
   },
-  saveIcon: {
-    fontSize: 18,
-    opacity: 0.3,
-  },
-  saveIconActive: {
-    opacity: 1,
-  },
 
   // Empty state
   emptyState: {
@@ -402,9 +371,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
-  },
-  illustrationEmoji: {
-    fontSize: 44,
   },
   emptyHeadline: {
     fontSize: 20,

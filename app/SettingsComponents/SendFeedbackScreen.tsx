@@ -369,6 +369,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   textAreaInput: {
     textAlignVertical: 'top',
+    height: 120,
   },
 
   // ── Submit Button ─────────────────────────────────────────────

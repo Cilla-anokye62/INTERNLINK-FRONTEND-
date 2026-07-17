@@ -19,7 +19,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { isValidEmail, isValidPassword, nonEmpty, passwordsMatch } from '../../src/utils/validateCard';
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function EmailPasswordScreen({ navigation }: any) {
@@ -51,20 +52,42 @@ export default function EmailPasswordScreen({ navigation }: any) {
 
   // Track which input is focused
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
+
+  // Email section validation
+  const emailErrors = useMemo(() => ({
+    newEmail: isValidEmail(newEmail),
+    emailPassword: nonEmpty(emailPassword, 'Password'),
+  }), [newEmail, emailPassword]);
+
+  const isEmailFormValid = !emailErrors.newEmail && !emailErrors.emailPassword;
+
+  // Password section validation
+  const passwordErrors = useMemo(() => ({
+    currentPassword: nonEmpty(currentPassword, 'Current password'),
+    newPassword: isValidPassword(newPassword),
+    confirmPassword: passwordsMatch(newPassword, confirmPassword),
+  }), [currentPassword, newPassword, confirmPassword]);
+
+  const isPasswordFormValid = !passwordErrors.currentPassword && !passwordErrors.newPassword && !passwordErrors.confirmPassword;
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
   const handleChangeEmail = () => {
+    setTouched({ newEmail: true, emailPassword: true });
+    if (!isEmailFormValid) return;
     console.log('Changing email:', { newEmail });
-    // TODO: save to backend
     navigation.goBack();
   };
 
   const handleChangePassword = () => {
+    setTouched({ currentPassword: true, newPassword: true, confirmPassword: true });
+    if (!isPasswordFormValid) return;
     console.log('Changing password');
-    // TODO: save to backend
     navigation.goBack();
   };
 
@@ -134,6 +157,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'newEmail' && styles.inputContainerFocused,
+              touched.newEmail && emailErrors.newEmail && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
@@ -144,9 +168,10 @@ export default function EmailPasswordScreen({ navigation }: any) {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('newEmail')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('newEmail'); }}
               />
             </View>
+            {touched.newEmail && emailErrors.newEmail && <Text style={styles.errorText}>{emailErrors.newEmail}</Text>}
           </View>
 
           {/* Confirm with Password */}
@@ -155,6 +180,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'emailPassword' && styles.inputContainerFocused,
+              touched.emailPassword && emailErrors.emailPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
@@ -164,16 +190,18 @@ export default function EmailPasswordScreen({ navigation }: any) {
                 onChangeText={setEmailPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('emailPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('emailPassword'); }}
               />
             </View>
+            {touched.emailPassword && emailErrors.emailPassword && <Text style={styles.errorText}>{emailErrors.emailPassword}</Text>}
           </View>
 
           {/* Save Button for Email */}
           <TouchableOpacity
-            style={styles.saveBtn}
+            style={[styles.saveBtn, !isEmailFormValid && styles.saveBtnDisabled]}
             onPress={handleChangeEmail}
             activeOpacity={0.85}
+            disabled={!isEmailFormValid}
           >
             <Text style={styles.saveBtnText}>Update Email</Text>
           </TouchableOpacity>
@@ -191,6 +219,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'currentPassword' && styles.inputContainerFocused,
+              touched.currentPassword && passwordErrors.currentPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
@@ -200,9 +229,10 @@ export default function EmailPasswordScreen({ navigation }: any) {
                 onChangeText={setCurrentPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('currentPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('currentPassword'); }}
               />
             </View>
+            {touched.currentPassword && passwordErrors.currentPassword && <Text style={styles.errorText}>{passwordErrors.currentPassword}</Text>}
           </View>
 
           {/* New Password */}
@@ -211,6 +241,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'newPassword' && styles.inputContainerFocused,
+              touched.newPassword && passwordErrors.newPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
@@ -220,11 +251,12 @@ export default function EmailPasswordScreen({ navigation }: any) {
                 onChangeText={setNewPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('newPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('newPassword'); }}
               />
             </View>
-            {/* Password Strength Hint */}
-            {newPassword.length > 0 && (
+            {touched.newPassword && passwordErrors.newPassword ? (
+              <Text style={styles.errorText}>{passwordErrors.newPassword}</Text>
+            ) : newPassword.length > 0 ? (
               <Text style={[
                 styles.hint,
                 passwordStrength === 'Weak' && styles.hintWeak,
@@ -233,7 +265,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
               ]}>
                 Password strength: {passwordStrength}
               </Text>
-            )}
+            ) : null}
           </View>
 
           {/* Confirm New Password */}
@@ -242,6 +274,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'confirmPassword' && styles.inputContainerFocused,
+              touched.confirmPassword && passwordErrors.confirmPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
@@ -251,16 +284,18 @@ export default function EmailPasswordScreen({ navigation }: any) {
                 onChangeText={setConfirmPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('confirmPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('confirmPassword'); }}
               />
             </View>
+            {touched.confirmPassword && passwordErrors.confirmPassword && <Text style={styles.errorText}>{passwordErrors.confirmPassword}</Text>}
           </View>
 
           {/* Save Button for Password */}
           <TouchableOpacity
-            style={styles.saveBtn}
+            style={[styles.saveBtn, !isPasswordFormValid && styles.saveBtnDisabled]}
             onPress={handleChangePassword}
             activeOpacity={0.85}
+            disabled={!isPasswordFormValid}
           >
             <Text style={styles.saveBtnText}>Update Password</Text>
           </TouchableOpacity>
@@ -362,6 +397,15 @@ const createStyles = (colors: any) => StyleSheet.create({
   inputContainerFocused: {
     borderColor: colors.inputFocus,
   },
+  inputContainerError: {
+    borderColor: colors.error,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+  },
   input: {
     flex: 1,
     fontSize: 14,
@@ -413,6 +457,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: colors.accentText,
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
   },
 
 });

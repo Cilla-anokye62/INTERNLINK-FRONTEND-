@@ -1,14 +1,23 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import HomeStack from './HomeStack';
 import DiscoverScreen from './DiscoverScreen';
 import SavedScreen from './SavedScreen';
-import ApplicationTrackingScreen from './ApplicationTrackingScreen';
+import MyApplicationsScreen from './MyApplicationsScreen';
 import StudentProfileScreen from './StudentProfileScreen';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const Tab = createBottomTabNavigator();
+
+const ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
+  Home:         { active: 'home',      inactive: 'home-outline' },
+  Discover:     { active: 'search',    inactive: 'search-outline' },
+  Saved:        { active: 'bookmark',  inactive: 'bookmark-outline' },
+  Applications: { active: 'clipboard', inactive: 'clipboard-outline' },
+  Profile:      { active: 'person',    inactive: 'person-outline' },
+};
 
 export default function StudentTabs() {
   const { colors } = useAppTheme();
@@ -21,33 +30,29 @@ export default function StudentTabs() {
           backgroundColor: colors.tabBarBg,
           borderTopWidth: 1,
           borderTopColor: colors.tabBarBorder,
-          height: 64,
-          paddingBottom: 10,
+          height: 78,
           paddingTop: 8,
+          paddingBottom: 18, // accounts for the phone's home indicator area
         },
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: ({ focused, color }) => {
-          const icons: Record<string, string> = {
-            Home:         '⌂',
-            Discover:     '🔍',
-            Saved:        '🔖',
-            Applications: '📋',
-            Profile:      '👤',
-          };
+        tabBarIcon: ({ focused, color, size }) => {
+          const iconSet = ICONS[route.name];
           return (
-            <Text style={{ fontSize: 20, color }}>
-              {icons[route.name]}
-            </Text>
+            <Ionicons
+              name={focused ? iconSet.active : iconSet.inactive}
+              size={size ?? 22}
+              color={color}
+            />
           );
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Discover"     component={DiscoverScreen} />
-      <Tab.Screen name="Saved"        component={SavedScreen} />
-      <Tab.Screen name="Applications" component={ApplicationTrackingScreen} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} />
+      <Tab.Screen name="Saved" component={SavedScreen} />
+      <Tab.Screen name="Applications" component={MyApplicationsScreen} />
       <Tab.Screen name="Profile" component={StudentProfileScreen} />
     </Tab.Navigator>
   );

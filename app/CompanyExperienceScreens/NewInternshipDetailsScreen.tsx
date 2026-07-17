@@ -9,6 +9,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -16,6 +18,7 @@ type LocationType = 'Remote' | 'Hybrid' | 'On-site';
 
 // ---------- Main Screen ----------
 const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
   const [roleTitle, setRoleTitle] = useState<string>('Frontend Engineering Intern');
   const [department, setDepartment] = useState<string>('Engineering');
   const [type, setType] = useState<string>('Internship');
@@ -148,7 +151,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.twoColumnItem}>
             <Text style={styles.fieldLabel}>Start date</Text>
             <View style={styles.inputRow}>
-              <Text style={styles.inputIcon}>📅</Text>
+              <Ionicons name="calendar-outline" size={16} color={colors.placeholder} style={{marginRight: 8}} />
               <TextInput
                 style={styles.inputFlex}
                 value={startDate}

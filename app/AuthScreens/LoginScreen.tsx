@@ -1,5 +1,5 @@
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,13 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppStore } from '../../src/store/useAppStore';
+import { isValidEmail, nonEmpty } from '../../src/utils/validateCard';
 
 const { height } = Dimensions.get('window');
 
@@ -21,14 +27,43 @@ const { height } = Dimensions.get('window');
 export default function LoginScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
+  const login = useAppStore((s) => s.login);
+  const scrollRef = useRef<ScrollView>(null);
+  const fieldY = useRef<Record<string, number>>({});
+
+  const scrollToField = (fieldName: string) => {
+    const y = fieldY.current[fieldName];
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }
+  };
+
+  const handleFocus = (fieldName: string) => {
+    setFocusedInput(fieldName);
+    setTimeout(() => scrollToField(fieldName), 300);
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const errors = useMemo(() => ({
+    email: isValidEmail(email),
+    password: nonEmpty(password, 'Password'),
+  }), [email, password]);
+
+  const isFormValid = !errors.email && !errors.password;
+
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
 
   const handleLogin = () => {
-    console.log('Logging in with:', email, password);
+    setTouched({ email: true, password: true });
+    if (!isFormValid) return;
+    login('student');
+    navigation.replace('HomeDashboard');
   };
 
   const handleGoogleLogin = () => {
@@ -42,8 +77,11 @@ export default function LoginScreen({ navigation }: any) {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.top}
       >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -62,50 +100,62 @@ export default function LoginScreen({ navigation }: any) {
             {/* Email */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Email</Text>
-              <View style={[
-                styles.inputWrapper,
-                focusedInput === 'email' && styles.inputWrapperFocused,
-              ]}>
-                <Text style={styles.inputIcon}>✉</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'email' && styles.inputWrapperFocused,
+                  touched.email && errors.email && styles.inputWrapperError,
+                ]}
+                onLayout={(e) => { fieldY.current.email = e.nativeEvent.layout.y; }}
+              >
+                <Ionicons name="mail-outline" size={18} color={colors.inputIcon} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.inputText }]}
                   placeholder="student@university.edu"
                   placeholderTextColor={colors.placeholder}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  onFocus={() => setFocusedInput('email')}
-                  onBlur={() => setFocusedInput(null)}
+                  onFocus={() => handleFocus('email')}
+                  onBlur={() => { setFocusedInput(null); markTouched('email'); }}
                 />
               </View>
+              {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
             {/* Password */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={[
-                styles.inputWrapper,
-                focusedInput === 'password' && styles.inputWrapperFocused,
-              ]}>
-                <Text style={styles.inputIcon}>🔒</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'password' && styles.inputWrapperFocused,
+                  touched.password && errors.password && styles.inputWrapperError,
+                ]}
+                onLayout={(e) => { fieldY.current.password = e.nativeEvent.layout.y; }}
+              >
+                <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.inputText }]}
                   placeholder="••••••••"
                   placeholderTextColor={colors.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  onFocus={() => setFocusedInput('password')}
-                  onBlur={() => setFocusedInput(null)}
+                  textContentType="password"
+                  autoComplete="password"
+                  onFocus={() => handleFocus('password')}
+                  onBlur={() => { setFocusedInput(null); markTouched('password'); }}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeBtn}
                 >
-                  <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁'}</Text>
+                  <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={colors.inputIcon} />
                 </TouchableOpacity>
               </View>
+              {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
             {/* Forgot Password */}
@@ -153,6 +203,7 @@ export default function LoginScreen({ navigation }: any) {
           </View>
 
         </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -168,9 +219,8 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: 28,
-    paddingVertical: height * 0.06,   // relative instead of fixed 48
+    paddingVertical: height * 0.06,
   },
   titleSection: {
     marginBottom: height * 0.04,      // relative instead of fixed 36
@@ -213,6 +263,15 @@ const createStyles = (colors: any) => StyleSheet.create({
   inputWrapperFocused: {
     borderColor: colors.inputBorderFocus,
   },
+  inputWrapperError: {
+    borderColor: colors.error,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+  },
   inputIcon: {
     fontSize: 16,
     marginRight: 10,
@@ -246,6 +305,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
     elevation: 6,
+  },
+  loginBtnDisabled: {
+    opacity: 0.5,
   },
   loginBtnText: {
     fontSize: 16,
