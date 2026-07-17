@@ -7,7 +7,10 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -23,16 +26,19 @@ interface PerkItem {
 }
 
 interface InfoItem {
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   value: string;
 }
 
 // ---------- Main Screen ----------
 const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const stats: StatItem[] = [
     { label: 'Open roles', value: '6' },
-    { label: 'Avg rating', value: '4.8', subtext: '★★★★★' },
+    { label: 'Avg rating', value: '4.8' },
     { label: "Hires '25", value: '38' },
   ];
 
@@ -45,8 +51,8 @@ const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
   ];
 
   const infoItems: InfoItem[] = [
-    { icon: '🌐', label: 'Website', value: 'acme.tech' },
-    { icon: '📍', label: 'HQ', value: 'SF, CA' },
+    { icon: 'globe-outline', label: 'Website', value: 'acme.tech' },
+    { icon: 'location-outline', label: 'HQ', value: 'SF, CA' },
   ];
 
   return (
@@ -105,7 +111,13 @@ const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.statLabel}>{stat.label}</Text>
               <Text style={styles.statValue}>{stat.value}</Text>
               {stat.subtext && (
-                <Text style={styles.statSubtext}>{stat.subtext}</Text>
+                <View style={{ flexDirection: 'row', gap: 1, marginTop: 2 }}>
+                  <Ionicons name="star" size={10} color={colors.accent} />
+                  <Ionicons name="star" size={10} color={colors.accent} />
+                  <Ionicons name="star" size={10} color={colors.accent} />
+                  <Ionicons name="star" size={10} color={colors.accent} />
+                  <Ionicons name="star" size={10} color={colors.accent} />
+                </View>
               )}
             </View>
           ))}
@@ -133,7 +145,7 @@ const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.infoRow}>
           {infoItems.map((item) => (
             <View key={item.label} style={styles.infoCard}>
-              <Text style={styles.infoIcon}>{item.icon}</Text>
+              <Ionicons name={item.icon} size={18} color={colors.accent} style={{ marginBottom: 6 }} />
               <Text style={styles.infoLabel}>{item.label}</Text>
               <Text style={styles.infoValue}>{item.value}</Text>
             </View>
@@ -145,17 +157,10 @@ const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -163,35 +168,35 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
+    borderBottomColor: colors.inputBorder,
   },
   backButton: {
     padding: 4,
   },
   backIcon: {
     fontSize: 18,
-    color: TEXT_DARK,
+    color: colors.title,
     fontWeight: '600',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   editLink: {
     fontSize: 14,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '600',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: TAB_BAR_BOTTOM_PADDING,
   },
   coverImage: {
     width: '100%',
     height: 140,
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.accent,
   },
   avatarWrapper: {
     paddingHorizontal: 20,
@@ -202,14 +207,14 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: colors.background,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
@@ -223,32 +228,32 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 20,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   verifiedBadge: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     paddingVertical: 3,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   verifiedText: {
     fontSize: 12,
-    color: TEAL_DARK,
+    color: colors.accent,
     fontWeight: '600',
   },
   companyMeta: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     paddingHorizontal: 20,
     marginBottom: 16,
   },
   statsRow: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 14,
     marginBottom: 24,
   },
@@ -258,34 +263,29 @@ const styles = StyleSheet.create({
   },
   statBoxDivider: {
     borderRightWidth: 1,
-    borderRightColor: BORDER_COLOR,
+    borderRightColor: colors.inputBorder,
   },
   statLabel: {
     fontSize: 11,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: TEXT_DARK,
-  },
-  statSubtext: {
-    fontSize: 10,
-    color: TEAL,
-    marginTop: 2,
+    color: colors.title,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     paddingHorizontal: 20,
     marginBottom: 10,
   },
   aboutText: {
     fontSize: 13,
     lineHeight: 20,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     paddingHorizontal: 20,
     marginBottom: 24,
   },
@@ -297,14 +297,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   perkChip: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
   },
   perkChipText: {
     fontSize: 12,
-    color: TEAL_DARK,
+    color: colors.accent,
     fontWeight: '500',
   },
   infoRow: {
@@ -314,25 +314,21 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 14,
-  },
-  infoIcon: {
-    fontSize: 18,
-    marginBottom: 6,
   },
   infoLabel: {
     fontSize: 11,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
 });
 

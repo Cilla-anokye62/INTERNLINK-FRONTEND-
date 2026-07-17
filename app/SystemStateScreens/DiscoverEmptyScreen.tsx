@@ -52,6 +52,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -95,7 +96,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
 
         <TouchableOpacity onPress={handleNotificationsPress}>
           {/* TODO: swap for <Ionicons name="notifications-outline" size={22} /> */}
-          <Text style={styles.bellIconText}>🔔</Text>
+          <Ionicons name="notifications-outline" size={24} color={colors.onPrimary} />
         </TouchableOpacity>
 
       </View>
@@ -111,7 +112,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
             image, e.g.:
             <Image source={require('../assets/empty-search-box.png')} style={styles.illustrationImage} />
           */}
-          <Text style={styles.illustrationEmoji}>📦🔍</Text>
+          <Ionicons name="search-outline" size={44} color={colors.placeholder} />
         </View>
 
         <Text style={styles.headline}>Nothing here yet</Text>

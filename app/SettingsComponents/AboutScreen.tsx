@@ -64,7 +64,7 @@ const handleBackPress = () => {
         {/* App Info Card */}
         <View style={styles.appInfoCard}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logo}>🎓</Text>
+            <Ionicons name="school-outline" size={40} color={colors.primary} />
           </View>
           <Text style={styles.appName}>InternLink</Text>
           <Text style={styles.tagline}>Connecting Students with Opportunities</Text>

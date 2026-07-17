@@ -127,9 +127,7 @@ export default function AppearanceSettingsScreen({ navigation }: any) {
 
                 {/* Active checkmark badge */}
                 {isSelected && (
-                  <View style={styles.checkBadge}>
-                    <Ionicons name="checkmark" size={12} color={colors.onPrimary} />
-                  </View>
+                  <Ionicons name="checkmark" size={12} color={colors.accent} style={{ position: 'absolute', top: 10, right: 10 }} />
                 )}
               </TouchableOpacity>
             );
@@ -263,18 +261,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 14,
   },
-  checkBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   // ── Info box ─────────────────────────────────────────────────────
   infoBox: {
     flexDirection: 'row',

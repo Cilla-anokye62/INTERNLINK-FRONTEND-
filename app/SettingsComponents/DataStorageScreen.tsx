@@ -133,7 +133,7 @@ const [offlineMode, setOfflineMode] = useState(false);
           <Text style={styles.sectionHeader}>Download Quality</Text>
           <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
             <Text style={styles.optionLabel}>High Quality</Text>
-            <Ionicons name="checkmark-circle" size={20} color={colors.button} />
+            <Ionicons name="checkmark-circle-outline" size={20} color={colors.button} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
             <Text style={styles.optionLabel}>Standard Quality</Text>

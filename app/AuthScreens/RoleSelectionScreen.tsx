@@ -87,24 +87,25 @@ export default function RoleSelectionScreen({ navigation }: any) {
                 onPress={() => setSelectedRole(role.id)}
                 activeOpacity={0.85}
               >
-                <View style={[styles.iconCircle, isSelected && styles.iconCircleSelected]}>
-                  <Ionicons
-                    name={role.icon}
-                    size={26}
-                    color={isSelected ? colors.iconSelected : colors.iconIdle}
-                  />
-                </View>
+                <Ionicons
+                  name={role.icon}
+                  size={26}
+                  color={isSelected ? colors.iconSelected : colors.iconIdle}
+                  style={{ marginRight: 16 }}
+                />
 
                 <View style={styles.cardTextBlock}>
                   <Text style={styles.cardTitle}>{role.title}</Text>
                   <Text style={styles.cardDescription}>{role.description}</Text>
                 </View>
 
-                {isSelected && (
-                  <View style={styles.checkmarkBadge}>
-                    <Text style={styles.checkmarkText}>✓</Text>
-                  </View>
-                )}
+                <View style={styles.checkmarkSlot}>
+                  {isSelected && (
+                    <View style={styles.checkmarkBadge}>
+                      <Text style={styles.checkmarkText}>✓</Text>
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -201,18 +202,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   cardSelected: {
     borderColor: colors.cardBorderActive,
   },
-  iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.iconCircle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  iconCircleSelected: {
-    backgroundColor: colors.iconCircleActive,
-  },
   cardTextBlock: {
     flex: 1,
   },
@@ -227,6 +216,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.cardDescription,
     lineHeight: 19,
   },
+  checkmarkSlot: {
+    width: 28,
+    height: 28,
+    marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   checkmarkBadge: {
     width: 28,
     height: 28,
@@ -234,7 +230,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.cardBorderActive,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 12,
   },
   checkmarkText: {
     color: colors.checkmark,

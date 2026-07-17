@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { isValidName, isValidEmail, isValidPassword, passwordsMatch } from '../../src/utils/validateCard';
 
 const { height } = Dimensions.get('window');
 
 export default function SignUpScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+  const fieldY = useRef<Record<string, number>>({});
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,10 +21,42 @@ export default function SignUpScreen({ navigation, route }: any) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const scrollToField = (fieldName: string) => {
+    const y = fieldY.current[fieldName];
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }
+  };
+
+  const handleFocus = (fieldName: string) => {
+    setFocusedInput(fieldName);
+    setTimeout(() => scrollToField(fieldName), 300);
+  };
+
+  const errors = useMemo(() => ({
+    fullName: isValidName(fullName),
+    email: isValidEmail(email),
+    password: isValidPassword(password),
+    confirmPassword: passwordsMatch(password, confirmPassword),
+  }), [fullName, email, password, confirmPassword]);
+
+  const isFormValid = !errors.fullName && !errors.email && !errors.password && !errors.confirmPassword && agreed;
+
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
+
+  const handleSignUp = () => {
+    setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
+    if (!isFormValid) return;
+    navigation.navigate('Verification', { role: route.params?.role });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={insets.top}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView ref={scrollRef} style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* Back button */}
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={22} color={colors.backArrow} />
@@ -32,93 +68,118 @@ export default function SignUpScreen({ navigation, route }: any) {
 
         {/* Full Name */}
         <Text style={styles.label}>Full Name</Text>
-        <View style={[
-          styles.inputContainer,
-          focusedInput === 'fullName' && styles.inputContainerFocused,
-        ]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'fullName' && styles.inputContainerFocused,
+            touched.fullName && errors.fullName && styles.inputContainerError,
+          ]}
+          onLayout={(e) => { fieldY.current.fullName = e.nativeEvent.layout.y; }}
+        >
           <Ionicons name="person-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.inputText }]}
             placeholder="Jane Doe"
             placeholderTextColor={colors.placeholder}
             value={fullName}
             onChangeText={setFullName}
-            onFocus={() => setFocusedInput('fullName')}
-            onBlur={() => setFocusedInput(null)}
+            onFocus={() => handleFocus('fullName')}
+            onBlur={() => { setFocusedInput(null); markTouched('fullName'); }}
+            autoCapitalize="words"
           />
         </View>
+        {touched.fullName && errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
 
         {/* Email */}
         <Text style={styles.label}>Email</Text>
-        <View style={[
-          styles.inputContainer,
-          focusedInput === 'email' && styles.inputContainerFocused,
-        ]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'email' && styles.inputContainerFocused,
+            touched.email && errors.email && styles.inputContainerError,
+          ]}
+          onLayout={(e) => { fieldY.current.email = e.nativeEvent.layout.y; }}
+        >
           <Ionicons name="mail-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.inputText }]}
             placeholder="jane.doe@email.com"
             placeholderTextColor={colors.placeholder}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            onFocus={() => setFocusedInput('email')}
-            onBlur={() => setFocusedInput(null)}
+            onFocus={() => handleFocus('email')}
+            onBlur={() => { setFocusedInput(null); markTouched('email'); }}
           />
         </View>
+        {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
         {/* Password */}
         <Text style={styles.label}>Password</Text>
-        <View style={[
-          styles.inputContainer,
-          focusedInput === 'password' && styles.inputContainerFocused,
-        ]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'password' && styles.inputContainerFocused,
+            touched.password && errors.password && styles.inputContainerError,
+          ]}
+          onLayout={(e) => { fieldY.current.password = e.nativeEvent.layout.y; }}
+        >
           <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.inputText }]}
             placeholder="••••••••"
             placeholderTextColor={colors.placeholder}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
-            onFocus={() => setFocusedInput('password')}
-            onBlur={() => setFocusedInput(null)}
+            textContentType="password"
+            autoComplete="password"
+            onFocus={() => handleFocus('password')}
+            onBlur={() => { setFocusedInput(null); markTouched('password'); }}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              name={showPassword ? 'eye-outline' : 'eye-off-outline'}
               size={18}
               color={colors.inputIcon}
             />
           </TouchableOpacity>
         </View>
+        {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
         {/* Confirm Password */}
         <Text style={styles.label}>Confirm Password</Text>
-        <View style={[
-          styles.inputContainer,
-          focusedInput === 'confirmPassword' && styles.inputContainerFocused,
-        ]}>
+        <View
+          style={[
+            styles.inputContainer,
+            focusedInput === 'confirmPassword' && styles.inputContainerFocused,
+            touched.confirmPassword && errors.confirmPassword && styles.inputContainerError,
+          ]}
+          onLayout={(e) => { fieldY.current.confirmPassword = e.nativeEvent.layout.y; }}
+        >
           <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: colors.inputText }]}
             placeholder="••••••••"
             placeholderTextColor={colors.placeholder}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry={!showConfirmPassword}
-            onFocus={() => setFocusedInput('confirmPassword')}
-            onBlur={() => setFocusedInput(null)}
+            textContentType="none"
+            autoComplete="off"
+            onFocus={() => handleFocus('confirmPassword')}
+            onBlur={() => { setFocusedInput(null); markTouched('confirmPassword'); }}
           />
           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
             <Ionicons
-              name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+              name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
               size={18}
               color={colors.inputIcon}
             />
           </TouchableOpacity>
         </View>
+        {touched.confirmPassword && errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
 
         {/* Tooltip */}
         <View style={styles.tooltip}>
@@ -141,8 +202,9 @@ export default function SignUpScreen({ navigation, route }: any) {
 
         {/* Button */}
         <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('Verification', { role: route.params?.role })}
+          style={[styles.button, !isFormValid && styles.buttonDisabled]}
+          onPress={handleSignUp}
+          disabled={!isFormValid}
         >
           <Text style={styles.buttonText}>Create Account →</Text>
         </TouchableOpacity>
@@ -154,6 +216,8 @@ export default function SignUpScreen({ navigation, route }: any) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -221,6 +285,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   inputContainerFocused: {
     borderColor: colors.inputBorderFocus,
   },
+  inputContainerError: {
+    borderColor: colors.error,
+  },
   inputIcon: {
     marginRight: 10,
   },
@@ -271,12 +338,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
   button: {
     backgroundColor: colors.buttonBg,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     color: colors.buttonText,

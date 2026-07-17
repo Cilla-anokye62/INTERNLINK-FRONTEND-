@@ -156,7 +156,7 @@ const [fontSize, setFontSize] = useState('Medium');
                 Optimize for screen readers like VoiceOver
               </Text>
             </View>
-            <Ionicons name="chevron-forward-outline" size={20} color="#C7DAD7" />
+            <Ionicons name="chevron-forward-outline" size={20} color={colors.icon} />
           </View>
         </View>
       </ScrollView>

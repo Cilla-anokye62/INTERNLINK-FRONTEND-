@@ -2,20 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { Ionicons } from '@expo/vector-icons';
 
 const TODAY_NOTIFICATIONS = [
   {
     id: '1',
-    icon: '📅',
-    iconBg: '#D4F0EE',
+    icon: 'calendar-outline',
     title: 'Interview scheduled',
     subtitle: 'Meta · Mar 24 at 2:00 PM',
     dotColor: '#10B981',
   },
   {
     id: '2',
-    icon: '👁️',
-    iconBg: '#D4F0EE',
+    icon: 'eye-outline',
     title: 'Application viewed',
     subtitle: 'Stripe viewed your application',
     dotColor: '#10B981',
@@ -25,24 +24,21 @@ const TODAY_NOTIFICATIONS = [
 const WEEK_NOTIFICATIONS = [
   {
     id: '3',
-    icon: '✦',
-    iconBg: '#EDE9FE',
+    icon: 'star-outline',
     title: 'New match',
     subtitle: 'OpenAI ML Research — 92% match',
     dotColor: '#10B981',
   },
   {
     id: '4',
-    icon: '✉️',
-    iconBg: '#D4F0EE',
+    icon: 'mail-outline',
     title: 'Message from recruiter',
     subtitle: 'Sarah Chen · Airbnb',
     dotColor: '#F59E0B',
   },
   {
     id: '5',
-    icon: '↗',
-    iconBg: '#D4F0EE',
+    icon: 'trending-up-outline',
     title: 'Profile boost',
     subtitle: 'Your profile got 24 views this week',
     dotColor: '#10B981',
@@ -75,8 +71,8 @@ export default function NotificationsScreen({ navigation }: any) {
         <View style={styles.section}>
           {TODAY_NOTIFICATIONS.map(item => (
             <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.7}>
-              <View style={[styles.iconCircle, { backgroundColor: item.iconBg }]}>
-                <Text style={styles.iconText}>{item.icon}</Text>
+              <View style={[styles.iconCircle, { backgroundColor: colors.iconCircle }]}>
+                <Ionicons name={item.icon as any} size={16} color={colors.accent} />
               </View>
               <View style={styles.cardInfo}>
                 <View style={styles.titleRow}>
@@ -94,8 +90,8 @@ export default function NotificationsScreen({ navigation }: any) {
         <View style={styles.section}>
           {WEEK_NOTIFICATIONS.map(item => (
             <TouchableOpacity key={item.id} style={styles.card} activeOpacity={0.7}>
-              <View style={[styles.iconCircle, { backgroundColor: item.iconBg }]}>
-                <Text style={styles.iconText}>{item.icon}</Text>
+              <View style={[styles.iconCircle, { backgroundColor: colors.iconCircle }]}>
+                <Ionicons name={item.icon as any} size={16} color={colors.accent} />
               </View>
               <View style={styles.cardInfo}>
                 <View style={styles.titleRow}>

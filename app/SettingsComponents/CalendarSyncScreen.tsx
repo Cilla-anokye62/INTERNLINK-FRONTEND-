@@ -92,17 +92,17 @@ const [syncEnabled, setSyncEnabled] = useState(false);
               <Ionicons name="calendar-outline" size={20} color={colors.switchActive} />
               <Text style={styles.optionLabel}>{selectedCalendar}</Text>
             </View>
-            <Ionicons name="checkmark-circle" size={20} color={colors.switchActive} />
+            <Ionicons name="checkmark-circle-outline" size={20} color={colors.switchActive} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
             <View style={styles.optionInfo}>
-              <Ionicons name="calendar-outline" size={20} color="#94A3B8" />
+              <Ionicons name="calendar-outline" size={20} color={colors.placeholder} />
               <Text style={styles.optionLabel}>Apple Calendar</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
             <View style={styles.optionInfo}>
-              <Ionicons name="calendar-outline" size={20} color="#94A3B8" />
+              <Ionicons name="calendar-outline" size={20} color={colors.placeholder} />
               <Text style={styles.optionLabel}>Outlook Calendar</Text>
             </View>
           </TouchableOpacity>
@@ -120,7 +120,7 @@ const [syncEnabled, setSyncEnabled] = useState(false);
             >
               <Text style={styles.optionLabel}>{freq}</Text>
               {syncFrequency === freq && (
-                <Ionicons name="checkmark-circle" size={20} color={colors.switchActive} />
+                <Ionicons name="checkmark-circle-outline" size={20} color={colors.switchActive} />
               )}
             </TouchableOpacity>
           ))}

@@ -7,6 +7,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 interface SummaryRow {
@@ -19,22 +21,39 @@ interface SummaryRow {
 interface SummaryRowItemProps {
   row: SummaryRow;
   onEdit: () => void;
+  colors: any;
 }
 
-const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit }) => {
+const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit, colors }) => {
   return (
-    <View style={styles.row}>
-      <View style={styles.rowIconCircle}>
-        <Text style={styles.rowIconText}>{row.icon}</Text>
-      </View>
+    <View style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 10,
+    }}>
+      <Ionicons name={row.icon as any} size={16} color={colors.subtitle} style={{ marginRight: 12 }} />
 
-      <View style={styles.rowTextContainer}>
-        <Text style={styles.rowTitle}>{row.title}</Text>
-        <Text style={styles.rowSubtitle}>{row.subtitle}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{
+          fontSize: 14,
+          fontWeight: '700',
+          color: colors.title,
+          marginBottom: 2,
+        }}>{row.title}</Text>
+        <Text style={{
+          fontSize: 12,
+          color: colors.subtitle,
+        }}>{row.subtitle}</Text>
       </View>
 
       <TouchableOpacity onPress={onEdit} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Text style={styles.editIcon}>✏️</Text>
+        <Ionicons name="create-outline" size={16} color={colors.subtitle} />
       </TouchableOpacity>
     </View>
   );
@@ -42,24 +61,27 @@ const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit }) => {
 
 // ---------- Main Screen ----------
 const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const summaryRows: SummaryRow[] = [
     {
-      icon: '🏢',
+      icon: 'business-outline',
       title: 'Company info',
       subtitle: 'Northwind · talent@northwind.io',
     },
     {
-      icon: '📁',
+      icon: 'folder-outline',
       title: 'Details',
       subtitle: 'Software · 51-200 employees',
     },
     {
-      icon: '💼',
+      icon: 'briefcase-outline',
       title: 'Recruitment',
       subtitle: '3 categories · Hybrid',
     },
     {
-      icon: '📍',
+      icon: 'location-outline',
       title: 'Locations',
       subtitle: 'SF · NYC · Remote',
     },
@@ -134,12 +156,13 @@ const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation
             key={row.title}
             row={row}
             onEdit={() => handleEdit(row.title)}
+            colors={colors}
           />
         ))}
 
         {/* Info banner */}
         <View style={styles.infoBanner}>
-          <Text style={styles.infoBannerIcon}>📄</Text>
+          <Ionicons name="document-text-outline" size={14} color={colors.accent} style={{ marginRight: 8 }} />
           <Text style={styles.infoBannerText}>
             You can post your first internship right after setup.
           </Text>
@@ -168,20 +191,14 @@ const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -196,42 +213,42 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   stepPercent: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     fontWeight: '500',
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.inputBorder,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 20,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 20,
   },
   companyCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 16,
     marginBottom: 16,
   },
@@ -244,13 +261,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -260,42 +277,42 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 2,
   },
   companyMeta: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   scoreBadge: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   scoreBadgeText: {
-    color: TEAL,
+    color: colors.accent,
     fontSize: 12,
     fontWeight: '700',
   },
   companyProgressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.inputBorder,
     borderRadius: 2,
     overflow: 'hidden',
   },
   companyProgressFill: {
     height: '100%',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginBottom: 10,
@@ -304,7 +321,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -318,12 +335,12 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 2,
   },
   rowSubtitle: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   editIcon: {
     fontSize: 16,
@@ -331,7 +348,7 @@ const styles = StyleSheet.create({
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 14,
@@ -345,31 +362,31 @@ const styles = StyleSheet.create({
   infoBannerText: {
     flex: 1,
     fontSize: 12,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   completeButton: {
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 10,
   },
   completeButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
   saveLaterButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 16,
     alignItems: 'center',
   },
   saveLaterButtonText: {
-    color: TEXT_DARK,
+    color: colors.title,
     fontSize: 15,
     fontWeight: '600',
   },

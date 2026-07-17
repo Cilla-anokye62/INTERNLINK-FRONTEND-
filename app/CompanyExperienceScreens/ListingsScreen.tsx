@@ -7,7 +7,10 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -25,6 +28,9 @@ interface Listing {
 
 // ---------- Main Screen ----------
 const ListingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
 
   const listings: Listing[] = [
@@ -168,8 +174,14 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
 
               <View style={styles.listingFooter}>
                 <View style={styles.listingStats}>
-                  <Text style={styles.statItem}>👁 {listing.views}</Text>
-                  <Text style={styles.statItem}>📈 {listing.growth}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="eye-outline" size={12} color={colors.subtitle} />
+                    <Text style={styles.statItem}>{listing.views}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="trending-up-outline" size={12} color={colors.subtitle} />
+                    <Text style={styles.statItem}>{listing.growth}</Text>
+                  </View>
                 </View>
                 <TouchableOpacity
                   onPress={() => console.log('Manage:', listing.title)}
@@ -187,17 +199,10 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F2FBFA',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -206,16 +211,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: '#F2FBFA',
+    backgroundColor: colors.background,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
     marginTop: 2,
   },
@@ -223,12 +228,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 22,
     fontWeight: '700',
     lineHeight: 26,
@@ -243,37 +248,37 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
   },
   filterTabActive: {
-  backgroundColor: TEAL,
-  borderColor: TEAL,
+  backgroundColor: colors.accent,
+  borderColor: colors.accent,
   height: 34,
   justifyContent: 'center',
 },
   filterTabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   filterTabTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 32,
+    paddingBottom: TAB_BAR_BOTTOM_PADDING,
     gap: 12,
   },
   listingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 16,
   },
   listingHeader: {
@@ -285,7 +290,7 @@ const styles = StyleSheet.create({
   listingTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     flex: 1,
     marginRight: 8,
   },
@@ -299,10 +304,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   badgeActive: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
   },
   badgeTextActive: {
-    color: TEAL_DARK,
+    color: colors.accent,
   },
   badgePaused: {
     backgroundColor: '#FEF3C7',
@@ -314,17 +319,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   badgeTextDraft: {
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   badgeClosed: {
     backgroundColor: '#F3F4F6',
   },
   badgeTextClosed: {
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   applicantsText: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
     marginBottom: 12,
   },
@@ -339,11 +344,11 @@ const styles = StyleSheet.create({
   },
   statItem: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   manageLink: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '600',
   },
 });

@@ -48,6 +48,7 @@ const SETTINGS_SECTIONS = [
       { id: 'personalInfo', title: 'Personal info' },
       { id: 'emailPassword', title: 'Email & password' },
       { id: 'connectedAccounts', title: 'Connected accounts' },
+      { id: 'subscription', title: 'Subscription' },
     ],
   },
   {
@@ -77,6 +78,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const userRole = route.params?.role || 'student'; // Default to student if not provided
   const logout = useAppStore((state) => state.logout);
+  const isPremium = useAppStore((state) => state.isPremium);
 
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -116,16 +118,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   };
 
   const handleProfilePress = () => {
-    // Navigate to role-specific profile screen
-    if (userRole === 'student') {
-      navigation.navigate('Profile');
-      navigation.navigate('HomeDashboard', { screen: 'Profile' });
-    } else if (userRole === 'university') {
-      navigation.navigate('EditProfile');
-    } else if (userRole === 'employer') {
-      // TODO: Add employer edit profile screen
-      console.log('Employer profile edit not yet implemented');
-    }
+    navigation.goBack();
   };
 
   const handleRowPress = (rowId: string) => {
@@ -138,6 +131,9 @@ export default function SettingsScreen({ navigation, route }: any) {
         break;
       case 'connectedAccounts':
         navigation.navigate('ConnectedAccounts');
+        break;
+      case 'subscription':
+        navigation.navigate('PremiumManage');
         break;
       case 'notifications':
         navigation.navigate('NotificationSettings');
@@ -200,7 +196,7 @@ export default function SettingsScreen({ navigation, route }: any) {
           onPress={handleProfilePress}
           activeOpacity={0.85}
         >
-          <View style={styles.profileCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
             ) : (
@@ -215,7 +211,7 @@ export default function SettingsScreen({ navigation, route }: any) {
             <Ionicons
               name="chevron-forward-outline"
               size={18}
-              color={COLORS.chevron}
+              color={colors.chevron}
             />
           </View>
         </TouchableOpacity>
@@ -236,7 +232,14 @@ export default function SettingsScreen({ navigation, route }: any) {
                   onPress={() => handleRowPress(item.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.rowText}>{item.title}</Text>
+                  <View style={styles.rowLeft}>
+                    <Text style={styles.rowText}>{item.title}</Text>
+                    {item.id === 'subscription' && isPremium && (
+                      <View style={styles.subscriptionBadge}>
+                        <Ionicons name="diamond-outline" size={14} color={colors.accent} />
+                      </View>
+                    )}
+                  </View>
                   <Ionicons
                     name="chevron-forward-outline"
                     size={18}
@@ -377,9 +380,25 @@ const createStyles = (colors: any) => StyleSheet.create({
   settingRowLast: {
     borderBottomWidth: 0,
   },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   rowText: {
     fontSize: 14,
     color: colors.rowText,
+  },
+  subscriptionBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(212,175,55,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionBadgeText: {
+    fontSize: 12,
   },
   signOutBtn: {
     alignItems: 'center',

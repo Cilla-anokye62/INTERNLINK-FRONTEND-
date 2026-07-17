@@ -9,6 +9,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -27,6 +29,9 @@ interface Applicant {
 
 // ---------- Main Screen ----------
 const ApplicantsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const applicants: Applicant[] = [
@@ -112,19 +117,19 @@ const ApplicantsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
         <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.filterIcon}>⚲</Text>
+          <Ionicons name="options-outline" size={16} color={colors.title} />
         </TouchableOpacity>
       </View>
 
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Ionicons name="search-outline" size={16} color={colors.placeholder} />
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Search by name, skill, school..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.placeholder}
         />
       </View>
 
@@ -187,17 +192,10 @@ const ApplicantsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F2FBFA',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -206,29 +204,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: '#F2FBFA',
+    backgroundColor: colors.background,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginTop: 2,
   },
   filterIcon: {
     fontSize: 22,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     marginHorizontal: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -241,7 +239,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
   },
   container: {
     flex: 1,
@@ -252,10 +250,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   applicantCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 14,
   },
   cardTop: {
@@ -267,13 +265,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -283,12 +281,12 @@ const styles = StyleSheet.create({
   applicantName: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 2,
   },
   applicantMeta: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   statusBadge: {
     paddingVertical: 4,
@@ -300,10 +298,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   badgeNew: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
   },
   badgeTextNew: {
-    color: TEAL_DARK,
+    color: colors.accent,
   },
   badgeShortlisted: {
     backgroundColor: '#D1FAE5',
@@ -315,7 +313,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   badgeTextReviewed: {
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   badgeInterview: {
     backgroundColor: '#FEF3C7',
@@ -330,14 +328,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   matchBadge: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   matchText: {
     fontSize: 12,
-    color: TEAL_DARK,
+    color: colors.accent,
     fontWeight: '600',
   },
   skillChip: {
@@ -348,7 +346,7 @@ const styles = StyleSheet.create({
   },
   skillChipText: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     fontWeight: '500',
   },
 });

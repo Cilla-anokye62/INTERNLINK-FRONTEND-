@@ -46,7 +46,7 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     iconCircle: 'rgba(46,196,182,0.18)',
     iconCircleActive: '#2EC4B6',
     iconIdle: '#2EC4B6',
-    iconSelected: '#FFFFFF',
+    iconSelected: '#329891',
     titleText: '#0D3B47',
     subtitleText: '#4A7C75',
     cardTitle: '#0D3B47',
@@ -260,6 +260,37 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     nextBtn: '#2CACAD',
     nextBtnText: '#FFFFFF',
 
+    // Application flow tokens
+    timelineActive: '#2CACAD',
+    timelineInactive: '#E0F0EE',
+    timelineLine: '#C5E8E3',
+    offerCardBg: '#D6F2E3',
+    offerCardText: '#1E8E5A',
+    interviewCardBg: '#EDE9FE',
+    interviewCardText: '#7C3AED',
+    withdrawBg: '#FEE2E2',
+    withdrawText: '#EF4444',
+    appProgressBg: '#E0F0EE',
+    appProgressFill: '#2CACAD',
+    applicantCardBg: '#FFFFFF',
+    applicantCardBorder: '#C5E8E3',
+    filterPillBg: '#FFFFFF',
+    filterPillBorder: '#C5E8E3',
+    filterPillActive: '#2CACAD',
+    filterPillActiveText: '#FFFFFF',
+    stepperInactive: '#E0F0EE',
+    stepperActive: '#2CACAD',
+    portfolioChipBg: '#E8F8F5',
+    portfolioChipText: '#2CACAD',
+    uploadAreaBg: '#F7F8FA',
+    uploadAreaBorder: '#C5E8E3',
+    textAreaBg: '#FFFFFF',
+    textAreaBorder: '#C5E8E3',
+    notifDot: '#EF4444',
+    notifReadBg: '#F7F8FA',
+    notifUnreadBg: '#E8F8F5',
+    successAnimBg: '#D6F2E3',
+
     // Auth & Settings keys
     profileEmail: '#4A7C75',
     profileName: '#0D3B47',
@@ -278,6 +309,19 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     switchThumb: '#FFFFFF',
     switchActive: '#2CACAD',
     iconBg: '#E8F8F5',
+
+    // Premium tokens
+    premiumGradientStart: '#D4AF37',
+    premiumGradientEnd: '#F2D06B',
+    premiumBadgeBg: '#FFF8E7',
+    premiumBadgeText: '#B8860B',
+    premiumCardBg: '#FFFBF0',
+    premiumLockOverlay: 'rgba(0,0,0,0.5)',
+    premiumText: '#D4AF37',
+    premiumFeatureCheck: '#2CACAD',
+    premiumFeatureCross: '#E0524C',
+    premiumBannerBg: '#FFF8E7',
+    premiumBannerBorder: '#E8D48B',
 
   },
   dark: {
@@ -327,7 +371,7 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     iconCircle: 'rgba(44,172,173,0.18)',
     iconCircleActive: '#2CACAD',
     iconIdle: '#2CACAD',
-    iconSelected: '#02364A',
+    iconSelected: '#2CACAD',
     titleText: '#EBE9FC',
     subtitleText: '#A0B0B5',
     cardTitle: '#EBE9FC',
@@ -541,6 +585,37 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     nextBtn: '#2CACAD',
     nextBtnText: '#02364A',
 
+    // Application flow tokens
+    timelineActive: '#2CACAD',
+    timelineInactive: '#1D8B89',
+    timelineLine: '#1D8B89',
+    offerCardBg: '#1D8B89',
+    offerCardText: '#10B981',
+    interviewCardBg: '#2D1B69',
+    interviewCardText: '#A78BFA',
+    withdrawBg: '#3B1A1A',
+    withdrawText: '#FF6B6B',
+    appProgressBg: '#1D8B89',
+    appProgressFill: '#2CACAD',
+    applicantCardBg: '#065063',
+    applicantCardBorder: '#1D8B89',
+    filterPillBg: '#065063',
+    filterPillBorder: '#1D8B89',
+    filterPillActive: '#2CACAD',
+    filterPillActiveText: '#02364A',
+    stepperInactive: '#1D8B89',
+    stepperActive: '#2CACAD',
+    portfolioChipBg: '#1D8B89',
+    portfolioChipText: '#2CACAD',
+    uploadAreaBg: '#065063',
+    uploadAreaBorder: '#1D8B89',
+    textAreaBg: '#065063',
+    textAreaBorder: '#1D8B89',
+    notifDot: '#FF6B6B',
+    notifReadBg: '#065063',
+    notifUnreadBg: '#1D8B89',
+    successAnimBg: '#1D8B89',
+
     // Auth & Settings keys
     profileEmail: '#A0B0B5',
     profileName: '#EBE9FC',
@@ -560,5 +635,22 @@ export const Colors: Record<'light' | 'dark', Record<string, string>> = {
     switchActive: '#2CACAD',
     iconBg: '#1D8B89',
 
+    // Premium tokens
+    premiumGradientStart: '#C9A227',
+    premiumGradientEnd: '#E8C84A',
+    premiumBadgeBg: '#2A1F0A',
+    premiumBadgeText: '#F2D06B',
+    premiumCardBg: '#0A2A33',
+    premiumLockOverlay: 'rgba(0,0,0,0.6)',
+    premiumText: '#F2D06B',
+    premiumFeatureCheck: '#2CACAD',
+    premiumFeatureCross: '#FF6B6B',
+    premiumBannerBg: '#2A1F0A',
+    premiumBannerBorder: '#5A4A1A',
+
   }
 };
+
+/** Shared bottom padding for screens inside a bottom tab navigator.
+ *  Tab bar height = 78px, so 100px gives comfortable clearance. */
+export const TAB_BAR_BOTTOM_PADDING = 100;

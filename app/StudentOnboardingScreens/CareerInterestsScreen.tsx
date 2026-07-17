@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height, width } = Dimensions.get('window');
@@ -61,7 +62,7 @@ export default function CareerInterestsScreen({ navigation }: any) {
         </Text>
 
         <View style={styles.hintRow}>
-          <Text style={styles.hintIcon}>✦</Text>
+          <Ionicons name="sparkles-outline" size={16} color={colors.accent} style={{ marginRight: 8 }} />
           <Text style={styles.hintText}>AI uses your interests to calculate match scores</Text>
         </View>
       </View>

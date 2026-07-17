@@ -48,6 +48,7 @@ import {
   Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -152,7 +153,7 @@ export default function LoadingStateScreen({ navigation }: any) {
 
           {/* Sparkle/star icon sitting in the very centre, on top of both rings */}
           {/* TODO: swap for <Ionicons name="sparkles-outline" size={22} color={colors.sparkleIcon} /> */}
-          <Text style={styles.sparkleIconText}>✦</Text>
+          <Ionicons name="sparkles-outline" size={16} color={colors.accent} />
 
         </View>
 

@@ -35,6 +35,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -134,8 +135,7 @@ export default function SearchResultsScreen({ navigation }: any) {
   };
 
   const handleBackPress = () => {
-    console.log('Back tapped');
-    // TODO: navigation.goBack();
+    navigation.goBack();
   };
 
   const handleFiltersPress = () => {
@@ -198,8 +198,7 @@ export default function SearchResultsScreen({ navigation }: any) {
 
         {/* ── SEARCH BAR ───────────────────────────────────────────── */}
         <View style={styles.searchBar}>
-          {/* TODO: swap for <Ionicons name="search-outline" size={16} /> */}
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search-outline" size={16} color={colors.searchIcon} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search internships..."
@@ -300,18 +299,19 @@ export default function SearchResultsScreen({ navigation }: any) {
                   style={styles.bookmarkBtn}
                   activeOpacity={0.7}
                 >
-                  {/* TODO: swap for <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} /> */}
-                  <Text style={styles.bookmarkIconText}>
-                    {isBookmarked ? '🔖' : '🏷️'}
-                  </Text>
+                  <Ionicons
+                    name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+                    size={16}
+                    color={isBookmarked ? colors.accent : colors.subtitle}
+                  />
                 </TouchableOpacity>
 
               </View>
 
               {/* Location · term line */}
               <Text style={styles.locationText}>
-                {/* TODO: swap 📍 for <Ionicons name="location-outline" size={12} /> */}
-                📍 {result.location}
+                <Ionicons name="location-outline" size={12} color={colors.locationText} style={{ marginRight: 4 }} />
+                {result.location}
               </Text>
 
               {/* Bottom row: match % pill + hourly rate pill */}

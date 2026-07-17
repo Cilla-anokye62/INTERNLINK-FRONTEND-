@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimens
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
@@ -47,9 +48,6 @@ export default function SkillsScreen({ navigation, route }: any) {
       return;
     }
     
-    if (isEditing) {
-      // Save skills to AsyncStorage and navigate back
-      AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
     // Always save skills to AsyncStorage
     await AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
     
@@ -91,7 +89,7 @@ export default function SkillsScreen({ navigation, route }: any) {
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search-outline" size={16} color={colors.placeholder} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search skills..."
@@ -184,7 +182,6 @@ export default function SkillsScreen({ navigation, route }: any) {
 
     </SafeAreaView>
   );
-}
 }
 
 const createStyles = (colors: any) => StyleSheet.create({
