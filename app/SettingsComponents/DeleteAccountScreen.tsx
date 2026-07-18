@@ -88,7 +88,7 @@ const [confirmed, setConfirmed] = useState(false);
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
               color={colors.backArrow}
             />

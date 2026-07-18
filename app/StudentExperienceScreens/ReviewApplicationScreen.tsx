@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { InternshipData, Application, STATUS_CONFIG, ApplicationStatus } from '../../src/types/application';
@@ -84,7 +85,7 @@ export default function ReviewApplicationScreen({ navigation, route }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.title }]}>Review Application</Text>
@@ -119,7 +120,7 @@ export default function ReviewApplicationScreen({ navigation, route }: any) {
           <Text style={[styles.sectionTitle, { color: colors.title }]}>Personal Info</Text>
           <InfoRow label="Name" value="Alex Morgan" />
           <InfoRow label="Email" value="alex.morgan@university.edu" />
-          <InfoRow label="Phone" value="+1 (555) 123-4567" />
+          <InfoRow label="Phone" value="+233 55 123 4567" />
         </View>
 
         {/* Resume */}

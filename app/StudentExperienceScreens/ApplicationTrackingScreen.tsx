@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -66,6 +66,54 @@ export default function ApplicationTrackingScreen({ navigation }: any) {
 
   const [activeFilter, setActiveFilter] = useState('All');
 
+  const renderItem = useCallback(({ item }: { item: typeof APPLICATIONS[0] }) => (
+    <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+      {/* Top row */}
+      <View style={styles.cardTopRow}>
+        <View style={[styles.avatar, { backgroundColor: item.color }]}>
+          <Text style={styles.avatarText}>{item.company[0]}</Text>
+        </View>
+        <View style={styles.cardInfo}>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+          <Text style={styles.cardCompany}>
+            {item.company}{item.duration ? ` · ${item.duration}` : ''}
+          </Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
+          <Text style={[styles.statusText, { color: item.statusColor }]}>
+            {item.statusLabel}
+          </Text>
+        </View>
+      </View>
+
+      {/* Progress section */}
+      {item.showStages ? (
+        <View style={styles.stagesRow}>
+          {STAGES.map((stage, index) => {
+            const isActive = index <= (item.currentStage ?? 0);
+            return (
+              <View key={stage} style={styles.stageItem}>
+                <Text style={[styles.stageLabel, isActive && styles.stageLabelActive]}>
+                  {stage}
+                </Text>
+                <View style={styles.stageDotsRow}>
+                  <View style={[styles.stageDot, isActive && styles.stageDotActive]} />
+                  {index < STAGES.length - 1 && (
+                    <View style={[styles.stageLine, isActive && styles.stageLineActive]} />
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={styles.simpleProgressBg}>
+          <View style={[styles.simpleProgressFill, { width: `${(item.progress ?? 0) * 100}%` }]} />
+        </View>
+      )}
+    </TouchableOpacity>
+  ), [styles]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
 
@@ -108,53 +156,7 @@ export default function ApplicationTrackingScreen({ navigation }: any) {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} activeOpacity={0.85}>
-              {/* Top row */}
-              <View style={styles.cardTopRow}>
-                <View style={[styles.avatar, { backgroundColor: item.color }]}>
-                  <Text style={styles.avatarText}>{item.company[0]}</Text>
-                </View>
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardCompany}>
-                    {item.company}{item.duration ? ` · ${item.duration}` : ''}
-                  </Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: item.statusBg }]}>
-                  <Text style={[styles.statusText, { color: item.statusColor }]}>
-                    {item.statusLabel}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Progress section */}
-              {item.showStages ? (
-                <View style={styles.stagesRow}>
-                  {STAGES.map((stage, index) => {
-                    const isActive = index <= (item.currentStage ?? 0);
-                    return (
-                      <View key={stage} style={styles.stageItem}>
-                        <Text style={[styles.stageLabel, isActive && styles.stageLabelActive]}>
-                          {stage}
-                        </Text>
-                        <View style={styles.stageDotsRow}>
-                          <View style={[styles.stageDot, isActive && styles.stageDotActive]} />
-                          {index < STAGES.length - 1 && (
-                            <View style={[styles.stageLine, isActive && styles.stageLineActive]} />
-                          )}
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={styles.simpleProgressBg}>
-                  <View style={[styles.simpleProgressFill, { width: `${(item.progress ?? 0) * 100}%` }]} />
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
+          renderItem={renderItem}
         />
       ) : (
         /* Free user tracking gate */

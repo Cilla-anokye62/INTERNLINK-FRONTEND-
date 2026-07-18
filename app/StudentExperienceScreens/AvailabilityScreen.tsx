@@ -50,7 +50,7 @@ export default function AvailabilityScreen({ navigation, route }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.title }]}>Availability</Text>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 
@@ -35,7 +36,7 @@ export default function OfferSendScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.title }]}>Send Offer</Text>
         <View style={{ width: 40 }} />

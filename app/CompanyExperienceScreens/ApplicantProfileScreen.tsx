@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { Application, STATUS_CONFIG } from '../../src/types/application';
@@ -93,7 +94,7 @@ export default function ApplicantProfileScreen({ navigation, route }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.title }]}>Applicant Profile</Text>
         <View style={{ width: 40 }} />

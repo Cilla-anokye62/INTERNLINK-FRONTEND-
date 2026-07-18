@@ -86,7 +86,7 @@ const COORDINATOR_FIELDS = [
 // Looping over this array avoids writing the same row markup three times.
 const PLACEMENT_INFO_ROWS = [
   { id: 'location', icon: 'location-outline', text: 'Building E39, 2nd Floor' },
-  { id: 'phone', icon: 'call-outline', text: '+1 (617) 253-4733' },
+  { id: 'phone', icon: 'call-outline', text: '+233 24 123 4567' },
   { id: 'hours', icon: 'time-outline', text: 'Mon – Fri · 9:00 – 17:00' },
 ];
 

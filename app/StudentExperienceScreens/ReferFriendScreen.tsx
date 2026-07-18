@@ -29,7 +29,7 @@ export default function ReferFriendScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.title }]}>Refer a Friend</Text>
         <View style={{ width: 40 }} />

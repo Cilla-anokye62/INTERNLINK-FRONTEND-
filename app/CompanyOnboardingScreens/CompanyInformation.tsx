@@ -7,10 +7,12 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 type Props = NativeStackScreenProps<any, any>;
@@ -30,13 +32,28 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
 
   const [companyName, setCompanyName] = useState<string>("Northwind Studios");
   const [companyEmail, setCompanyEmail] = useState<string>("talent@northwind.io");
-  const [contactPhone, setContactPhone] = useState<string>("+1 (415) 555-2014");
+  const [contactPhone, setContactPhone] = useState<string>("+233 55 123 4567");
   const [website, setWebsite] = useState<string>("https://northwind.io");
+  const [logoName, setLogoName] = useState<string | null>(null);
+
+  const handleUploadLogo = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/png', 'image/svg+xml'],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setLogoName(result.assets[0].name);
+      }
+    } catch {
+      Alert.alert('Upload failed', 'Could not pick the file. Please try again.');
+    }
+  };
 
   const fields: FormField[] = [
     { label: "COMPANY NAME", value: companyName, placeholder: "Your company name", icon: "business-outline", keyboardType: "default" },
     { label: "COMPANY EMAIL", value: companyEmail, placeholder: "talent@yourcompany.com", icon: "mail-outline", keyboardType: "email-address" },
-    { label: "CONTACT PHONE", value: contactPhone, placeholder: "+1 (000) 000-0000", icon: "call-outline", keyboardType: "phone-pad" },
+    { label: "CONTACT PHONE", value: contactPhone, placeholder: "+233 XX XXX XXXX", icon: "call-outline", keyboardType: "phone-pad" },
     { label: "WEBSITE", value: website, placeholder: "https://yourcompany.com", icon: "globe-outline", keyboardType: "url" },
   ];
 
@@ -66,10 +83,10 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.title}>Company information</Text>
           <Text style={styles.subtitle}>Make a great first impression on candidates.</Text>
 
-          <TouchableOpacity style={styles.logoUploadBox} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.logoUploadBox} activeOpacity={0.7} onPress={handleUploadLogo}>
             <Ionicons name="cloud-upload-outline" size={18} color={colors.subtitle} style={{ marginRight: 10 }} />
             <View style={styles.logoTextBlock}>
-              <Text style={styles.logoMainText}>Upload company logo</Text>
+              <Text style={styles.logoMainText}>{logoName || 'Upload company logo'}</Text>
               <Text style={styles.logoSubText}>PNG or SVG · max 2MB · square</Text>
             </View>
             <View style={styles.uploadBadge}>

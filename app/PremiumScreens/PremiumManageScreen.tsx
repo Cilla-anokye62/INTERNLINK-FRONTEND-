@@ -47,7 +47,7 @@ export default function PremiumManageScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={handleBackPress} activeOpacity={0.7}>
-          <Ionicons name="arrow-back-outline" size={22} color={colors.backArrow} />
+          <Ionicons name="chevron-back-outline" size={22} color={colors.backArrow} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Subscription</Text>
       </View>

@@ -99,8 +99,7 @@ export default function HelpCenterScreen({ navigation }: any) {
   };
 
   const handleContactSupport = () => {
-    console.log('Contact support tapped');
-    // TODO: open email client or support chat
+    navigation.navigate('SendFeedback');
   };
 
   // Filter FAQ items based on search query
@@ -127,7 +126,7 @@ export default function HelpCenterScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
               color={colors.title}
             />

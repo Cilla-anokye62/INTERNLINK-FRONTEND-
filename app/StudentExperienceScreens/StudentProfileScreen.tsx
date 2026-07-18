@@ -10,19 +10,20 @@ import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { ComponentProps } from 'react';
 
-const EXPERIENCE = [
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+const EXPERIENCE: { id: string; ionicon: IoniconName; title: string; subtitle: string }[] = [
   {
     id: '1',
-    icon: 'V',
-    iconColor: '#0F172A',
+    ionicon: 'code-outline',
     title: 'Eng Intern',
     subtitle: 'Vercel · Summer 2025',
   },
   {
     id: '2',
-    icon: 'M',
-    iconColor: '#3B82F6',
+    ionicon: 'flask-outline',
     title: 'Research Assistant',
     subtitle: 'MIT Media Lab · 2024 - Present',
   },
@@ -42,7 +43,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [aboutText, setAboutText] = useState(initialBio);
   const [skills, setSkills] = useState(initialSkills);
-  const [experience, setExperience] = useState(EXPERIENCE);
+  const [experience, setExperience] = useState<{ id: string; ionicon: IoniconName; title: string; subtitle: string }[]>(EXPERIENCE);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [newExperienceTitle, setNewExperienceTitle] = useState('');
@@ -116,8 +117,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     if (newExperienceTitle.trim() && newExperienceSubtitle.trim()) {
       const newExp = {
         id: Date.now().toString(),
-        icon: newExperienceTitle.charAt(0).toUpperCase(),
-        iconColor: '#2CACAD',
+        ionicon: 'briefcase-outline' as IoniconName,
         title: newExperienceTitle,
         subtitle: newExperienceSubtitle,
       };
@@ -170,7 +170,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -197,9 +197,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
               </View>
             )}
             {isEditMode && (
-              <View style={styles.editPhotoBadge}>
-                <Ionicons name="create-outline" size={14} color={colors.onPrimary} />
-              </View>
+              <Ionicons name="create-outline" size={16} color={colors.onPrimary} style={styles.editPhotoIcon} />
             )}
           </TouchableOpacity>
           <Text style={styles.name}>{username || 'Your Name'}</Text>
@@ -311,9 +309,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
                 index < experience.length - 1 && styles.experienceItemBorder,
               ]}
             >
-              <View style={[styles.experienceIcon, { backgroundColor: item.iconColor }]}>
-                <Text style={styles.experienceIconText}>{item.icon}</Text>
-              </View>
+              <Ionicons name={item.ionicon} size={20} color={colors.accent} style={{ marginRight: 12 }} />
               <View style={styles.experienceInfo}>
                 <Text style={styles.experienceTitle}>{item.title}</Text>
                 <Text style={styles.experienceSubtitle}>{item.subtitle}</Text>
@@ -466,15 +462,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.title,
   },
   settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsIcon: {
-    fontSize: 18,
+    padding: 4,
   },
   profileCard: {
     backgroundColor: colors.card,
@@ -629,19 +617,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.rowBorder,
   },
-  experienceIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  experienceIconText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
   experienceInfo: {
     flex: 1,
   },
@@ -655,23 +630,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
     color: colors.subtitle,
   },
-  editPhotoBadge: {
+  editPhotoIcon: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.card,
-  },
-  editPhotoBadgeText: {
-    color: colors.onPrimary,
-    fontSize: 14,
-    fontWeight: 'bold',
   },
 
   // Modal styles
