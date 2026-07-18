@@ -27,10 +27,12 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
@@ -84,9 +86,23 @@ export default function PersonalInfoScreen({ navigation }: any) {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log('Change photo tapped');
-    // TODO: open image picker
+  const handleChangePhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'We need camera roll permissions to change your photo.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets && result.assets[0]) {
+      const uri = result.assets[0].uri;
+      setProfilePhoto(uri);
+      await AsyncStorage.setItem('userProfilePhoto', uri);
+    }
   };
 
   return (
@@ -107,7 +123,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
               color={colors.title}
             />
@@ -206,7 +222,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
           ]}>
             <TextInput
               style={styles.input}
-              placeholder="+1 (555) 000-0000"
+              placeholder="+233 XX XXX XXXX"
               placeholderTextColor={colors.placeholder}
               value={phone}
               onChangeText={setPhone}

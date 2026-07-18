@@ -102,7 +102,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
               activeOpacity={0.7}
             >
               <Ionicons
-                name="arrow-back-outline"
+                name="chevron-back-outline"
                 size={22}
                 color={colors.title}
               />
@@ -168,7 +168,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
               color={colors.title}
             />

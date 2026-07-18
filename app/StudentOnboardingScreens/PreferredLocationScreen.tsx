@@ -114,7 +114,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
         {/* Header row */}
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backArrow}>←</Text>
+            <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
           </TouchableOpacity>
           <Text style={styles.stepLabel}>STEP 4 OF 5</Text>
           <TouchableOpacity onPress={() => navigation.replace('HomeDashboard')}>

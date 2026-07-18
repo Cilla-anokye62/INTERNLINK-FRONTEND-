@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,12 +52,38 @@ export default function NotificationsScreen({ navigation }: any) {
     return `${days}d ago`;
   };
 
+  const renderItem = useCallback(({ item }: { item: Notification }) => (
+    <TouchableOpacity
+      style={[
+        styles.notifCard,
+        {
+          backgroundColor: item.isRead ? colors.notifReadBg : colors.notifUnreadBg,
+          borderLeftColor: item.isRead ? 'transparent' : colors.accent,
+        },
+      ]}
+      onPress={() => handleNotifPress(item)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.iconContainer}>
+        <Ionicons name={(NOTIF_ICONS[item.type] || 'notifications-outline') as any} size={22} color={colors.accent} />
+      </View>
+      <View style={styles.notifContent}>
+        <View style={styles.notifHeader}>
+          <Text style={[styles.notifTitle, { color: colors.title }]} numberOfLines={1}>{item.title}</Text>
+          {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: colors.notifDot }]} />}
+        </View>
+        <Text style={[styles.notifMessage, { color: colors.subtitle }]} numberOfLines={2}>{item.message}</Text>
+        <Text style={[styles.notifTime, { color: colors.placeholder }]}>{formatTime(item.timestamp)}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [colors, handleNotifPress]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.title }]}>Notifications</Text>
         <TouchableOpacity onPress={() => markAllNotificationsRead(userRole === 'employer' ? 'employer' : 'student')}>
@@ -70,31 +96,7 @@ export default function NotificationsScreen({ navigation }: any) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.notifCard,
-              {
-                backgroundColor: item.isRead ? colors.notifReadBg : colors.notifUnreadBg,
-                borderLeftColor: item.isRead ? 'transparent' : colors.accent,
-              },
-            ]}
-            onPress={() => handleNotifPress(item)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.iconContainer}>
-              <Ionicons name={(NOTIF_ICONS[item.type] || 'notifications-outline') as any} size={22} color={colors.accent} />
-            </View>
-            <View style={styles.notifContent}>
-              <View style={styles.notifHeader}>
-                <Text style={[styles.notifTitle, { color: colors.title }]} numberOfLines={1}>{item.title}</Text>
-                {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: colors.notifDot }]} />}
-              </View>
-              <Text style={[styles.notifMessage, { color: colors.subtitle }]} numberOfLines={2}>{item.message}</Text>
-              <Text style={[styles.notifTime, { color: colors.placeholder }]}>{formatTime(item.timestamp)}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={[styles.emptyIcon, { backgroundColor: colors.iconCircle }]}>

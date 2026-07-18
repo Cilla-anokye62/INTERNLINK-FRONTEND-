@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -111,12 +111,12 @@ export default function StudentChatScreen({ route, navigation }: any) {
     </View>
   );
 
-  const renderItem = ({ item }: { item: ChatMessage }) => {
+  const renderItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isMine = item.senderId === userId;
     if (item.type === 'system') return renderSystemMessage(item);
     if (item.type === 'offer' || item.type === 'interview_invite') return renderSpecialMessage(item);
     return renderTextMessage(item, isMine);
-  };
+  }, [userId, renderSystemMessage, renderSpecialMessage, renderTextMessage]);
 
   const renderDateHeader = (date: string) => (
     <View style={styles.dateHeader}>
@@ -139,16 +139,16 @@ export default function StudentChatScreen({ route, navigation }: any) {
 
   const sections = renderSection();
 
-  const renderItemWrapper = ({ item }: { item: any }) => {
+  const renderItemWrapper = useCallback(({ item }: { item: any }) => {
     if (item.type === 'date') return renderDateHeader(item.date);
     return renderItem({ item: item.data });
-  };
+  }, [renderDateHeader, renderItem]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={[styles.header, { borderBottomColor: colors.rowBorder }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+          <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
         <View style={[styles.headerAvatar, { backgroundColor: participantColor }]}>
           <Text style={styles.headerAvatarText}>{participantInitials}</Text>

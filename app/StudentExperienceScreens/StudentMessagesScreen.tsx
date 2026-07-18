@@ -64,7 +64,7 @@ export default function StudentMessagesScreen({ navigation }: any) {
     });
   }, [navigation, markConversationRead]);
 
-  const renderConversation = ({ item }: { item: Conversation }) => {
+  const renderConversation = useCallback(({ item }: { item: Conversation }) => {
     const hasUnread = item.unreadCount > 0;
     return (
       <TouchableOpacity
@@ -95,7 +95,7 @@ export default function StudentMessagesScreen({ navigation }: any) {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [colors, styles, handleOpen]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

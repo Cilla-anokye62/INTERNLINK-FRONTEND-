@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
@@ -42,7 +43,7 @@ export default function ApplicationSubmittedScreen({ navigation, route }: any) {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       {/* Back */}
       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Text style={[styles.backArrow, { color: colors.title }]}>←</Text>
+        <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
       </TouchableOpacity>
 
       <View style={styles.centerContent}>

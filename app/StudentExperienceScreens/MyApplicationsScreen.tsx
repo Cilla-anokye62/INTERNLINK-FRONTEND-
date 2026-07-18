@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +39,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
     return (idx + 1) / TIMELINE_STEPS.length;
   };
 
-  const renderItem = ({ item }: { item: Application }) => {
+  const renderItem = useCallback(({ item }: { item: Application }) => {
     const progress = getProgress(item);
     const config = STATUS_CONFIG[item.status];
 
@@ -87,7 +87,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
         </Text>
       </TouchableOpacity>
     );
-  };
+  }, [navigation, styles, colors, getProgress]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, FlatList } from 'react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -27,11 +27,11 @@ export default function DiscoverScreen({ navigation }: any) {
   const [activeCategory, setActiveCategory] = useState('Recommended');
   const [savedItems, setSavedItems] = useState<string[]>(['1']);
 
-  const toggleSave = (id: string) => {
+  const toggleSave = useCallback((id: string) => {
     setSavedItems(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
-  };
+  }, []);
 
   const filtered = INTERNSHIPS.filter(item => {
     const matchesSearch =
@@ -45,10 +45,53 @@ export default function DiscoverScreen({ navigation }: any) {
     return matchesSearch && matchesCategory;
   });
 
-  const handleBrowseAll = () => {
+  const handleBrowseAll = useCallback(() => {
     setSearch('');
     setActiveCategory('All');
-  };
+  }, []);
+
+  const renderItem = useCallback(({ item }: { item: typeof INTERNSHIPS[0] }) => (
+    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('InternshipDetails', { internship: item })}>
+      {/* Left: company avatar */}
+      <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
+        <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
+      </View>
+
+      {/* Middle: info */}
+      <View style={styles.cardInfo}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardCompany}>{item.company}</Text>
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{marginRight: 4}} />
+          <Text style={styles.cardLocation}>{item.location}</Text>
+        </View>
+        <View style={styles.tagsRow}>
+          <View style={styles.matchBadge}>
+            <Text style={styles.matchText}>{item.match}% match</Text>
+          </View>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{item.pay}</Text>
+          </View>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{item.duration}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Right: save button */}
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={() => toggleSave(item.id)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={savedItems.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+          size={18}
+          color={savedItems.includes(item.id) ? colors.accent : colors.placeholder}
+        />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  ), [navigation, colors, savedItems, toggleSave]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -125,48 +168,7 @@ export default function DiscoverScreen({ navigation }: any) {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('InternshipDetails', { internship: item })}>
-              {/* Left: company avatar */}
-              <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
-                <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
-              </View>
-
-              {/* Middle: info */}
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardCompany}>{item.company}</Text>
-                <View style={styles.locationRow}>
-                  <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{marginRight: 4}} />
-                  <Text style={styles.cardLocation}>{item.location}</Text>
-                </View>
-                <View style={styles.tagsRow}>
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{item.match}% match</Text>
-                  </View>
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>{item.pay}</Text>
-                  </View>
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>{item.duration}</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Right: save button */}
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => toggleSave(item.id)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={savedItems.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
-                  size={18}
-                  color={savedItems.includes(item.id) ? colors.accent : colors.placeholder}
-                />
-              </TouchableOpacity>
-            </TouchableOpacity>
-          )}
+          renderItem={renderItem}
         />
 
       )}
