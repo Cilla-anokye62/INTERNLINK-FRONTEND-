@@ -28,9 +28,11 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -66,6 +68,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const [role, setRole] = useState('Career Services Director');
   const [bio, setBio] = useState('');
   const [university, setUniversity] = useState('MIT Career Hub'); // read-only
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   // Track which input is focused for the border highlight effect
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -80,9 +83,20 @@ export default function EditProfileScreen({ navigation }: any) {
     navigation.goBack();
   };
 
-  const handleChangePhoto = () => {
-    console.log('Change photo tapped');
-    // TODO: open image picker
+  const handleChangePhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfilePhoto(result.assets[0].uri);
+    }
   };
 
   return (
@@ -120,10 +134,14 @@ export default function EditProfileScreen({ navigation }: any) {
             onPress={handleChangePhoto}
             activeOpacity={0.85}
           >
-            {/* Large avatar circle */}
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>KB</Text>
-            </View>
+            {/* Large avatar circle or selected photo */}
+            {profilePhoto ? (
+              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>KB</Text>
+              </View>
+            )}
 
             {/* Camera badge overlay */}
             <View style={styles.cameraBadge}>
@@ -299,6 +317,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   avatarText: {
     fontSize: 32,

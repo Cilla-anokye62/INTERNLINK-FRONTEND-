@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, ImageBackground, Animated, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, ImageBackground, Animated, Image, Platform, PanResponder } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const { width, height } = Dimensions.get('screen');
 
 const slides = [
   {
@@ -24,7 +26,6 @@ const slides = [
 ];
 
 export default function WelcomeOnboardingScreen({ navigation }: any) {
-  const { width, height } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Create separate animated values for each slide for cross-fading
@@ -68,8 +69,52 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
     }
   };
 
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1;
+      
+      // Cross-fade: fade out current, fade in previous simultaneously
+      Animated.parallel([
+        Animated.timing(slideAnims[currentIndex], {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnims[prevIndex], {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setCurrentIndex(prevIndex);
+      });
+    }
+  };
+
+  // PanResponder for swipe gestures
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal swipes with minimum movement
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const swipeThreshold = 30;
+        
+        // Swipe left (negative dx) - go to next slide
+        if (gestureState.dx < -swipeThreshold) {
+          handleNext();
+        }
+        // Swipe right (positive dx) - go to previous slide
+        else if (gestureState.dx > swipeThreshold) {
+          handlePrevious();
+        }
+      },
+    })
+  ).current;
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       {slides.map((slide, index) => (
         <Animated.View
           key={slide.id}
@@ -129,6 +174,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    marginTop: Platform.OS === 'android' ? -(StatusBar.currentHeight ?? 0) : 0,
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,

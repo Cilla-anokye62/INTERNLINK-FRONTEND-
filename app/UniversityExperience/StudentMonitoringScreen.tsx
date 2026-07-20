@@ -35,6 +35,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
+import FilterModal from './FilterModal';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -144,31 +145,34 @@ const STUDENTS = [
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function StudentMonitoringScreen({ navigation }: any) {
 
-  // This screen lives on the "Students" tab, so it starts active
-  const [setActiveTab] = useState('students');
-
   // Stores what the user has typed into the search bar
   const [searchText, setSearchText] = useState('');
+
+  // Filter modal state
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   // Header counts — later these would come from your backend/API
   const totalStudents = 1476;
   const placedStudents = 1248;
 
-  // Filters the STUDENTS array based on what's typed in the search bar.
-  // Matches against the student's name (case-insensitive).
-  // If searchText is empty, every student is shown.
-  const filteredStudents = STUDENTS.filter((student) =>
-    student.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filters the STUDENTS array based on search text AND active status filters.
+  const filteredStudents = STUDENTS.filter((student) => {
+    const matchesSearch = student.name.toLowerCase().includes(searchText.toLowerCase());
+    const matchesFilter = activeFilters.length === 0 || activeFilters.includes(student.status);
+    return matchesSearch && matchesFilter;
+  });
 
   const handleFilterPress = () => {
-    console.log('Filter button tapped');
-    // TODO: open a filter modal/sheet (e.g. filter by status, major, year)
+    setFilterVisible(true);
+  };
+
+  const handleFilterApply = (filters: string[]) => {
+    setActiveFilters(filters);
   };
 
   const handleStudentPress = (studentId: string) => {
-    console.log('Opening student profile:', studentId);
-    // TODO: navigation.navigate('StudentProfile', { id: studentId });
+    navigation.navigate('StudentDetail', { studentId });
   };
 
   return (
@@ -286,11 +290,13 @@ export default function StudentMonitoringScreen({ navigation }: any) {
 
       </ScrollView>
 
-
-      {/* ── BOTTOM TAB BAR ─────────────────────────────────────────
-          Sits outside the ScrollView so it stays fixed at the bottom
-          while the content above scrolls underneath it.
-      */}
+      {/* ── FILTER MODAL ───────────────────────────────────────── */}
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={handleFilterApply}
+        activeFilters={activeFilters}
+      />
       
     </SafeAreaView>
   );

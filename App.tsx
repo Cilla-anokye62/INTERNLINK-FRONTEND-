@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect } from 'react';
 
 
@@ -45,10 +46,13 @@ import NewInternshipDetailsScreen from './app/CompanyExperienceScreens/NewIntern
 import ApplicantsScreen from './app/CompanyExperienceScreens/ApplicantsScreen';
 import ApplicantDetailScreen from './app/CompanyExperienceScreens/ApplicantDetailScreen';
 //University experience screens
-import UniversityDashboardScreen from './app/UniversityExperience/UniversityTabs';
+import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
-
+import StudentDetailScreen from './app/UniversityExperience/StudentDetailScreen';
+import CompanyDetailScreen from './app/UniversityExperience/CompanyDetailScreen';
+import UniversityNotificationsScreen from './app/UniversityExperience/UniversityNotificationsScreen';
+import UniversityEditProfileScreen from './app/UniversityExperience/EditProfileScreen';
 
 //Student experience screens
 import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
@@ -62,7 +66,6 @@ import NoConnectionScreen from './app/SystemStateScreens/NoConnectionScreen';
 import LoadingStateScreen from './app/SystemStateScreens/LoadingStateScreen';
 import SearchResultsScreen from './app/SystemStateScreens/SearchResultsScreen';
 import ActionSuccessfulScreen from './app/SystemStateScreens/ActionSuccessfulScreen';
-import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 
 //Settings components (shared across all roles)
 import SettingsScreen from './app/SettingsComponents/SettingsScreen';
@@ -95,6 +98,7 @@ export default function App() {
   }, []);
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="auto" />
@@ -144,6 +148,10 @@ export default function App() {
           <Stack.Screen name="UniversityTabs" component={UniversityTabs} /> 
           <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
           <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
+          <Stack.Screen name="StudentDetail" component={StudentDetailScreen} />
+          <Stack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
+          <Stack.Screen name="UniversityNotifications" component={UniversityNotificationsScreen} />
+          <Stack.Screen name="UniversityEditProfile" component={UniversityEditProfileScreen} />
         
 
           {/* Company onboarding */}
@@ -183,5 +191,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

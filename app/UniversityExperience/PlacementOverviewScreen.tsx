@@ -19,7 +19,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
+import FilterModal from './FilterModal';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -102,15 +103,19 @@ const MONTH_LABELS = ['S', 'O', 'N', 'D', 'J', 'F', 'M'];
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PlacementOverviewScreen({ navigation }: any) {
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const handleBackPress = () => {
-    console.log('Back tapped');
-    // TODO: navigation.goBack();
+    navigation.goBack();
   };
 
   const handleFilterPress = () => {
-    console.log('Filter tapped');
-    // TODO: open a filter modal/sheet
+    setFilterVisible(true);
+  };
+
+  const handleFilterApply = (filters: string[]) => {
+    setActiveFilters(filters);
   };
 
   return (
@@ -208,6 +213,14 @@ export default function PlacementOverviewScreen({ navigation }: any) {
         </View>
 
       </ScrollView>
+
+      {/* ── FILTER MODAL ───────────────────────────────────────── */}
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={handleFilterApply}
+        activeFilters={activeFilters}
+      />
     </SafeAreaView>
   );
 }

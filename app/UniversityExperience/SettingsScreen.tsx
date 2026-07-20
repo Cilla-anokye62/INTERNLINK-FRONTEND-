@@ -21,7 +21,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -112,9 +112,6 @@ const SETTINGS_SECTIONS = [
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function SettingsScreen({ navigation }: any) {
 
-  // This screen lives on the "Settings" tab, so it starts active
-  const [setActiveTab] = useState('settings');
-
   // Placeholder profile data — later this would come from your
   // logged-in user's data (auth context, backend, etc.)
   const profile = {
@@ -123,25 +120,44 @@ export default function SettingsScreen({ navigation }: any) {
     email: 'kenneth.baidoo@uni.edu',
   };
 
-  // Called when the back arrow is tapped
-  const handleBackPress = () => {
-    console.log('Back tapped');
-    navigation.goBack();
-  };
-
   // Called when the profile card itself is tapped
   const handleProfilePress = () => {
-    console.log('Opening profile editor');
-    navigation.navigate('EditProfile');
+    navigation.navigate('UniversityEditProfile');
   };
 
   // Called when any individual settings row is tapped.
-  // Using one shared handler (instead of one function per row) keeps
-  // this simple — the rowId tells us which row was pressed.
   const handleRowPress = (rowId: string) => {
-    console.log('Opening setting:', rowId);
-    // TODO: navigate to the matching screen for this setting, e.g.:
-    // if (rowId === 'notifications') navigation.navigate('NotificationSettings');
+    switch (rowId) {
+      case 'personalInfo':
+        navigation.navigate('PersonalInfo');
+        break;
+      case 'emailPassword':
+        navigation.navigate('EmailPassword');
+        break;
+      case 'connectedAccounts':
+        navigation.navigate('ConnectedAccounts');
+        break;
+      case 'notifications':
+        navigation.navigate('NotificationSettings');
+        break;
+      case 'privacy':
+        navigation.navigate('PrivacySettings');
+        break;
+      case 'language':
+        navigation.navigate('LanguageSettings');
+        break;
+      case 'appearance':
+        navigation.navigate('AppearanceSettings');
+        break;
+      case 'helpCenter':
+        navigation.navigate('HelpCenter');
+        break;
+      case 'sendFeedback':
+        navigation.navigate('SendFeedback');
+        break;
+      default:
+        break;
+    }
   };
 
   // Called when "Sign out" is tapped
@@ -162,20 +178,8 @@ export default function SettingsScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
+        {/* ── HEADER ROW: title only (this is a tab screen) ──────── */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="arrow-back-outline"
-              size={22}
-              color={COLORS.backArrow}
-            />
-          </TouchableOpacity>
-
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
         {/* ── END HEADER ──────────────────────────────────────────── */}
@@ -294,22 +298,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: COLORS.headerTitle,
   },
