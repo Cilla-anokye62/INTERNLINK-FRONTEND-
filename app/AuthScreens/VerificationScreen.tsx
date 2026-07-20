@@ -1,11 +1,15 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions } from 'react-native';
-import { useState, useRef, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
-export default function VerificationScreen({ navigation,route }: any) {
+export default function VerificationScreen({ navigation,route }: any) { 
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const inputs = useRef<(TextInput | null)[]>([]);
@@ -39,10 +43,12 @@ export default function VerificationScreen({ navigation,route }: any) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={insets.top}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView style={styles.container}>
       {/* Back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="chevron-back" size={24} color="#024D60" />
+        <Ionicons name="chevron-back" size={24} color={colors.headerTitle} />
       </TouchableOpacity>
 
       {/* Header */}
@@ -84,13 +90,15 @@ export default function VerificationScreen({ navigation,route }: any) {
         <Text style={styles.backToLogin}>← Back to login</Text>
       </TouchableOpacity>
     </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
     paddingHorizontal: 24,
     paddingTop: height * 0.10,
     alignItems: 'center',
@@ -100,7 +108,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -height * 0.07,
@@ -114,13 +122,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.headerTitle,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.profileEmail,
     textAlign: 'center',
     marginBottom: height * 0.04,  // relative instead of fixed 32
   },
@@ -134,15 +142,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 56,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.headerTitle,
     borderWidth: 2,
     borderColor: '#B2EDE8',
   },
   button: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.buttonActive,
     borderRadius: 30,
     paddingVertical: 16,
     width: '100%',
@@ -150,22 +158,22 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.025, // relative instead of fixed 20
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: colors.card,
     fontSize: 16,
     fontWeight: 'bold',
   },
   resendText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.profileEmail,
     marginBottom: height * 0.025, // relative instead of fixed 20
   },
   resendLink: {
-    color: '#2CACAD',
+    color: colors.buttonActive,
     fontWeight: '600',
   },
   backToLogin: {
     fontSize: 14,
-    color: '#024D60',
+    color: colors.headerTitle,
     fontWeight: '600',
   },
 });

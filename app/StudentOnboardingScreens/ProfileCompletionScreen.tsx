@@ -1,8 +1,11 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
@@ -17,25 +20,28 @@ const COMPLETION_ITEMS = [
 const STAND_OUT_ITEMS = [
   {
     id: 'resume',
-    icon: '📄',
+    icon: 'document-text-outline',
     title: 'Upload your resume',
     subtitle: 'PDF, max 5MB',
   },
   {
     id: 'portfolio',
-    icon: '🔗',
+    icon: 'link-outline',
     title: 'Add portfolio link',
     subtitle: 'Behance, GitHub, personal site',
   },
   {
     id: 'bio',
-    icon: '✏️',
+    icon: 'create-outline',
     title: 'Write your bio',
     subtitle: 'Tell employers who you are',
   },
 ];
 
 export default function ProfileCompletionScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [completionItems, setCompletionItems] = useState(COMPLETION_ITEMS);
@@ -131,7 +137,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.stepLabel}>Step 5 of 5</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('HomeDashboard')}>
+          <TouchableOpacity onPress={() => navigation.replace('StudentApp')}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -153,7 +159,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
             <Image source={{ uri: profilePhoto }} style={styles.uploadedImage} />
           ) : (
             <View style={styles.uploadIconBox}>
-              <Text style={styles.uploadIcon}>📋</Text>
+              <Ionicons name="clipboard-outline" size={36} color={colors.placeholder} />
               <View style={styles.uploadPlusBadge}>
                 <Text style={styles.uploadPlusText}>+</Text>
               </View>
@@ -203,7 +209,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         {/* AI Profile Strength */}
         <View style={styles.strengthCard}>
           <View style={styles.strengthHeader}>
-            <Text style={styles.strengthIcon}>✦</Text>
+            <Ionicons name="sparkles-outline" size={16} color={colors.accent} style={{ marginRight: 6 }} />
             <Text style={styles.strengthTitle}>AI Profile Strength: 85%</Text>
           </View>
           <View style={styles.strengthBarBg}>
@@ -233,7 +239,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
                 activeOpacity={0.7}
               >
                 <View style={[styles.standOutIconCircle, isCompleted && styles.standOutIconCircleDone]}>
-                  <Text style={styles.standOutIcon}>{item.icon}</Text>
+                  <Ionicons name={item.icon as any} size={18} color={isCompleted ? colors.onPrimary : colors.placeholder} />
                 </View>
                 <View style={styles.standOutText}>
                   <Text style={styles.standOutTitle}>{item.title}</Text>
@@ -347,10 +353,10 @@ export default function ProfileCompletionScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -367,12 +373,12 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   skipText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.placeholder,
     fontWeight: '500',
   },
 
@@ -380,13 +386,13 @@ const styles = StyleSheet.create({
   progressBarBg: {
     width: '100%',
     height: 5,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
     marginBottom: height * 0.03,
   },
   progressBarFill: {
     height: 5,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
 
@@ -394,12 +400,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: height * 0.03,
     lineHeight: 20,
   },
@@ -419,7 +425,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 20,
-    backgroundColor: '#D4F0EE',
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -434,19 +440,19 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   uploadPlusText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
     lineHeight: 20,
   },
   uploadPhotoLabel: {
     fontSize: 13,
-    color: '#024D60',
+    color: colors.label,
     fontWeight: '600',
   },
 
@@ -457,23 +463,23 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.label,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
 
   // Checklist card
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     paddingHorizontal: 16,
     marginBottom: 16,
@@ -485,31 +491,31 @@ const styles = StyleSheet.create({
   },
   checklistItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.rowBorder,
   },
   checkCircle: {
     width: 26,
     height: 26,
     borderRadius: 13,
     borderWidth: 2,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   checkCircleDone: {
-    backgroundColor: '#2CACAD',
-    borderColor: '#2CACAD',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   checkMark: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 12,
     fontWeight: 'bold',
   },
   checklistLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
     fontWeight: '500',
   },
   checklistStatus: {
@@ -517,20 +523,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statusDone: {
-    color: '#2CACAD',
+    color: colors.accent,
   },
   statusPending: {
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
 
   // AI Strength card
   strengthCard: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#C8E6E4',
+    borderColor: colors.inputBorder,
   },
   strengthHeader: {
     flexDirection: 'row',
@@ -539,29 +545,29 @@ const styles = StyleSheet.create({
   },
   strengthIcon: {
     fontSize: 14,
-    color: '#2CACAD',
+    color: colors.accent,
     marginRight: 6,
   },
   strengthTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#024D60',
+    color: colors.title,
   },
   strengthBarBg: {
     width: '100%',
     height: 6,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
     marginBottom: 8,
   },
   strengthBarFill: {
     height: 6,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   strengthHint: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.subtitle,
     lineHeight: 18,
   },
 
@@ -569,7 +575,7 @@ const styles = StyleSheet.create({
   standOutLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.placeholder,
     letterSpacing: 1,
     marginBottom: 10,
   },
@@ -582,7 +588,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -596,23 +602,23 @@ const styles = StyleSheet.create({
   standOutTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#024D60',
+    color: colors.cardTitle,
     marginBottom: 2,
   },
   standOutSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   standOutArrow: {
     fontSize: 20,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   standOutIconCircleDone: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
   },
   standOutCheck: {
     fontSize: 20,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: 'bold',
   },
 
@@ -629,7 +635,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -638,36 +644,37 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 20,
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
+    backgroundColor: colors.inputBg,
     marginBottom: 16,
   },
   modalTextArea: {
     height: 100,
   },
   modalButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
     marginBottom: 8,
   },
   modalButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -676,20 +683,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCancelText: {
-    color: '#64748B',
+    color: colors.subtitle,
     fontSize: 14,
   },
 
   // Complete button
   completeButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   completeButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

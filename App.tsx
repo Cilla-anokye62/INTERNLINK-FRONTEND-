@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect } from 'react';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 
 // First screens
@@ -43,8 +44,13 @@ import CompanyProfileCompletion from './app/CompanyOnboardingScreens/CompanyProf
 import CompanyTabs from './app/CompanyExperienceScreens/CompanyTabs';
 import CompanyProfileScreen from './app/CompanyExperienceScreens/CompanyProfileScreen';
 import NewInternshipDetailsScreen from './app/CompanyExperienceScreens/NewInternshipDetailsScreen';
-import ApplicantsScreen from './app/CompanyExperienceScreens/ApplicantsScreen';
-import ApplicantDetailScreen from './app/CompanyExperienceScreens/ApplicantDetailScreen';
+import ApplicantProfileScreen from './app/CompanyExperienceScreens/ApplicantProfileScreen';
+import InterviewScheduleScreen from './app/CompanyExperienceScreens/InterviewScheduleScreen';
+import OfferSendScreen from './app/CompanyExperienceScreens/OfferSendScreen';
+import PostInternshipWizard from './app/CompanyExperienceScreens/PostInternshipWizard';
+import MessagesScreen from './app/CompanyExperienceScreens/MessagesScreen';
+import ChatScreen from './app/CompanyExperienceScreens/ChatScreen';
+import InsightsScreen from './app/CompanyExperienceScreens/InsightsScreen';
 //University experience screens
 import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
@@ -55,10 +61,22 @@ import UniversityNotificationsScreen from './app/UniversityExperience/University
 import UniversityEditProfileScreen from './app/UniversityExperience/EditProfileScreen';
 
 //Student experience screens
-import ApplicationSentScreen from './app/StudentExperienceScreens/ApplicationSentScreen';
 import InternshipDetailsScreen from './app/StudentExperienceScreens/InternshipDetailsScreen';
 import StudentEditProfileScreen from './app/StudentExperienceScreens/StudentEditProfileScreen';
 import StudentTabs from './app/StudentExperienceScreens/StudentTabs';
+import StudentChatScreen from './app/StudentExperienceScreens/StudentChatScreen';
+
+// Student application flow screens
+import ApplicationReviewScreen from './app/StudentExperienceScreens/ApplicationReviewScreen';
+import ResumeSelectionScreen from './app/StudentExperienceScreens/ResumeSelectionScreen';
+import AdditionalInfoScreen from './app/StudentExperienceScreens/AdditionalInfoScreen';
+import PortfolioLinksScreen from './app/StudentExperienceScreens/PortfolioLinksScreen';
+import AvailabilityScreen from './app/StudentExperienceScreens/AvailabilityScreen';
+import ReviewApplicationScreen from './app/StudentExperienceScreens/ReviewApplicationScreen';
+import ApplicationSubmittedScreen from './app/StudentExperienceScreens/ApplicationSubmittedScreen';
+import MyApplicationsScreen from './app/StudentExperienceScreens/MyApplicationsScreen';
+import ApplicationDetailsScreen from './app/StudentExperienceScreens/ApplicationDetailsScreen';
+import NotificationsScreen from './app/StudentExperienceScreens/NotificationsScreen';
 
 //System state screens
 import DiscoverEmptyScreen from './app/SystemStateScreens/DiscoverEmptyScreen';
@@ -78,29 +96,31 @@ import LanguageSettingsScreen from './app/SettingsComponents/LanguageSettingsScr
 import AppearanceSettingsScreen from './app/SettingsComponents/AppearanceSettingsScreen';
 import HelpCenterScreen from './app/SettingsComponents/HelpCenterScreen';
 import SendFeedbackScreen from './app/SettingsComponents/SendFeedbackScreen';
+import TermsOfServiceScreen from './app/SettingsComponents/TermsOfServiceScreen';
+import PrivacyPolicyScreen from './app/SettingsComponents/PrivacyPolicyScreen';
+import DeleteAccountScreen from './app/SettingsComponents/DeleteAccountScreen';
+import JobPreferencesScreen from './app/SettingsComponents/JobPreferencesScreen';
+import DataStorageScreen from './app/SettingsComponents/DataStorageScreen';
+import AccessibilityScreen from './app/SettingsComponents/AccessibilityScreen';
+import CalendarSyncScreen from './app/SettingsComponents/CalendarSyncScreen';
+import ReportProblemScreen from './app/SettingsComponents/ReportProblemScreen';
+import AboutScreen from './app/SettingsComponents/AboutScreen';
+
+//Premium screens
+import PremiumPaywallScreen from './app/PremiumScreens/PremiumPaywallScreen';
+import PaymentScreen from './app/PremiumScreens/PaymentScreen';
+import PremiumConfirmationScreen from './app/PremiumScreens/PremiumConfirmationScreen';
+import PremiumManageScreen from './app/PremiumScreens/PremiumManageScreen';
 
 
 const Stack = createStackNavigator();
 
 export default function App() {
-  // Clear AsyncStorage on app start for testing purposes
-  // Remove this in production
-  useEffect(() => {
-    const clearData = async () => {
-      try {
-        await AsyncStorage.clear();
-        console.log('AsyncStorage cleared for testing');
-      } catch (error) {
-        console.error('Error clearing AsyncStorage:', error);
-      }
-    };
-    clearData();
-  }, []);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
     <SafeAreaProvider>
-      <NavigationContainer>
+      <ThemeProvider>
+        <NavigationContainer>
         <StatusBar style="auto" />
         <Stack.Navigator 
   screenOptions={{ 
@@ -133,9 +153,21 @@ export default function App() {
 
           {/* Student Experience screens */}
           <Stack.Screen name="HomeDashboard" component={StudentTabs} />
-          <Stack.Screen name="ApplicationSent" component={ApplicationSentScreen} />
           <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
           <Stack.Screen name="StudentEditProfile" component={StudentEditProfileScreen} />
+
+          {/* Student Application Flow */}
+          <Stack.Screen name="ApplicationReview" component={ApplicationReviewScreen} />
+          <Stack.Screen name="ResumeSelection" component={ResumeSelectionScreen} />
+          <Stack.Screen name="AdditionalInfo" component={AdditionalInfoScreen} />
+          <Stack.Screen name="PortfolioLinks" component={PortfolioLinksScreen} />
+          <Stack.Screen name="Availability" component={AvailabilityScreen} />
+          <Stack.Screen name="ReviewApplication" component={ReviewApplicationScreen} />
+          <Stack.Screen name="ApplicationSubmitted" component={ApplicationSubmittedScreen} />
+          <Stack.Screen name="MyApplications" component={MyApplicationsScreen} />
+          <Stack.Screen name="ApplicationDetails" component={ApplicationDetailsScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="StudentChatScreen" component={StudentChatScreen} />
 
 
           {/* University onboarding */}
@@ -164,8 +196,13 @@ export default function App() {
           <Stack.Screen name="CompanyTabs" component={CompanyTabs} />
           <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
           <Stack.Screen name="NewInternshipDetails" component={NewInternshipDetailsScreen} />
-          <Stack.Screen name="Applicants" component={ApplicantsScreen} />
-          <Stack.Screen name="ApplicantDetail" component={ApplicantDetailScreen} />
+          <Stack.Screen name="ApplicantProfile" component={ApplicantProfileScreen} />
+          <Stack.Screen name="InterviewSchedule" component={InterviewScheduleScreen} />
+          <Stack.Screen name="OfferSend" component={OfferSendScreen} />
+          <Stack.Screen name="PostInternshipWizard" component={PostInternshipWizard} />
+          <Stack.Screen name="Messages" component={MessagesScreen} />
+          <Stack.Screen name="ChatScreen" component={ChatScreen} />
+          <Stack.Screen name="Insights" component={InsightsScreen} />
 
           {/* System states */}
           <Stack.Screen name="DiscoverEmpty" component={DiscoverEmptyScreen} />
@@ -185,11 +222,25 @@ export default function App() {
           <Stack.Screen name="AppearanceSettings" component={AppearanceSettingsScreen} />
           <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
           <Stack.Screen name="SendFeedback" component={SendFeedbackScreen} />
-          {/* Employer onboarding — add when CompanyInfoScreen is ready */}
-          {/* <Stack.Screen name="CompanyInfo"    component={CompanyInfoScreen} /> */}
+          <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+          <Stack.Screen name="JobPreferences" component={JobPreferencesScreen} />
+          <Stack.Screen name="DataStorage" component={DataStorageScreen} />
+          <Stack.Screen name="Accessibility" component={AccessibilityScreen} />
+          <Stack.Screen name="CalendarSync" component={CalendarSyncScreen} />
+          <Stack.Screen name="ReportProblem" component={ReportProblemScreen} />
+          <Stack.Screen name="About" component={AboutScreen} />
+
+          {/* Premium screens */}
+          <Stack.Screen name="PremiumPaywall" component={PremiumPaywallScreen} />
+          <Stack.Screen name="Payment" component={PaymentScreen} />
+          <Stack.Screen name="PremiumConfirmation" component={PremiumConfirmationScreen} />
+          <Stack.Screen name="PremiumManage" component={PremiumManageScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>
+      </ThemeProvider>
     </SafeAreaProvider>
     </GestureHandlerRootView>
   );

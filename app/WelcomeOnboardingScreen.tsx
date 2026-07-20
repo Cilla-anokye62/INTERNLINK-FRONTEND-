@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, ImageBackground, Animated, Image, Platform, PanResponder } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -26,6 +26,8 @@ const slides = [
 ];
 
 export default function WelcomeOnboardingScreen({ navigation }: any) {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   
   // Create separate animated values for each slide for cross-fading
@@ -139,7 +141,10 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
         </Animated.View>
       ))}
 
-      <SafeAreaView style={styles.overlayContainer} pointerEvents="box-none">
+      <View
+        style={[styles.overlayContainer, { paddingBottom: insets.bottom + 24 }]}
+        pointerEvents="box-none"
+      >
         <View style={styles.dotsContainer}>
           {slides.map((_, index) => (
             <View
@@ -159,7 +164,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
             <Text style={styles.loginText}>I Already Have an Account</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -211,7 +216,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     justifyContent: 'flex-end',
-    paddingBottom: 24,
   },
   dotsContainer: {
     flexDirection: 'row',

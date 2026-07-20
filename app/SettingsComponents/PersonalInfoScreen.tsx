@@ -27,39 +27,19 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  avatarBg:      '#0D3B47',
-  avatarText:    '#FFFFFF',
-  cameraBadge:   '#2CACAD',
-  cameraIcon:    '#FFFFFF',
-  note:          '#94A3B8',
-};
-
+import * as ImagePicker from 'expo-image-picker';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PersonalInfoScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -81,7 +61,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
       const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
       const savedPhone = await AsyncStorage.getItem('userPhone');
       const savedEmail = await AsyncStorage.getItem('userEmail');
-      
+
       if (savedUsername) setFullName(savedUsername);
       if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
       if (savedPhone) setPhone(savedPhone);
@@ -106,14 +86,28 @@ export default function PersonalInfoScreen({ navigation }: any) {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log('Change photo tapped');
-    // TODO: open image picker
+  const handleChangePhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'We need camera roll permissions to change your photo.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets && result.assets[0]) {
+      const uri = result.assets[0].uri;
+      setProfilePhoto(uri);
+      await AsyncStorage.setItem('userProfilePhoto', uri);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -129,9 +123,9 @@ export default function PersonalInfoScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Personal Info</Text>
@@ -158,7 +152,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
                 <Ionicons
                   name="camera-outline"
                   size={14}
-                  color={COLORS.cameraIcon}
+                  color={colors.cameraIcon}
                 />
               </View>
             </TouchableOpacity>
@@ -185,7 +179,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               placeholder="Enter your full name"
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={fullName}
               onChangeText={setFullName}
               onFocus={() => setFocusedInput('fullName')}
@@ -202,14 +196,14 @@ export default function PersonalInfoScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, styles.readOnlyInput]}
               placeholder="your.email@example.com"
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={email}
               editable={false}
             />
             <Ionicons
               name="lock-closed-outline"
               size={16}
-              color={COLORS.placeholder}
+              color={colors.placeholder}
               style={styles.lockIcon}
             />
           </View>
@@ -228,8 +222,8 @@ export default function PersonalInfoScreen({ navigation }: any) {
           ]}>
             <TextInput
               style={styles.input}
-              placeholder="+1 (555) 000-0000"
-              placeholderTextColor={COLORS.placeholder}
+              placeholder="+233 XX XXX XXXX"
+              placeholderTextColor={colors.placeholder}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -256,11 +250,11 @@ export default function PersonalInfoScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -279,7 +273,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -292,7 +286,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Profile Photo Section ─────────────────────────────────────
@@ -310,7 +304,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.avatarBg,
+    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -322,7 +316,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.avatarText,
+    color: colors.avatarText,
   },
   cameraBadge: {
     position: 'absolute',
@@ -331,24 +325,24 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: COLORS.cameraBadge,
+    backgroundColor: colors.cameraBadge,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: COLORS.background,
+    borderColor: colors.background,
   },
   changePhotoBtn: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.cardBorder,
+    borderColor: colors.cardBorder,
   },
   changePhotoBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.accent,
+    color: colors.accent,
   },
 
   // ── Input Fields ───────────────────────────────────────────────
@@ -358,7 +352,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.label,
+    color: colors.label,
     letterSpacing: 1,
     marginBottom: 8,
     marginLeft: 4,
@@ -366,12 +360,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -379,12 +373,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: COLORS.inputFocus,
+    borderColor: colors.inputFocus,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Read-only Field ─────────────────────────────────────────────
@@ -392,26 +386,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFA',
   },
   readOnlyInput: {
-    color: COLORS.subtitle,
+    color: colors.subtitle,
   },
   lockIcon: {
     marginLeft: 10,
   },
   note: {
     fontSize: 12,
-    color: COLORS.note,
+    color: colors.note,
     marginTop: 6,
     marginLeft: 4,
   },
 
   // ── Save Button ────────────────────────────────────────────────
   saveBtn: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 12,
-    shadowColor: COLORS.accent,
+    shadowColor: colors.accent,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -420,7 +414,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.accentText,
+    color: colors.accentText,
   },
 
 });

@@ -1,23 +1,15 @@
 /**
  * AppearanceSettingsScreen.tsx
  * ─────────────────────────────────────────────────────────────────
- * InternLink — Appearance Settings (PREFERENCES section in SettingsScreen)
+ * InternLink — Appearance Settings
  *
- * Content:
- *  - Three selectable cards/pills: Light, Dark, System Default
- *  - Similar style to Institution Type pills from InstitutionDetailsScreen
- *  - Instant apply pattern (no save button needed)
- *
- * HOW TO USE:
- *  1. Drop inside your screens/ or app/ folder
- *  2. Add to App.tsx:
- *     import AppearanceSettingsScreen from './app/AppearanceSettingsScreen';
- *     <Stack.Screen name="AppearanceSettings" component={AppearanceSettingsScreen} />
+ * Wired to the central ThemeContext via useAppTheme().
+ * Selecting Light / Dark / System Default instantly changes the
+ * entire app's theme and persists the choice via Zustand + AsyncStorage.
  * ─────────────────────────────────────────────────────────────────
  */
 
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -28,84 +20,56 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  optionText:    '#0D3B47',
-  optionDesc:    '#4A7C75',
-  pillIdle:      '#F0F6F5',
-  pillIdleText:  '#4A7C75',
-  pillActive:    '#2CACAD',
-  pillActiveText: '#FFFFFF',
-};
-
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ─── DATA ─────────────────────────────────────────────────────────
-// Appearance options
 const APPEARANCE_OPTIONS = [
   {
-    id: 'light',
+    id: 'light' as const,
     name: 'Light',
     description: 'Always use light mode',
-    icon: 'sunny-outline',
+    icon: 'sunny-outline' as const,
   },
   {
-    id: 'dark',
+    id: 'dark' as const,
     name: 'Dark',
     description: 'Always use dark mode',
-    icon: 'moon-outline',
+    icon: 'moon-outline' as const,
   },
   {
-    id: 'system',
+    id: 'system' as const,
     name: 'System Default',
     description: 'Follow device settings',
-    icon: 'phone-portrait-outline',
+    icon: 'phone-portrait-outline' as const,
   },
 ];
 
-
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function AppearanceSettingsScreen({ navigation }: any) {
-
-  // Currently selected appearance mode
-  const [selectedAppearance, setSelectedAppearance] = useState('light');
+  // Pull the live preference and the setter from the centralized theme
+  const { colors, themePreference, setThemePreference, theme } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const selectAppearance = (appearanceId: string) => {
-    setSelectedAppearance(appearanceId);
-    console.log('Selected appearance:', appearanceId);
-    // TODO: sync with backend and apply theme change instantly
+  const selectAppearance = (id: 'light' | 'dark' | 'system') => {
+    setThemePreference(id);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-
-        {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
+        {/* ── HEADER ──────────────────────────────────────────────── */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
@@ -113,21 +77,21 @@ export default function AppearanceSettingsScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.backArrow}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Appearance</Text>
         </View>
-        {/* ── END HEADER ──────────────────────────────────────────── */}
 
+        {/* ── SECTION LABEL ────────────────────────────────────────── */}
+        <Text style={styles.sectionLabel}>THEME</Text>
 
-        {/* ── APPEARANCE OPTIONS (3 across) ─────────────────────────── */}
+        {/* ── APPEARANCE OPTION CARDS (3 across) ──────────────────── */}
         <View style={styles.optionsRow}>
           {APPEARANCE_OPTIONS.map((option) => {
-            const isSelected = selectedAppearance === option.id;
-
+            const isSelected = themePreference === option.id;
             return (
               <TouchableOpacity
                 key={option.id}
@@ -138,15 +102,15 @@ export default function AppearanceSettingsScreen({ navigation }: any) {
                 onPress={() => selectAppearance(option.id)}
                 activeOpacity={0.85}
               >
-                {/* Icon */}
+                {/* Icon circle */}
                 <View style={[
                   styles.iconCircle,
                   isSelected && styles.iconCircleActive,
                 ]}>
                   <Ionicons
-                    name={option.icon as any}
+                    name={option.icon}
                     size={24}
-                    color={isSelected ? COLORS.accent : COLORS.subtitle}
+                    color={isSelected ? colors.accent : colors.subtitle}
                   />
                 </View>
 
@@ -160,12 +124,28 @@ export default function AppearanceSettingsScreen({ navigation }: any) {
 
                 {/* Description */}
                 <Text style={styles.optionDesc}>{option.description}</Text>
+
+                {/* Active checkmark badge */}
+                {isSelected && (
+                  <Ionicons name="checkmark" size={12} color={colors.accent} style={{ position: 'absolute', top: 10, right: 10 }} />
+                )}
               </TouchableOpacity>
             );
           })}
         </View>
-        {/* ── END APPEARANCE OPTIONS ──────────────────────────────── */}
 
+        {/* ── INFO NOTE ────────────────────────────────────────────── */}
+        <View style={styles.infoBox}>
+          <Ionicons
+            name="information-circle-outline"
+            size={18}
+            color={colors.accent}
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.infoText}>
+            Your preference is saved automatically and will persist when you reopen the app.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -173,30 +153,30 @@ export default function AppearanceSettingsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
     paddingHorizontal: 18,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
 
-  // ── Header ────────────────────────────────────────────────────
+  // ── Header ──────────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   backBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -209,25 +189,36 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.headerTitle,
   },
 
-  // ── Options Row (3 cards across) ───────────────────────────────
+  // ── Section label ────────────────────────────────────────────────
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.sectionLabel,
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+
+  // ── Options Row (3 cards across) ─────────────────────────────────
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 10,
+    marginBottom: 24,
   },
 
-  // ── Option Card ───────────────────────────────────────────────
+  // ── Option Card ──────────────────────────────────────────────────
   optionCard: {
     flex: 1,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.pillIdle,
+    borderColor: colors.cardBorderIdle,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -235,9 +226,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   optionCardActive: {
-    backgroundColor: COLORS.card,
-    borderColor: COLORS.pillActive,
-    shadowColor: COLORS.pillActive,
+    borderColor: colors.cardBorderActive,
+    shadowColor: colors.cardBorderActive,
     shadowOpacity: 0.2,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -247,29 +237,42 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.pillIdle,
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
   iconCircleActive: {
-    backgroundColor: '#E8F8F5',
+    backgroundColor: colors.iconCircle,
   },
   optionName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: COLORS.optionText,
+    color: colors.cardTitle,
     marginBottom: 4,
     textAlign: 'center',
   },
   optionNameActive: {
-    color: COLORS.accent,
+    color: colors.accent,
   },
   optionDesc: {
-    fontSize: 11,
-    color: COLORS.optionDesc,
+    fontSize: 10,
+    color: colors.cardDescription,
     textAlign: 'center',
     lineHeight: 14,
   },
-
+  // ── Info box ─────────────────────────────────────────────────────
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.iconCircle,
+    borderRadius: 12,
+    padding: 14,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.subtitle,
+    lineHeight: 19,
+  },
 });

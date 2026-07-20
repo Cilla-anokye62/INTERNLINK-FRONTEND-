@@ -19,7 +19,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,36 +28,19 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  sectionHeader: '#4A7C75',
-  hint:          '#94A3B8',
-  currentEmail:  '#0D3B47',
-};
-
+import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { isValidEmail, isValidPassword, nonEmpty, passwordsMatch } from '../../src/utils/validateCard';
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function EmailPasswordScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Email form state
   const [currentEmail] = useState('kenneth.baidoo@uni.edu');
@@ -71,20 +54,42 @@ export default function EmailPasswordScreen({ navigation }: any) {
 
   // Track which input is focused
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
+
+  // Email section validation
+  const emailErrors = useMemo(() => ({
+    newEmail: isValidEmail(newEmail),
+    emailPassword: nonEmpty(emailPassword, 'Password'),
+  }), [newEmail, emailPassword]);
+
+  const isEmailFormValid = !emailErrors.newEmail && !emailErrors.emailPassword;
+
+  // Password section validation
+  const passwordErrors = useMemo(() => ({
+    currentPassword: nonEmpty(currentPassword, 'Current password'),
+    newPassword: isValidPassword(newPassword),
+    confirmPassword: passwordsMatch(newPassword, confirmPassword),
+  }), [currentPassword, newPassword, confirmPassword]);
+
+  const isPasswordFormValid = !passwordErrors.currentPassword && !passwordErrors.newPassword && !passwordErrors.confirmPassword;
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
   const handleChangeEmail = () => {
+    setTouched({ newEmail: true, emailPassword: true });
+    if (!isEmailFormValid) return;
     console.log('Changing email:', { newEmail });
-    // TODO: save to backend
     navigation.goBack();
   };
 
   const handleChangePassword = () => {
+    setTouched({ currentPassword: true, newPassword: true, confirmPassword: true });
+    if (!isPasswordFormValid) return;
     console.log('Changing password');
-    // TODO: save to backend
     navigation.goBack();
   };
 
@@ -100,13 +105,17 @@ export default function EmailPasswordScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
 
         {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
         <View style={styles.header}>
@@ -116,9 +125,9 @@ export default function EmailPasswordScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Email & Password</Text>
@@ -142,7 +151,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
               <Ionicons
                 name="lock-closed-outline"
                 size={16}
-                color={COLORS.placeholder}
+                color={colors.placeholder}
                 style={styles.lockIcon}
               />
             </View>
@@ -154,19 +163,21 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'newEmail' && styles.inputContainerFocused,
+              touched.newEmail && emailErrors.newEmail && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
                 placeholder="Enter new email"
-                placeholderTextColor={COLORS.placeholder}
+                placeholderTextColor={colors.placeholder}
                 value={newEmail}
                 onChangeText={setNewEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('newEmail')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('newEmail'); }}
               />
             </View>
+            {touched.newEmail && emailErrors.newEmail && <Text style={styles.errorText}>{emailErrors.newEmail}</Text>}
           </View>
 
           {/* Confirm with Password */}
@@ -175,25 +186,28 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'emailPassword' && styles.inputContainerFocused,
+              touched.emailPassword && emailErrors.emailPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
                 placeholder="Enter your current password"
-                placeholderTextColor={COLORS.placeholder}
+                placeholderTextColor={colors.placeholder}
                 value={emailPassword}
                 onChangeText={setEmailPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('emailPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('emailPassword'); }}
               />
             </View>
+            {touched.emailPassword && emailErrors.emailPassword && <Text style={styles.errorText}>{emailErrors.emailPassword}</Text>}
           </View>
 
           {/* Save Button for Email */}
           <TouchableOpacity
-            style={styles.saveBtn}
+            style={[styles.saveBtn, !isEmailFormValid && styles.saveBtnDisabled]}
             onPress={handleChangeEmail}
             activeOpacity={0.85}
+            disabled={!isEmailFormValid}
           >
             <Text style={styles.saveBtnText}>Update Email</Text>
           </TouchableOpacity>
@@ -211,18 +225,20 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'currentPassword' && styles.inputContainerFocused,
+              touched.currentPassword && passwordErrors.currentPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
                 placeholder="Enter current password"
-                placeholderTextColor={COLORS.placeholder}
+                placeholderTextColor={colors.placeholder}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('currentPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('currentPassword'); }}
               />
             </View>
+            {touched.currentPassword && passwordErrors.currentPassword && <Text style={styles.errorText}>{passwordErrors.currentPassword}</Text>}
           </View>
 
           {/* New Password */}
@@ -231,20 +247,22 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'newPassword' && styles.inputContainerFocused,
+              touched.newPassword && passwordErrors.newPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
                 placeholder="Enter new password"
-                placeholderTextColor={COLORS.placeholder}
+                placeholderTextColor={colors.placeholder}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('newPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('newPassword'); }}
               />
             </View>
-            {/* Password Strength Hint */}
-            {newPassword.length > 0 && (
+            {touched.newPassword && passwordErrors.newPassword ? (
+              <Text style={styles.errorText}>{passwordErrors.newPassword}</Text>
+            ) : newPassword.length > 0 ? (
               <Text style={[
                 styles.hint,
                 passwordStrength === 'Weak' && styles.hintWeak,
@@ -253,7 +271,7 @@ export default function EmailPasswordScreen({ navigation }: any) {
               ]}>
                 Password strength: {passwordStrength}
               </Text>
-            )}
+            ) : null}
           </View>
 
           {/* Confirm New Password */}
@@ -262,25 +280,28 @@ export default function EmailPasswordScreen({ navigation }: any) {
             <View style={[
               styles.inputContainer,
               focusedInput === 'confirmPassword' && styles.inputContainerFocused,
+              touched.confirmPassword && passwordErrors.confirmPassword && styles.inputContainerError,
             ]}>
               <TextInput
                 style={styles.input}
                 placeholder="Confirm new password"
-                placeholderTextColor={COLORS.placeholder}
+                placeholderTextColor={colors.placeholder}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
                 onFocus={() => setFocusedInput('confirmPassword')}
-                onBlur={() => setFocusedInput(null)}
+                onBlur={() => { setFocusedInput(null); markTouched('confirmPassword'); }}
               />
             </View>
+            {touched.confirmPassword && passwordErrors.confirmPassword && <Text style={styles.errorText}>{passwordErrors.confirmPassword}</Text>}
           </View>
 
           {/* Save Button for Password */}
           <TouchableOpacity
-            style={styles.saveBtn}
+            style={[styles.saveBtn, !isPasswordFormValid && styles.saveBtnDisabled]}
             onPress={handleChangePassword}
             activeOpacity={0.85}
+            disabled={!isPasswordFormValid}
           >
             <Text style={styles.saveBtnText}>Update Password</Text>
           </TouchableOpacity>
@@ -288,17 +309,18 @@ export default function EmailPasswordScreen({ navigation }: any) {
         {/* ── END CHANGE PASSWORD SECTION ─────────────────────────── */}
 
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -317,7 +339,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -330,12 +352,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Section Cards ─────────────────────────────────────────────
   sectionCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 20,
     marginBottom: 20,
@@ -348,7 +370,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 20,
   },
 
@@ -359,7 +381,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.label,
+    color: colors.label,
     letterSpacing: 1,
     marginBottom: 8,
     marginLeft: 4,
@@ -367,12 +389,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -380,12 +402,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: COLORS.inputFocus,
+    borderColor: colors.inputFocus,
+  },
+  inputContainerError: {
+    borderColor: colors.error,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Read-only Field ─────────────────────────────────────────────
@@ -393,7 +424,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFA',
   },
   readOnlyInput: {
-    color: COLORS.subtitle,
+    color: colors.subtitle,
   },
   lockIcon: {
     marginLeft: 10,
@@ -402,12 +433,12 @@ const styles = StyleSheet.create({
   // ── Password Strength Hint ─────────────────────────────────────
   hint: {
     fontSize: 12,
-    color: COLORS.hint,
+    color: colors.hint,
     marginTop: 6,
     marginLeft: 4,
   },
   hintWeak: {
-    color: COLORS.danger,
+    color: colors.danger,
   },
   hintMedium: {
     color: '#F59E0B',
@@ -418,12 +449,12 @@ const styles = StyleSheet.create({
 
   // ── Save Button ────────────────────────────────────────────────
   saveBtn: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: COLORS.accent,
+    shadowColor: colors.accent,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -432,7 +463,10 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.accentText,
+    color: colors.accentText,
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
   },
 
 });

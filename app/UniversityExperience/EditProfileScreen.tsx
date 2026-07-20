@@ -58,10 +58,14 @@ const COLORS = {
   cameraIcon:    '#FFFFFF',
   counter:       '#94A3B8',
 };
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function EditProfileScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Form state — in a real app this would come from auth context/backend
   const [fullName, setFullName] = useState('Kenneth Baidoo');
@@ -101,7 +105,7 @@ export default function EditProfileScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -117,9 +121,9 @@ export default function EditProfileScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
@@ -148,7 +152,7 @@ export default function EditProfileScreen({ navigation }: any) {
               <Ionicons
                 name="camera-outline"
                 size={14}
-                color={COLORS.cameraIcon}
+                color={colors.cameraIcon}
               />
             </View>
           </TouchableOpacity>
@@ -168,7 +172,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               placeholder="Enter your full name"
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={fullName}
               onChangeText={setFullName}
               onFocus={() => setFocusedInput('fullName')}
@@ -188,7 +192,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <TextInput
               style={styles.input}
               placeholder="e.g. Career Services Director"
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={role}
               onChangeText={setRole}
               onFocus={() => setFocusedInput('role')}
@@ -209,7 +213,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, styles.textAreaInput]}
               placeholder="Tell us about yourself..."
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={bio}
               onChangeText={setBio}
               onFocus={() => setFocusedInput('bio')}
@@ -237,7 +241,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <Ionicons
               name="lock-closed-outline"
               size={16}
-              color={COLORS.placeholder}
+              color={colors.placeholder}
               style={styles.lockIcon}
             />
           </View>
@@ -263,11 +267,11 @@ export default function EditProfileScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -286,7 +290,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -299,7 +303,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Avatar Section ─────────────────────────────────────────────
@@ -314,7 +318,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.avatarBg,
+    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -326,7 +330,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: '700',
-    color: COLORS.avatarText,
+    color: colors.avatarText,
   },
   cameraBadge: {
     position: 'absolute',
@@ -335,16 +339,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.cameraBadge,
+    backgroundColor: colors.cameraBadge,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: COLORS.background,
+    borderColor: colors.background,
   },
   changePhotoText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.accent,
+    color: colors.accent,
   },
 
   // ── Input Fields ───────────────────────────────────────────────
@@ -354,7 +358,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.label,
+    color: colors.label,
     letterSpacing: 1,
     marginBottom: 8,
     marginLeft: 4,
@@ -362,12 +366,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -375,12 +379,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: COLORS.inputFocus,
+    borderColor: colors.inputFocus,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Text Area (Bio) ────────────────────────────────────────────
@@ -394,7 +398,7 @@ const styles = StyleSheet.create({
   },
   counter: {
     fontSize: 12,
-    color: COLORS.counter,
+    color: colors.counter,
     textAlign: 'right',
     marginTop: 6,
     marginLeft: 4,
@@ -405,26 +409,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFA',
   },
   readOnlyInput: {
-    color: COLORS.subtitle,
+    color: colors.subtitle,
   },
   lockIcon: {
     marginLeft: 10,
   },
   readOnlyNote: {
     fontSize: 11,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     marginTop: 6,
     marginLeft: 4,
   },
 
   // ── Save Button ────────────────────────────────────────────────
   saveBtn: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 12,
-    shadowColor: COLORS.accent,
+    shadowColor: colors.accent,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -433,7 +437,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.accentText,
+    color: colors.accentText,
   },
 
 });

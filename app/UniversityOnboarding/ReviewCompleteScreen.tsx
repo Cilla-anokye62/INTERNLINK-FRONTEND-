@@ -35,54 +35,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-// Same teal/mint family used across the onboarding flow.
-const COLORS = {
-  background: '#F5FBFA', // mint — full screen background
-  card: 'transparent', // transparent card
-  progressTrack: '#B2DDD8', // unfilled part of progress bar
-  progressFill: '#2CACAD', // filled part of progress bar
-  stepLabel: '#64748B', // "University setup · Step 4 of 4"
-  stepPercent: '#2CACAD', // "100%" text
-  title: '#024D60', // "Review & complete"
-  subtitle: '#64748B', // subtitle text
-
-  // University summary card (inside the white card)
-  summaryCardBg: '#FFFFFF', // white background for contrast on teal
-  summaryCardBorder: '#C5E8E3',
-  avatarBg: '#024D60', // dark teal circle behind "M"
-  avatarText: '#FFFFFF',
-  summaryName: '#024D60',
-  summaryDetail: '#64748B',
-  completenessBg: '#D6F2E3', // light green pill behind "95%"
-  completenessText: '#1E8E5A', // green text inside the pill
-  summaryBarTrack: '#E0F0EE',
-  summaryBarFill: '#2CACAD',
-
-  // Review rows
-  rowBorder: '#E8F4F2',
-  rowIconBg: '#E8F8F5', // light teal circle behind each row icon
-  rowIcon: '#2CACAD',
-  rowTitle: '#024D60',
-  rowSubtitle: '#7A9D98',
-  editBtnBg: '#F0F4F3', // grey circle behind the pencil icon
-  editIcon: '#5C7D78',
-
-  // Info banner
-  bannerBg: '#E3F6F1',
-  bannerIconBg: '#2CACAD',
-  bannerIcon: '#FFFFFF',
-  bannerText: '#1F5C52',
-
-  // Buttons
-  completeBtnBg: '#2CACAD',
-  completeBtnText: '#FFFFFF',
-  saveLaterBtnBg: '#FFFFFF',
-  saveLaterBtnBorder: '#D5EAE7',
-  saveLaterBtnText: '#64748B',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -119,6 +72,9 @@ const REVIEW_ROWS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function ReviewCompleteScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Step 4 of 4 is fully complete, so progress is 100%
   const PROGRESS = 1;
@@ -160,7 +116,7 @@ export default function ReviewCompleteScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* No KeyboardAvoidingView needed here — there are no text inputs on this screen */}
       <ScrollView
@@ -243,13 +199,12 @@ export default function ReviewCompleteScreen({ navigation }: any) {
               <View key={row.id} style={styles.row}>
 
                 {/* Left: icon circle */}
-                <View style={styles.rowIconCircle}>
-                  <Ionicons
+                <Ionicons
                     name={row.icon as any}
                     size={18}
-                    color={COLORS.rowIcon}
+                    color={colors.rowIcon}
+                    style={{ marginRight: 12 }}
                   />
-                </View>
 
                 {/* Middle: title + detail text, fills remaining space */}
                 <View style={styles.rowTextBlock}>
@@ -266,7 +221,7 @@ export default function ReviewCompleteScreen({ navigation }: any) {
                   <Ionicons
                     name="create-outline"
                     size={14}
-                    color={COLORS.editIcon}
+                    color={colors.editIcon}
                   />
                 </TouchableOpacity>
 
@@ -280,13 +235,12 @@ export default function ReviewCompleteScreen({ navigation }: any) {
               Light teal banner reminding the user about the review wait time.
           */}
           <View style={styles.banner}>
-            <View style={styles.bannerIconCircle}>
-              <Ionicons
+            <Ionicons
                 name="shield-checkmark-outline"
                 size={14}
-                color={COLORS.bannerIcon}
+                color={colors.bannerIcon}
+                style={{ marginRight: 12 }}
               />
-            </View>
             <Text style={styles.bannerText}>
               Your profile will be reviewed within 24 hours before going live.
             </Text>
@@ -323,12 +277,12 @@ export default function ReviewCompleteScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   // Full mint background, fills the entire screen
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ScrollView inner padding — keeps mint visible around the card
@@ -337,7 +291,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 40,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ── Progress header (outside card, sits directly on mint) ────────
@@ -349,32 +303,32 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: COLORS.stepLabel,
+    color: colors.stepLabel,
     fontWeight: '500',
     letterSpacing: 0.2,
   },
   stepPercent: {
     fontSize: 12,
-    color: COLORS.stepPercent,
+    color: colors.stepPercent,
     fontWeight: '700',
   },
   progressTrack: {
     width: '100%',
     height: 5,
-    backgroundColor: COLORS.progressTrack,
+    backgroundColor: colors.progressTrack,
     borderRadius: 3,
     marginBottom: 20, // space between progress bar and the white card below
     overflow: 'hidden', // keeps the fill's corners clipped to match the track
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.progressFill,
+    backgroundColor: colors.progressFill,
     borderRadius: 3,
   },
 
   // ── Card wrapping all main content ──────────────────────────
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 0,
   },
@@ -383,22 +337,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     lineHeight: 20,
     marginBottom: 20,
   },
 
   // ── University summary card (inside the white card) ───────────────
   summaryCard: {
-    backgroundColor: COLORS.summaryCardBg,
+    backgroundColor: colors.summaryCardBg,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: COLORS.summaryCardBorder,
+    borderColor: colors.summaryCardBorder,
     padding: 16,
     marginBottom: 20,
   },
@@ -412,7 +366,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.avatarBg,
+    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -420,7 +374,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.avatarText,
+    color: colors.avatarText,
   },
   // Name + location column — flex: 1 makes it fill remaining space
   summaryTextBlock: {
@@ -429,16 +383,16 @@ const styles = StyleSheet.create({
   summaryName: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.summaryName,
+    color: colors.summaryName,
     marginBottom: 2,
   },
   summaryDetail: {
     fontSize: 12,
-    color: COLORS.summaryDetail,
+    color: colors.summaryDetail,
   },
   // Green rounded pill showing the completeness percentage (e.g. "95%")
   completenessPill: {
-    backgroundColor: COLORS.completenessBg,
+    backgroundColor: colors.completenessBg,
     borderRadius: 50,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -447,19 +401,19 @@ const styles = StyleSheet.create({
   completenessText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.completenessText,
+    color: colors.completenessText,
   },
   // Thin progress bar underneath the avatar row, mirrors completeness %
   summaryBarTrack: {
     width: '100%',
     height: 6,
-    backgroundColor: COLORS.summaryBarTrack,
+    backgroundColor: colors.summaryBarTrack,
     borderRadius: 3,
     overflow: 'hidden',
   },
   summaryBarFill: {
     height: '100%',
-    backgroundColor: COLORS.summaryBarFill,
+    backgroundColor: colors.summaryBarFill,
     borderRadius: 3,
   },
 
@@ -472,7 +426,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.rowBorder,
+    borderColor: colors.rowBorder,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10, // space between stacked rows
@@ -482,7 +436,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: COLORS.rowIconBg,
+    backgroundColor: colors.rowIconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -494,19 +448,19 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.rowTitle,
+    color: colors.rowTitle,
     marginBottom: 2,
   },
   rowSubtitle: {
     fontSize: 12,
-    color: COLORS.rowSubtitle,
+    color: colors.rowSubtitle,
   },
   // Small grey circular button containing the pencil/edit icon
   editBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: COLORS.editBtnBg,
+    backgroundColor: colors.editBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 10,
@@ -516,7 +470,7 @@ const styles = StyleSheet.create({
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.bannerBg,
+    backgroundColor: colors.bannerBg,
     borderRadius: 14,
     padding: 14,
     marginBottom: 20,
@@ -526,7 +480,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: COLORS.bannerIconBg,
+    backgroundColor: colors.bannerIconBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -535,13 +489,13 @@ const styles = StyleSheet.create({
   bannerText: {
     flex: 1,
     fontSize: 12.5,
-    color: COLORS.bannerText,
+    color: colors.bannerText,
     lineHeight: 18,
   },
 
   // ── Complete Setup button (filled teal, primary action) ───────────────
   completeBtn: {
-    backgroundColor: COLORS.completeBtnBg,
+    backgroundColor: colors.completeBtnBg,
     borderRadius: 30, // pill shape
     paddingVertical: 16,
     alignItems: 'center',
@@ -550,22 +504,22 @@ const styles = StyleSheet.create({
   completeBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.completeBtnText,
+    color: colors.completeBtnText,
   },
 
   // ── Save & finish later button (outlined, secondary action) ────────────
   saveLaterBtn: {
-    backgroundColor: COLORS.saveLaterBtnBg,
+    backgroundColor: colors.saveLaterBtnBg,
     borderRadius: 30,
     borderWidth: 1.5,
-    borderColor: COLORS.saveLaterBtnBorder,
+    borderColor: colors.saveLaterBtnBorder,
     paddingVertical: 15,
     alignItems: 'center',
   },
   saveLaterBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.saveLaterBtnText,
+    color: colors.saveLaterBtnText,
   },
 
 });

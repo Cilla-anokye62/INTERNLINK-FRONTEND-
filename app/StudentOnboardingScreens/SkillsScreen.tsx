@@ -1,7 +1,10 @@
+import React from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
@@ -16,6 +19,9 @@ const ALL_SKILLS = [
 ];
 
 export default function SkillsScreen({ navigation, route }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const isEditing = route.params?.isEditing || false;
   const initialSkills = route.params?.initialSkills || [];
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills);
@@ -60,7 +66,7 @@ export default function SkillsScreen({ navigation, route }: any) {
         <View style={styles.progressRow}>
           <Text style={styles.stepLabel}>{isEditing ? 'Edit Skills' : 'Step 2 of 5'}</Text>
           {!isEditing && (
-            <TouchableOpacity onPress={() => navigation.navigate('NextScreen')}>
+            <TouchableOpacity onPress={() => navigation.navigate('CareerInterests')}>
               <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
           )}
@@ -82,11 +88,11 @@ export default function SkillsScreen({ navigation, route }: any) {
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search-outline" size={16} color={colors.placeholder} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search skills..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
           />
@@ -177,10 +183,10 @@ export default function SkillsScreen({ navigation, route }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
 
   // Top fixed section
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: height * 0.02,
     paddingBottom: 12,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   progressRow: {
     flexDirection: 'row',
@@ -198,58 +204,58 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   skipText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.placeholder,
     fontWeight: '500',
   },
   progressBarBg: {
     width: '100%',
     height: 5,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
     marginBottom: height * 0.025,
   },
   progressBarFill: {
     height: 5,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 8,
     lineHeight: 36,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: height * 0.02,
     lineHeight: 20,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.inputBg,
     borderRadius: 30,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   searchIcon: {
     fontSize: 14,
     marginRight: 8,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#024D60',
+    color: colors.text,
   },
 
   // Scrollable area
@@ -268,7 +274,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: colors.placeholder,
     letterSpacing: 1,
     marginBottom: 12,
   },
@@ -285,53 +291,53 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 30,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   chipSelected: {
-    backgroundColor: '#2CACAD',
-    borderColor: '#2CACAD',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipCheck: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: 'bold',
   },
   chipText: {
     fontSize: 13,
-    color: '#024D60',
+    color: colors.text,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '600',
   },
 
   // Selected summary box
   selectedBox: {
-    backgroundColor: '#EAF6F5',
+    backgroundColor: colors.iconCircle,
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#C8E6E4',
+    borderColor: colors.inputBorder,
   },
   selectedBoxLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2CACAD',
+    color: colors.accent,
     marginBottom: 10,
   },
   selectedTag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 30,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
   },
   selectedTagText: {
     fontSize: 12,
-    color: '#024D60',
+    color: colors.text,
     fontWeight: '500',
   },
 
@@ -340,16 +346,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: height * 0.03,
     paddingTop: 12,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   continueButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,34 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
-const COLORS = {
-  background: '#F5FBFA',
-  card: 'transparent',
-  progressTrack: '#B2DDD8',
-  progressFill: '#2CACAD',
-  stepLabel: '#64748B',
-  stepPercent: '#2CACAD',
-  title: '#024D60',
-  subtitle: '#64748B',
-  uploadCard: '#FFFFFF',
-  uploadCardBorder: '#C5E8E3',
-  uploadIconCircle: '#E8F8F5',
-  uploadIconBorder: '#2CACAD',
-  uploadIcon: '#2CACAD',
-  uploadTitle: '#024D60',
-  uploadSubtitle: '#94A3B8',
-  uploadBtn: '#2CACAD',
-  uploadBtnText: '#FFFFFF',
-  label: '#024D60',
-  inputBg: '#FFFFFF',
-  inputBorder: 'transparent',
-  inputBorderFocus: '#2CACAD',
-  inputText: '#024D60',
-  placeholder: '#94A3B8',
-  inputIcon: '#94A3B8',
-  nextBtn: '#2CACAD',
-  nextBtnText: '#FFFFFF',
-};
 
 // Each field now carries an `icon` that is an Ionicons NAME string
 // (e.g. "school-outline") instead of an emoji character. The actual
@@ -81,6 +54,9 @@ const FIELDS = [
 ];
 
 export default function UniversityInfoScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [formValues, setFormValues] = useState<Record<string, string>>({
     name: '', email: '', phone: '', website: '',
   });
@@ -100,7 +76,7 @@ export default function UniversityInfoScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -129,18 +105,12 @@ export default function UniversityInfoScreen({ navigation }: any) {
 
             {/* Upload row */}
             <View style={styles.uploadCard}>
-              <View style={styles.uploadIconCircle}>
-                {/*
-                  Upload arrow — swapped from the "⬆" emoji to a real
-                  Ionicons icon. Sized and colored the same way the
-                  emoji's Text style used to be (20px, COLORS.uploadIcon).
-                */}
-                <Ionicons
-                  name="cloud-upload-outline"
-                  size={20}
-                  color={COLORS.uploadIcon}
-                />
-              </View>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={20}
+                color={colors.uploadIcon}
+                style={{ marginRight: 14 }}
+              />
               <View style={styles.uploadTextBlock}>
                 <Text style={styles.uploadTitle}>Upload university logo</Text>
                 <Text style={styles.uploadSubtitle}>PNG or SVG · max 2MB · square</Text>
@@ -177,13 +147,13 @@ export default function UniversityInfoScreen({ navigation }: any) {
                     <Ionicons
                       name={field.icon as any}
                       size={18}
-                      color={COLORS.inputIcon}
+                      color={colors.inputIcon}
                       style={styles.inputIcon}
                     />
                     <TextInput
                       style={styles.input}
                       placeholder={field.placeholder}
-                      placeholderTextColor={COLORS.placeholder}
+                      placeholderTextColor={colors.placeholder}
                       value={formValues[field.id]}
                       onChangeText={(value) => handleChange(field.id, value)}
                       keyboardType={field.keyboardType}
@@ -201,9 +171,9 @@ export default function UniversityInfoScreen({ navigation }: any) {
               <Text style={styles.nextBtnText}>Next</Text>
               {/* TODO icon ("→") replaced with a real arrow icon for consistency */}
               <Ionicons
-                name="arrow-forward"
+                name="arrow-forward-outline"
                 size={18}
-                color={COLORS.nextBtnText}
+                color={colors.nextBtnText}
                 style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
@@ -215,20 +185,20 @@ export default function UniversityInfoScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   flex: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: height * 0.03,
     paddingBottom: height * 0.05,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   stepRow: {
     flexDirection: 'row',
@@ -238,52 +208,52 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: COLORS.stepLabel,
+    color: colors.stepLabel,
     fontWeight: '500',
     letterSpacing: 0.2,
   },
   stepPercent: {
     fontSize: 12,
-    color: COLORS.stepPercent,
+    color: colors.stepPercent,
     fontWeight: '700',
   },
   progressTrack: {
     width: '100%',
     height: 5,
-    backgroundColor: COLORS.progressTrack,
+    backgroundColor: colors.progressTrack,
     borderRadius: 3,
     marginBottom: height * 0.025,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.progressFill,
+    backgroundColor: colors.progressFill,
     borderRadius: 3,
   },
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 0,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     lineHeight: 20,
     marginBottom: height * 0.03,
   },
   uploadCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.uploadCard,
+    backgroundColor: colors.uploadCard,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: COLORS.uploadCardBorder,
+    borderColor: colors.uploadCardBorder,
     padding: 14,
     marginBottom: height * 0.03,
   },
@@ -291,9 +261,9 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: COLORS.uploadIconCircle,
+    backgroundColor: colors.uploadIconCircle,
     borderWidth: 1.5,
-    borderColor: COLORS.uploadIconBorder,
+    borderColor: colors.uploadIconBorder,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
@@ -305,16 +275,16 @@ const styles = StyleSheet.create({
   uploadTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.uploadTitle,
+    color: colors.uploadTitle,
     marginBottom: 3,
   },
   uploadSubtitle: {
     fontSize: 11,
-    color: COLORS.uploadSubtitle,
+    color: colors.uploadSubtitle,
     lineHeight: 16,
   },
   uploadBtn: {
-    backgroundColor: COLORS.uploadBtn,
+    backgroundColor: colors.uploadBtn,
     borderRadius: 50,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -323,7 +293,7 @@ const styles = StyleSheet.create({
   uploadBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.uploadBtnText,
+    color: colors.uploadBtnText,
   },
   fieldsContainer: {
     marginBottom: height * 0.03,
@@ -334,7 +304,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 6,
   },
   // Renamed from `inputWrapper` to `inputContainer` and
@@ -343,10 +313,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 16,
     height: 52,
     marginBottom: 16,
@@ -357,7 +327,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: COLORS.inputBorderFocus,
+    borderColor: colors.inputBorderFocus,
   },
   // Now styles the spacing around the Ionicons icon rather than a
   // font size/color (Ionicons takes size/color as direct props instead)
@@ -367,11 +337,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.inputText,
+    color: colors.inputText,
   },
   nextBtn: {
     flexDirection: 'row', // added so the "Next" text and arrow icon sit side by side
-    backgroundColor: COLORS.nextBtn,
+    backgroundColor: colors.nextBtn,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
@@ -380,6 +350,6 @@ const styles = StyleSheet.create({
   nextBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.nextBtnText,
+    color: colors.nextBtnText,
   },
 });

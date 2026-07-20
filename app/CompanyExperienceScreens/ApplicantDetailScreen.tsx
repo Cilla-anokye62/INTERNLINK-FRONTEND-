@@ -7,13 +7,18 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
 
 // ---------- Main Screen ----------
 const ApplicantDetailScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const handleReject = (): void => {
     console.log('Reject pressed');
     // TODO: reject applicant logic
@@ -36,7 +41,7 @@ const ApplicantDetailScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.backIcon}>{'<'}</Text>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.messageIcon}>💬</Text>
+          <Ionicons name="chatbubble-outline" size={20} color={colors.title} />
         </TouchableOpacity>
       </View>
 
@@ -87,7 +92,7 @@ const ApplicantDetailScreen: React.FC<Props> = ({ navigation }) => {
         {/* AI summary */}
         <Text style={styles.sectionTitle}>AI summary</Text>
         <View style={styles.aiSummaryCard}>
-          <Text style={styles.aiIcon}>✨</Text>
+          <Ionicons name="sparkles-outline" size={16} color={colors.primary} />
           <Text style={styles.aiSummaryText}>
             Strong frontend candidate with React + TypeScript experience at
             Vercel. Portfolio shows real product shipping. Top 2% of
@@ -108,15 +113,13 @@ const ApplicantDetailScreen: React.FC<Props> = ({ navigation }) => {
         {/* Resume */}
         <Text style={styles.sectionTitle}>Resume</Text>
         <View style={styles.resumeCard}>
-          <View style={styles.resumeIconCircle}>
-            <Text style={styles.resumeIcon}>📄</Text>
-          </View>
+          <Ionicons name="document-text-outline" size={18} color={colors.primary} />
           <View style={styles.resumeInfo}>
             <Text style={styles.resumeFileName}>Alex_Morgan_Resume.pdf</Text>
             <Text style={styles.resumeMeta}>482 KB · Updated 3 days ago</Text>
           </View>
           <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.downloadIcon}>⬇️</Text>
+            <Ionicons name="download-outline" size={20} color={colors.accent} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -143,17 +146,10 @@ const ApplicantDetailScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -162,18 +158,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
+    borderBottomColor: colors.inputBorder,
   },
   backButton: {
     padding: 4,
   },
   backIcon: {
     fontSize: 18,
-    color: TEXT_DARK,
+    color: colors.title,
     fontWeight: '600',
-  },
-  messageIcon: {
-    fontSize: 20,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -190,12 +183,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: TEAL_DARK,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -205,12 +198,12 @@ const styles = StyleSheet.create({
   applicantName: {
     fontSize: 18,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 4,
   },
   applicantMeta: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 8,
   },
   badgeRow: {
@@ -218,33 +211,33 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   matchBadge: {
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   matchText: {
     fontSize: 12,
-    color: TEAL_DARK,
+    color: colors.primary,
     fontWeight: '600',
   },
   verifiedBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.successBg,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
   },
   verifiedText: {
     fontSize: 12,
-    color: '#065F46',
+    color: colors.successText,
     fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 16,
     marginBottom: 24,
   },
@@ -254,87 +247,73 @@ const styles = StyleSheet.create({
   },
   statBoxDivider: {
     borderRightWidth: 1,
-    borderRightColor: BORDER_COLOR,
+    borderRightColor: colors.inputBorder,
   },
   statLabel: {
     fontSize: 11,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 6,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   statValueLink: {
     fontSize: 20,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     textAlign: 'center',
   },
   statLinkArrow: {
     fontSize: 12,
-    color: TEAL,
+    color: colors.accent,
     textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 10,
   },
   aiSummaryCard: {
     flexDirection: 'row',
-    backgroundColor: TEAL_LIGHT,
+    backgroundColor: colors.iconCircle,
     borderRadius: 14,
     padding: 14,
     marginBottom: 24,
     gap: 10,
     alignItems: 'flex-start',
   },
-  aiIcon: {
-    fontSize: 16,
-  },
   aiSummaryText: {
     flex: 1,
     fontSize: 13,
     lineHeight: 20,
-    color: TEAL_DARK,
+    color: colors.primary,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 14,
     marginBottom: 24,
   },
   coverLetterText: {
     fontSize: 13,
     lineHeight: 20,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   resumeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 14,
     marginBottom: 16,
     gap: 12,
-  },
-  resumeIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: TEAL_LIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resumeIcon: {
-    fontSize: 18,
   },
   resumeInfo: {
     flex: 1,
@@ -342,15 +321,12 @@ const styles = StyleSheet.create({
   resumeFileName: {
     fontSize: 14,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 2,
   },
   resumeMeta: {
     fontSize: 12,
-    color: TEXT_GRAY,
-  },
-  downloadIcon: {
-    fontSize: 20,
+    color: colors.subtitle,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -358,33 +334,33 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: BORDER_COLOR,
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.inputBorder,
+    backgroundColor: colors.background,
   },
   rejectButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     alignItems: 'center',
   },
   rejectText: {
     fontSize: 14,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   interviewButton: {
     flex: 2,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     alignItems: 'center',
   },
   interviewText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
 });
 

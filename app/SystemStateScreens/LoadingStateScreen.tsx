@@ -47,29 +47,9 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  backBtnBg:         '#FFFFFF',
-  backArrow:         '#0D3B47',
-
-  // Spinning ring + icon
-  ringTrack:         '#E0F0EE', // the lighter, non-moving part of the ring
-  ringActive:        '#2EC4B6', // the bright teal arc that spins around
-  sparkleIcon:       '#2EC4B6',
-
-  // Text
-  headline:          '#0D3B47',
-  subtext:           '#6B8D88',
-
-  // Skeleton placeholder cards
-  skeletonCardBg:    '#FFFFFF',
-  skeletonAvatarBg:  '#E3EFED', // grey-green circle placeholder
-  skeletonBarBg:     '#E3EFED', // grey-green bar placeholders
-};
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -81,6 +61,9 @@ const SKELETON_CARDS = ['1', '2', '3'];
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function LoadingStateScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // useRef holds the animated value across re-renders without resetting it.
   // Animated.Value is a special number React Native can animate smoothly
@@ -130,7 +113,7 @@ export default function LoadingStateScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* ── HEADER: back arrow only, no title ───────────────────── */}
       <View style={styles.header}>
@@ -169,8 +152,8 @@ export default function LoadingStateScreen({ navigation }: any) {
           />
 
           {/* Sparkle/star icon sitting in the very centre, on top of both rings */}
-          {/* TODO: swap for <Ionicons name="sparkles-outline" size={22} color={COLORS.sparkleIcon} /> */}
-          <Text style={styles.sparkleIconText}>✦</Text>
+          {/* TODO: swap for <Ionicons name="sparkles-outline" size={22} color={colors.sparkleIcon} /> */}
+          <Ionicons name="sparkles-outline" size={16} color={colors.accent} />
 
         </View>
 
@@ -216,11 +199,11 @@ export default function LoadingStateScreen({ navigation }: any) {
 // ─── STYLES ──────────────────────────────────────────────────────
 const RING_SIZE = 64; // controls both ring circles' width/height together
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // ── Header ────────────────────────────────────────────────────
@@ -232,7 +215,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -243,7 +226,7 @@ const styles = StyleSheet.create({
   },
   backArrowText: {
     fontSize: 22,
-    color: COLORS.backArrow,
+    color: colors.backArrow,
     lineHeight: 26,
     marginRight: 2,
   },
@@ -272,7 +255,7 @@ const styles = StyleSheet.create({
     height: RING_SIZE,
     borderRadius: RING_SIZE / 2,
     borderWidth: 3,
-    borderColor: COLORS.ringTrack,
+    borderColor: colors.ringTrack,
   },
   // The animated arc on top. Only the TOP border is colored — the
   // other 3 sides are transparent — so as this rotates, it looks
@@ -284,26 +267,26 @@ const styles = StyleSheet.create({
     height: RING_SIZE,
     borderRadius: RING_SIZE / 2,
     borderWidth: 3,
-    borderTopColor: COLORS.ringActive,
+    borderTopColor: colors.ringActive,
     borderRightColor: 'transparent',
     borderBottomColor: 'transparent',
     borderLeftColor: 'transparent',
   },
   sparkleIconText: {
     fontSize: 20,
-    color: COLORS.sparkleIcon,
+    color: colors.sparkleIcon,
   },
 
   headline: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.headline,
+    color: colors.headline,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtext: {
     fontSize: 14,
-    color: COLORS.subtext,
+    color: colors.subtext,
     textAlign: 'center',
   },
 
@@ -315,7 +298,7 @@ const styles = StyleSheet.create({
   skeletonCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.skeletonCardBg,
+    backgroundColor: colors.skeletonCardBg,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -329,7 +312,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: COLORS.skeletonAvatarBg,
+    backgroundColor: colors.skeletonAvatarBg,
     marginRight: 14,
   },
   skeletonTextBlock: {
@@ -339,14 +322,14 @@ const styles = StyleSheet.create({
     width: '70%',
     height: 10,
     borderRadius: 5,
-    backgroundColor: COLORS.skeletonBarBg,
+    backgroundColor: colors.skeletonBarBg,
     marginBottom: 8,
   },
   skeletonBarShort: {
     width: '45%',
     height: 10,
     borderRadius: 5,
-    backgroundColor: COLORS.skeletonBarBg,
+    backgroundColor: colors.skeletonBarBg,
   },
 
 });

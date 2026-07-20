@@ -7,6 +7,8 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
 type WorkSetup = 'Remote' | 'Hybrid' | 'On-site';
@@ -21,16 +23,39 @@ interface ChipProps {
   label: string;
   selected: boolean;
   onPress: () => void;
+  colors: any;
 }
 
-const Chip: React.FC<ChipProps> = ({ label, selected, onPress }) => {
+const Chip: React.FC<ChipProps> = ({ label, selected, onPress, colors }) => {
   return (
     <TouchableOpacity
-      style={[styles.chip, selected && styles.chipSelected]}
+      style={[
+        {
+          paddingVertical: 8,
+          paddingHorizontal: 14,
+          borderRadius: 20,
+          borderWidth: 1,
+          borderColor: colors.inputBorder,
+          backgroundColor: colors.card,
+        },
+        selected && {
+          backgroundColor: colors.accent,
+          borderColor: colors.accent,
+        }
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+      <Text style={[
+        {
+          fontSize: 13,
+          color: colors.title,
+          fontWeight: '500',
+        },
+        selected && {
+          color: colors.onPrimary,
+        }
+      ]}>
         {selected ? `✓ ${label}` : label}
       </Text>
     </TouchableOpacity>
@@ -42,6 +67,9 @@ type Props = NativeStackScreenProps<any, any>;
 
 // ---------- Main Screen ----------
 const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   // Internship categories state
   const [categories, setCategories] = useState<ChipData[]>([
     { label: 'Engineering', selected: true },
@@ -118,6 +146,7 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
                 label={item.label}
                 selected={item.selected}
                 onPress={() => toggleCategory(index)}
+                colors={colors}
               />
             ))}
           </View>
@@ -133,6 +162,7 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
                 label={item.label}
                 selected={item.selected}
                 onPress={() => toggleQualification(index)}
+                colors={colors}
               />
             ))}
           </View>
@@ -141,7 +171,7 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
         {/* Internship locations */}
         <Text style={styles.sectionLabel}>INTERNSHIP LOCATIONS</Text>
         <View style={styles.locationCard}>
-          <Text style={styles.locationIcon}>📍</Text>
+          <Ionicons name="location-outline" size={16} color={colors.accent} style={{ marginRight: 8 }} />
           <Text style={styles.locationText}>
             San Francisco · New York · Remote
           </Text>
@@ -189,20 +219,14 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_LIGHT = '#E6F5F4';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -217,50 +241,50 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 13,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   stepPercent: {
     fontSize: 13,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     fontWeight: '500',
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.inputBorder,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 20,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 24,
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: colors.placeholder,
     letterSpacing: 0.5,
     marginBottom: 10,
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 14,
     marginBottom: 20,
   },
@@ -274,28 +298,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.card,
   },
   chipSelected: {
-    backgroundColor: TEAL,
-    borderColor: TEAL,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipText: {
     fontSize: 13,
-    color: TEXT_DARK,
+    color: colors.title,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   locationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 20,
@@ -306,7 +330,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 14,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   workSetupRow: {
@@ -319,30 +343,30 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
   },
   workSetupButtonSelected: {
-    backgroundColor: TEAL,
-    borderColor: TEAL,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   workSetupText: {
     fontSize: 14,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   workSetupTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   continueButton: {
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

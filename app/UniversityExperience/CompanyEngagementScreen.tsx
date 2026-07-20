@@ -31,31 +31,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  backBtnBg:         '#FFFFFF', // back arrow circle background
-  backArrow:         '#0D3B47',
-  headerTitle:       '#0D3B47', // "Partners"
-  headerSubtitle:    '#4A7C75', // "238 companies engaged"
-  menuBtnBg:         '#FFFFFF', // "···" circle background
-  menuBtnIcon:       '#0D3B47',
-
-  statCardBg:        '#FFFFFF',
-  statLabel:         '#9BB8B4',
-  statValue:         '#0D3B47',
-  statChange:        '#2EC4B6',
-
-  rowBg:             '#FFFFFF',
-  companyName:       '#0D3B47',
-  companyDetail:     '#9BB8B4',
-  logoText:          '#FFFFFF',
-
-  engagedPillBg:     '#D6EEF2',
-  engagedPillText:   '#1B7E94',
-};
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -120,6 +96,9 @@ const PARTNER_COMPANIES = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function CompanyEngagementScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Now that this is a regular stack screen (not a tab), the back
   // arrow has a real, working destination: the Dashboard screen this
@@ -135,7 +114,7 @@ export default function CompanyEngagementScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -151,9 +130,9 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.backArrow}
+              color={colors.backArrow}
             />
           </TouchableOpacity>
 
@@ -161,6 +140,18 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             <Text style={styles.headerTitle}>Partners</Text>
             <Text style={styles.headerSubtitle}>238 companies engaged</Text>
           </View>
+
+          <TouchableOpacity
+            style={styles.menuBtn}
+            onPress={handleMenuPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="ellipsis-horizontal"
+              size={18}
+              color={colors.menuBtnIcon}
+            />
+          </TouchableOpacity>
 
         </View>
 
@@ -210,11 +201,11 @@ export default function CompanyEngagementScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   // paddingBottom is back to a normal value (no tab bar to clear
@@ -237,7 +228,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -253,18 +244,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: COLORS.headerSubtitle,
+    color: colors.headerSubtitle,
   },
   menuBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.menuBtnBg,
+    backgroundColor: colors.menuBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -282,7 +273,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '48%',
-    backgroundColor: COLORS.statCardBg,
+    backgroundColor: colors.statCardBg,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -293,26 +284,26 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.statLabel,
+    color: colors.statLabel,
     marginBottom: 6,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '800',
-    color: COLORS.statValue,
+    color: colors.statValue,
     marginBottom: 4,
   },
   statChange: {
     fontSize: 11,
     fontWeight: '600',
-    color: COLORS.statChange,
+    color: colors.statChange,
   },
 
   // ── Partner company rows ──────────────────────────────────────
   companyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.rowBg,
+    backgroundColor: colors.rowBg,
     borderRadius: 16,
     padding: 14,
     marginBottom: 12,
@@ -333,7 +324,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.logoText,
+    color: colors.logoText,
   },
   companyTextBlock: {
     flex: 1,
@@ -341,16 +332,16 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.companyName,
+    color: colors.companyName,
     marginBottom: 2,
   },
   companyDetail: {
     fontSize: 12,
-    color: COLORS.companyDetail,
+    color: colors.companyDetail,
   },
 
   engagedPill: {
-    backgroundColor: COLORS.engagedPillBg,
+    backgroundColor: colors.engagedPillBg,
     borderRadius: 50,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -359,7 +350,7 @@ const styles = StyleSheet.create({
   engagedPillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.engagedPillText,
+    color: colors.engagedPillText,
   },
 
 });

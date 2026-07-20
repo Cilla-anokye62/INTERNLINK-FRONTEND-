@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,42 +11,58 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppStore } from '../../src/store/useAppStore';
+import { isValidEmail, nonEmpty } from '../../src/utils/validateCard';
 
 const { height } = Dimensions.get('window');
 
-const COLORS = {
-  background: '#F5FBFA',
-  title: '#0D3B47',
-  subtitle: '#4A7C75',
-  label: '#0D3B47',
-  inputBg: '#FFFFFF',
-  inputBorder: '#C5E8E3',
-  inputBorderFocus: '#2EC4B6',
-  inputText: '#0D3B47',
-  placeholder: '#9BB8B4',
-  icon: '#9BB8B4',
-  buttonBg: '#329891',
-  buttonText: '#FFFFFF',
-  Password: '#329891',
-  dividerLine: '#B2D8D2',
-  dividerText: '#7AADA6',
-  googleBtn: '#FFFFFF',
-  googleBtnBorder: '#C5E8E3',
-  googleBtnText: '#0D3B47',
-  footerText: '#4A7C75',
-  signUpText: '#329891',
-};
+
 
 export default function LoginScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
+  const login = useAppStore((s) => s.login);
+  const scrollRef = useRef<ScrollView>(null);
+  const fieldY = useRef<Record<string, number>>({});
+
+  const scrollToField = (fieldName: string) => {
+    const y = fieldY.current[fieldName];
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }
+  };
+
+  const handleFocus = (fieldName: string) => {
+    setFocusedInput(fieldName);
+    setTimeout(() => scrollToField(fieldName), 300);
+  };
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const errors = useMemo(() => ({
+    email: isValidEmail(email),
+    password: nonEmpty(password, 'Password'),
+  }), [email, password]);
+
+  const isFormValid = !errors.email && !errors.password;
+
+  const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
 
   const handleLogin = () => {
-    console.log('Logging in with:', email, password);
+    setTouched({ email: true, password: true });
+    if (!isFormValid) return;
+    login('student');
+    navigation.replace('HomeDashboard');
   };
 
   const handleGoogleLogin = () => {
@@ -54,13 +71,16 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.top}
       >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -79,50 +99,62 @@ export default function LoginScreen({ navigation }: any) {
             {/* Email */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Email</Text>
-              <View style={[
-                styles.inputWrapper,
-                focusedInput === 'email' && styles.inputWrapperFocused,
-              ]}>
-                <Text style={styles.inputIcon}>✉</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'email' && styles.inputWrapperFocused,
+                  touched.email && errors.email && styles.inputWrapperError,
+                ]}
+                onLayout={(e) => { fieldY.current.email = e.nativeEvent.layout.y; }}
+              >
+                <Ionicons name="mail-outline" size={18} color={colors.inputIcon} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.inputText }]}
                   placeholder="student@university.edu"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  onFocus={() => setFocusedInput('email')}
-                  onBlur={() => setFocusedInput(null)}
+                  onFocus={() => handleFocus('email')}
+                  onBlur={() => { setFocusedInput(null); markTouched('email'); }}
                 />
               </View>
+              {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
             {/* Password */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={[
-                styles.inputWrapper,
-                focusedInput === 'password' && styles.inputWrapperFocused,
-              ]}>
-                <Text style={styles.inputIcon}>🔒</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  focusedInput === 'password' && styles.inputWrapperFocused,
+                  touched.password && errors.password && styles.inputWrapperError,
+                ]}
+                onLayout={(e) => { fieldY.current.password = e.nativeEvent.layout.y; }}
+              >
+                <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={{ marginRight: 10 }} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.inputText }]}
                   placeholder="••••••••"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={colors.placeholder}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  onFocus={() => setFocusedInput('password')}
-                  onBlur={() => setFocusedInput(null)}
+                  textContentType="password"
+                  autoComplete="password"
+                  onFocus={() => handleFocus('password')}
+                  onBlur={() => { setFocusedInput(null); markTouched('password'); }}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeBtn}
                 >
-                  <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁'}</Text>
+                  <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={colors.inputIcon} />
                 </TouchableOpacity>
               </View>
+              {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
             {/* Forgot Password */}
@@ -170,24 +202,24 @@ export default function LoginScreen({ navigation }: any) {
           </View>
 
         </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   flex: {
     flex: 1,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: 28,
-    paddingVertical: height * 0.06,   // relative instead of fixed 48
+    paddingVertical: height * 0.06,
   },
   titleSection: {
     marginBottom: height * 0.04,      // relative instead of fixed 36
@@ -196,12 +228,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -214,31 +246,40 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     height: 52,
   },
   inputWrapperFocused: {
-    borderColor: COLORS.inputBorderFocus,
+    borderColor: colors.inputBorderFocus,
+  },
+  inputWrapperError: {
+    borderColor: colors.error,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
   },
   inputIcon: {
     fontSize: 16,
     marginRight: 10,
-    color: COLORS.icon,
+    color: colors.icon,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: COLORS.inputText,
+    color: colors.inputText,
   },
   eyeBtn: {
     padding: 4,
@@ -253,21 +294,24 @@ const styles = StyleSheet.create({
     color: '#2CACAD',
   },
   loginBtn: {
-    backgroundColor: COLORS.buttonBg,
+    backgroundColor: colors.buttonBg,
     borderRadius: 50,
     paddingVertical: 17,
     alignItems: 'center',
     marginBottom: height * 0.035,     // relative instead of fixed 28
-    shadowColor: COLORS.buttonBg,
+    shadowColor: colors.buttonBg,
     shadowOpacity: 0.45,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
     elevation: 6,
   },
+  loginBtnDisabled: {
+    opacity: 0.5,
+  },
   loginBtnText: {
     fontSize: 16,
     fontWeight: '700',
-    color: COLORS.buttonText,
+    color: colors.buttonText,
     letterSpacing: 0.5,
   },
   divider: {
@@ -278,22 +322,22 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.dividerLine,
+    backgroundColor: colors.dividerLine,
   },
   dividerText: {
     marginHorizontal: 12,
     fontSize: 13,
-    color: COLORS.dividerText,
+    color: colors.dividerText,
     fontWeight: '500',
   },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.googleBtn,
+    backgroundColor: colors.googleBtn,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.googleBtnBorder,
+    borderColor: colors.googleBtnBorder,
     paddingVertical: 15,
     marginBottom: height * 0.04,      // relative instead of fixed 32
     shadowColor: '#000',
@@ -311,7 +355,7 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.googleBtnText,
+    color: colors.googleBtnText,
   },
   footer: {
     flexDirection: 'row',
@@ -320,11 +364,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: COLORS.footerText,
+    color: colors.footerText,
   },
   signUpText: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.signUpText,
+    color: colors.signUpText,
   },
 });

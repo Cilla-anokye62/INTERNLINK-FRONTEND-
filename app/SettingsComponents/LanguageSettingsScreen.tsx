@@ -17,7 +17,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,29 +28,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  languageText:  '#0D3B47',
-  checkmark:     '#2CACAD',
-  rowBg:         '#FFFFFF',
-};
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -81,6 +59,8 @@ const LANGUAGES = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function LanguageSettingsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Currently selected language
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -97,7 +77,7 @@ export default function LanguageSettingsScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -112,9 +92,9 @@ export default function LanguageSettingsScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Language</Text>
@@ -148,7 +128,7 @@ export default function LanguageSettingsScreen({ navigation }: any) {
                   <Ionicons
                     name="checkmark-circle"
                     size={24}
-                    color={COLORS.checkmark}
+                    color={colors.accent}
                   />
                 )}
               </TouchableOpacity>
@@ -164,11 +144,11 @@ export default function LanguageSettingsScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -187,7 +167,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -200,12 +180,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Language Card ─────────────────────────────────────────────
   languageCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 8,
     shadowColor: '#000',
@@ -225,7 +205,7 @@ const styles = StyleSheet.create({
   },
   languageRowNotLast: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowBorder,
+    borderBottomColor: colors.rowBorder,
   },
   languageTextBlock: {
     flex: 1,
@@ -233,12 +213,12 @@ const styles = StyleSheet.create({
   languageName: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.languageText,
+    color: colors.label,
     marginBottom: 2,
   },
   nativeName: {
     fontSize: 13,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
   },
 
 });

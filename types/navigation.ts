@@ -37,7 +37,6 @@ export type RootStackParamList = {
   EditProfile: undefined;
   Reports: undefined;
   Settings: undefined;
-  ApplicationSent: undefined;
   InternshipDetails: undefined;
   PersonalInfo: undefined;
   EmailPassword: undefined;

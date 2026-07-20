@@ -31,34 +31,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:    '#F5FBFA',
-  card:          '#FFFFFF',
-  cardBorder:    '#C5E8E3',
-  title:         '#0D3B47',
-  subtitle:      '#4A7C75',
-  label:         '#0D3B47',
-  inputBg:       '#FFFFFF',
-  inputBorder:   'transparent',
-  inputFocus:    '#2CACAD',
-  placeholder:   '#94A3B8',
-  accent:        '#2CACAD',
-  accentText:    '#FFFFFF',
-  danger:        '#E0524C',
-  chevron:       '#C7DAD7',
-  rowBorder:     '#F0F6F5',
-  pillIdle:      '#F0F6F5',
-  pillIdleText:  '#4A7C75',
-  pillActive:    '#2CACAD',
-  pillActiveText: '#FFFFFF',
-  successBg:     '#E8F8F5',
-  successText:   '#10B981',
-  successIcon:   '#10B981',
-};
-
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── DATA ─────────────────────────────────────────────────────────
 // Feedback type options
@@ -80,6 +53,9 @@ const FEEDBACK_TYPES = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function SendFeedbackScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Form state
   const [feedbackType, setFeedbackType] = useState('general');
@@ -111,7 +87,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
   if (isSubmitted) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -126,9 +102,9 @@ export default function SendFeedbackScreen({ navigation }: any) {
               activeOpacity={0.7}
             >
               <Ionicons
-                name="arrow-back-outline"
+                name="chevron-back-outline"
                 size={22}
-                color={COLORS.title}
+                color={colors.title}
               />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Send Feedback</Text>
@@ -142,7 +118,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
               <Ionicons
                 name="checkmark"
                 size={40}
-                color={COLORS.successIcon}
+                color={colors.successIcon}
               />
             </View>
             <Text style={styles.confirmationTitle}>Thank you!</Text>
@@ -176,7 +152,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
   // Normal form state
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -192,9 +168,9 @@ export default function SendFeedbackScreen({ navigation }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.title}
+              color={colors.title}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Send Feedback</Text>
@@ -244,7 +220,7 @@ export default function SendFeedbackScreen({ navigation }: any) {
             <TextInput
               style={[styles.input, styles.textAreaInput]}
               placeholder="Tell us what's on your mind..."
-              placeholderTextColor={COLORS.placeholder}
+              placeholderTextColor={colors.placeholder}
               value={message}
               onChangeText={setMessage}
               onFocus={() => setFocusedInput('message')}
@@ -281,11 +257,11 @@ export default function SendFeedbackScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
 
   scrollContent: {
@@ -304,7 +280,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -317,7 +293,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Field Group ───────────────────────────────────────────────
@@ -327,7 +303,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.label,
+    color: colors.label,
     letterSpacing: 1,
     marginBottom: 8,
     marginLeft: 4,
@@ -342,34 +318,34 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: COLORS.pillIdle,
+    backgroundColor: colors.pillIdle,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.pillIdle,
+    borderColor: colors.pillIdle,
   },
   typePillActive: {
-    backgroundColor: COLORS.pillActive,
-    borderColor: COLORS.pillActive,
+    backgroundColor: colors.pillActive,
+    borderColor: colors.pillActive,
   },
   typePillText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.pillIdleText,
+    color: colors.pillIdleText,
   },
   typePillTextActive: {
-    color: COLORS.pillActiveText,
+    color: colors.pillActiveText,
   },
 
   // ── Input Container ───────────────────────────────────────────
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.inputBg,
+    backgroundColor: colors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 52,
     borderWidth: 1.5,
-    borderColor: COLORS.inputBorder,
+    borderColor: colors.inputBorder,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -377,12 +353,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputContainerFocused: {
-    borderColor: COLORS.inputFocus,
+    borderColor: colors.inputFocus,
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.title,
+    color: colors.title,
   },
 
   // ── Text Area ─────────────────────────────────────────────────
@@ -393,16 +369,17 @@ const styles = StyleSheet.create({
   },
   textAreaInput: {
     textAlignVertical: 'top',
+    height: 120,
   },
 
   // ── Submit Button ─────────────────────────────────────────────
   submitBtn: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 12,
-    shadowColor: COLORS.accent,
+    shadowColor: colors.accent,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -411,15 +388,15 @@ const styles = StyleSheet.create({
   submitBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.accentText,
+    color: colors.accentText,
   },
   submitBtnTextDisabled: {
-    color: COLORS.placeholder,
+    color: colors.placeholder,
   },
 
   // ── Confirmation Card ─────────────────────────────────────────
   confirmationCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 32,
     alignItems: 'center',
@@ -433,7 +410,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.successBg,
+    backgroundColor: colors.successBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
@@ -441,24 +418,24 @@ const styles = StyleSheet.create({
   confirmationTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.title,
+    color: colors.title,
     marginBottom: 12,
   },
   confirmationText: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 32,
   },
   doneBtn: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 14,
     paddingHorizontal: 48,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: COLORS.accent,
+    shadowColor: colors.accent,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -467,7 +444,7 @@ const styles = StyleSheet.create({
   doneBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.accentText,
+    color: colors.accentText,
   },
   anotherBtn: {
     paddingVertical: 12,
@@ -475,7 +452,7 @@ const styles = StyleSheet.create({
   anotherBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.accent,
+    color: colors.accent,
   },
 
 });

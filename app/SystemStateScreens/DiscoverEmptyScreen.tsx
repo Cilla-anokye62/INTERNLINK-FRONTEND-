@@ -51,29 +51,16 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
-
-
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  headerBg:          '#F7F8FA',
-  headerTitle:       '#0F6E64', // "InternLink" teal text
-  bellIcon:          '#1A1A2E',
-
-  background:        '#F5FBFA', // mint body background
-
-  illustrationCardBg:'#FFFFFF',
-
-  headline:          '#1A1A2E',
-  subtext:           '#5C6B6A',
-
-  browseBtnBg:       '#0F6E64',
-  browseBtnText:     '#FFFFFF',
-};
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function DiscoverEmptyScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
 
   // Placeholder avatar — in the real app this would be the logged-in
   // student's profile photo URL
@@ -93,7 +80,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.headerBg} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.headerBg} />
 
       {/* ── TOP HEADER BAR ───────────────────────────────────────── */}
       <View style={styles.header}>
@@ -109,7 +96,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
 
         <TouchableOpacity onPress={handleNotificationsPress}>
           {/* TODO: swap for <Ionicons name="notifications-outline" size={22} /> */}
-          <Text style={styles.bellIconText}>🔔</Text>
+          <Ionicons name="notifications-outline" size={24} color={colors.onPrimary} />
         </TouchableOpacity>
 
       </View>
@@ -125,7 +112,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
             image, e.g.:
             <Image source={require('../assets/empty-search-box.png')} style={styles.illustrationImage} />
           */}
-          <Text style={styles.illustrationEmoji}>📦🔍</Text>
+          <Ionicons name="search-outline" size={44} color={colors.placeholder} />
         </View>
 
         <Text style={styles.headline}>Nothing here yet</Text>
@@ -158,18 +145,18 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
 
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.headerBg,
+    backgroundColor: colors.headerBg,
   },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.headerBg,
+    backgroundColor: colors.headerBg,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
@@ -181,7 +168,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
   },
   bellIconText: {
     fontSize: 20,
@@ -189,7 +176,7 @@ const styles = StyleSheet.create({
 
   body: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
@@ -198,7 +185,7 @@ const styles = StyleSheet.create({
   illustrationCard: {
     width: 180,
     height: 180,
-    backgroundColor: COLORS.illustrationCardBg,
+    backgroundColor: colors.illustrationCardBg,
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
@@ -216,13 +203,13 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.headline,
+    color: colors.headline,
     textAlign: 'center',
     marginBottom: 12,
   },
   subtext: {
     fontSize: 14,
-    color: COLORS.subtext,
+    color: colors.subtext,
     textAlign: 'center',
     lineHeight: 21,
     marginBottom: 24,
@@ -232,21 +219,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.browseBtnBg,
+    backgroundColor: colors.browseBtnBg,
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 28,
   },
   browseBtnIcon: {
     fontSize: 15,
-    color: COLORS.browseBtnText,
+    color: colors.browseBtnText,
     marginRight: 8,
     fontWeight: '700',
   },
   browseBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.browseBtnText,
+    color: colors.browseBtnText,
   },
 
 });

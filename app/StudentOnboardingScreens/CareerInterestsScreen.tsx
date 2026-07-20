@@ -1,7 +1,10 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height, width } = Dimensions.get('window');
 
@@ -17,6 +20,9 @@ const INTERESTS = [
 ];
 
 export default function CareerInterestsScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggleInterest = (id: string) => {
@@ -56,7 +62,7 @@ export default function CareerInterestsScreen({ navigation }: any) {
         </Text>
 
         <View style={styles.hintRow}>
-          <Text style={styles.hintIcon}>✦</Text>
+          <Ionicons name="sparkles-outline" size={16} color={colors.accent} style={{ marginRight: 8 }} />
           <Text style={styles.hintText}>AI uses your interests to calculate match scores</Text>
         </View>
       </View>
@@ -121,16 +127,16 @@ export default function CareerInterestsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   topSection: {
     paddingHorizontal: 24,
     paddingTop: height * 0.02,
     paddingBottom: 12,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   progressRow: {
     flexDirection: 'row',
@@ -140,58 +146,58 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 12,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '600',
   },
   skipText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.placeholder,
     fontWeight: '500',
   },
   progressBarBg: {
     width: '100%',
     height: 5,
-    backgroundColor: '#C8E6E4',
+    backgroundColor: colors.inputBorder,
     borderRadius: 3,
     marginBottom: height * 0.025,
   },
   progressBarFill: {
     height: 5,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 8,
     lineHeight: 36,
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     marginBottom: 12,
     lineHeight: 20,
   },
   hintRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 30,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
     marginBottom: 4,
   },
   hintIcon: {
     fontSize: 14,
-    color: '#2CACAD',
+    color: colors.accent,
     marginRight: 8,
   },
   hintText: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.subtitle,
   },
   scrollArea: {
     flex: 1,
@@ -212,7 +218,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   cardSelected: {
-    borderColor: '#2CACAD',
+    borderColor: colors.accent,
   },
   cardGradient: {
     flex: 1,
@@ -226,7 +232,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -244,7 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: height * 0.03,
     paddingTop: 12,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
   },
   bottomInfo: {
     flexDirection: 'row',
@@ -253,21 +259,21 @@ const styles = StyleSheet.create({
   },
   selectedCount: {
     fontSize: 13,
-    color: '#024D60',
+    color: colors.title,
     fontWeight: '600',
   },
   minText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
   continueButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   continueButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },

@@ -19,6 +19,7 @@
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
 import React, { useState, useEffect } from 'react';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import {
   View,
   Text,
@@ -31,33 +32,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppStore } from '../../src/store/useAppStore';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background: '#F5FBFA',
-  backBtnBg: '#FFFFFF',
-  backArrow: '#0D3B47',
-  headerTitle: '#0D3B47',
-
-  // Profile card
-  profileCardBg: '#FFFFFF',
-  avatarBg: '#0D3B47',
-  avatarText: '#FFFFFF',
-  profileName: '#0D3B47',
-  profileEmail: '#9BB8B4',
-  chevron: '#C7DAD7',
-
-  // Section labels
-  sectionLabel: '#4A7C75',
-
-  // Setting rows
-  rowBg: '#FFFFFF',
-  rowText: '#0D3B47',
-
-  // Sign out link
-  signOutText: '#E0524C',
-};
+// Removed hardcoded COLORS object
 
 
 // ─── DATA ─────────────────────────────────────────────────────────
@@ -69,6 +48,7 @@ const SETTINGS_SECTIONS = [
       { id: 'personalInfo', title: 'Personal info' },
       { id: 'emailPassword', title: 'Email & password' },
       { id: 'connectedAccounts', title: 'Connected accounts' },
+      { id: 'subscription', title: 'Subscription' },
     ],
   },
   {
@@ -94,7 +74,11 @@ const SETTINGS_SECTIONS = [
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function SettingsScreen({ navigation, route }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const userRole = route.params?.role || 'student'; // Default to student if not provided
+  const logout = useAppStore((state) => state.logout);
+  const isPremium = useAppStore((state) => state.isPremium);
 
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -113,6 +97,7 @@ export default function SettingsScreen({ navigation, route }: any) {
     try {
       const savedUsername = await AsyncStorage.getItem('username');
       const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
+
 
       if (savedUsername) {
         setUsername(savedUsername);
@@ -133,16 +118,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   };
 
   const handleProfilePress = () => {
-    // Navigate to role-specific profile screen
-    if (userRole === 'student') {
-      navigation.navigate('Profile');
-      navigation.navigate('HomeDashboard', { screen: 'Profile' });
-    } else if (userRole === 'university') {
-      navigation.navigate('EditProfile');
-    } else if (userRole === 'employer') {
-      // TODO: Add employer edit profile screen
-      console.log('Employer profile edit not yet implemented');
-    }
+    navigation.goBack();
   };
 
   const handleRowPress = (rowId: string) => {
@@ -155,6 +131,9 @@ export default function SettingsScreen({ navigation, route }: any) {
         break;
       case 'connectedAccounts':
         navigation.navigate('ConnectedAccounts');
+        break;
+      case 'subscription':
+        navigation.navigate('PremiumManage');
         break;
       case 'notifications':
         navigation.navigate('NotificationSettings');
@@ -180,6 +159,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   };
 
   const handleSignOut = () => {
+    logout();
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
@@ -188,7 +168,7 @@ export default function SettingsScreen({ navigation, route }: any) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -202,9 +182,9 @@ export default function SettingsScreen({ navigation, route }: any) {
             activeOpacity={0.7}
           >
             <Ionicons
-              name="arrow-back-outline"
+              name="chevron-back-outline"
               size={22}
-              color={COLORS.backArrow}
+              color={colors.backArrow}
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
@@ -216,7 +196,7 @@ export default function SettingsScreen({ navigation, route }: any) {
           onPress={handleProfilePress}
           activeOpacity={0.85}
         >
-          <View style={styles.profileCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
             ) : (
@@ -231,7 +211,7 @@ export default function SettingsScreen({ navigation, route }: any) {
             <Ionicons
               name="chevron-forward-outline"
               size={18}
-              color={COLORS.chevron}
+              color={colors.chevron}
             />
           </View>
         </TouchableOpacity>
@@ -252,11 +232,18 @@ export default function SettingsScreen({ navigation, route }: any) {
                   onPress={() => handleRowPress(item.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.rowText}>{item.title}</Text>
+                  <View style={styles.rowLeft}>
+                    <Text style={styles.rowText}>{item.title}</Text>
+                    {item.id === 'subscription' && isPremium && (
+                      <View style={styles.subscriptionBadge}>
+                        <Ionicons name="diamond-outline" size={14} color={colors.accent} />
+                      </View>
+                    )}
+                  </View>
                   <Ionicons
                     name="chevron-forward-outline"
                     size={18}
-                    color={COLORS.chevron}
+                    color={colors.chevron}
                   />
                 </TouchableOpacity>
               ))}
@@ -280,10 +267,10 @@ export default function SettingsScreen({ navigation, route }: any) {
 
 
 // ─── STYLES ──────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 18,
@@ -299,7 +286,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.backBtnBg,
+    backgroundColor: colors.backBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -312,12 +299,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.headerTitle,
+    color: colors.headerTitle,
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.profileCardBg,
+    backgroundColor: colors.profileCardBg,
     borderRadius: 16,
     padding: 14,
     marginBottom: 20,
@@ -331,7 +318,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: COLORS.avatarBg,
+    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -345,7 +332,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.avatarText,
+    color: colors.avatarText,
   },
   profileTextBlock: {
     flex: 1,
@@ -353,12 +340,12 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 15,
     fontWeight: '700',
-    color: COLORS.profileName,
+    color: colors.profileName,
     marginBottom: 2,
   },
   profileEmail: {
     fontSize: 12,
-    color: COLORS.profileEmail,
+    color: colors.profileEmail,
   },
   section: {
     marginBottom: 20,
@@ -366,13 +353,13 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.sectionLabel,
+    color: colors.sectionLabel,
     letterSpacing: 1,
     marginBottom: 8,
     marginLeft: 4,
   },
   sectionCard: {
-    backgroundColor: COLORS.rowBg,
+    backgroundColor: colors.rowBg,
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -393,9 +380,25 @@ const styles = StyleSheet.create({
   settingRowLast: {
     borderBottomWidth: 0,
   },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   rowText: {
     fontSize: 14,
-    color: COLORS.rowText,
+    color: colors.rowText,
+  },
+  subscriptionBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(212,175,55,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionBadgeText: {
+    fontSize: 12,
   },
   signOutBtn: {
     alignItems: 'center',
@@ -405,6 +408,6 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 15,
     fontWeight: '600',
-    color: COLORS.signOutText,
+    color: colors.signOutText,
   },
 });

@@ -1,16 +1,15 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import EmployerDashboardScreen from './EmployerDashboardScreen';
-import SettingsScreen from '../SettingsComponents/SettingsScreen';
-
-import CompanyProfileScreen from './CompanyProfileScreen';
 import ListingsScreen from './ListingsScreen';
-import ApplicantsScreen from './ApplicantsScreen';
+import ApplicantPipelineScreen from './ApplicantPipelineScreen';
+import CompanyProfileScreen from './CompanyProfileScreen';
+import SettingsScreen from '../SettingsComponents/SettingsScreen';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
-
-
-
+// ---------- Types ----------
 export type CompanyTabParamList = {
   Dashboard: undefined;
   Listings: undefined;
@@ -20,32 +19,42 @@ export type CompanyTabParamList = {
 };
 
 interface TabIconProps {
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   focused: boolean;
+  color: string;
 }
 
-const TabIcon: React.FC<TabIconProps> = ({ icon, focused }) => {
-  return (
-    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
-  );
+const FILLED_MAP: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  'home-outline': 'home',
+  'albums-outline': 'albums',
+  'people-outline': 'people',
+  'business-outline': 'business',
+  'settings-outline': 'settings',
+};
+
+const TabIcon: React.FC<TabIconProps> = ({ icon, focused, color }) => {
+  const iconName = focused ? (FILLED_MAP[icon] || icon) : icon;
+  return <Ionicons name={iconName} size={24} color={color} />;
 };
 
 const Tab = createBottomTabNavigator<CompanyTabParamList>();
 
-const TEAL = '#2BA9A0';
-const TEXT_GRAY = '#6B7280';
-
 const CompanyTabs: React.FC = () => {
+  const { colors } = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: TEAL,
-        tabBarInactiveTintColor: TEXT_GRAY,
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          height: 60,
-          paddingBottom: 8,
+          backgroundColor: colors.tabBarBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
+          height: 78,
           paddingTop: 8,
+          paddingBottom: 18, // accounts for the phone's home indicator area
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -57,29 +66,29 @@ const CompanyTabs: React.FC = () => {
         name="Dashboard"
         component={EmployerDashboardScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon icon="home-outline" focused={focused} color={color} />,
         }}
       />
       <Tab.Screen
         name="Listings"
         component={ListingsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🗂️" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon icon="albums-outline" focused={focused} color={color} />,
         }}
       />
 
       <Tab.Screen
         name="Applicants"
-        component={ApplicantsScreen}
+        component={ApplicantPipelineScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="👥" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon icon="people-outline" focused={focused} color={color} />,
         }}
       />
       <Tab.Screen
         name="Company"
         component={CompanyProfileScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏢" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon icon="business-outline" focused={focused} color={color} />,
         }}
       />
       <Tab.Screen
@@ -87,7 +96,7 @@ const CompanyTabs: React.FC = () => {
         component={SettingsScreen}
         initialParams={{ role: 'employer' }}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon icon="settings-outline" focused={focused} color={color} />,
         }}
       />
     </Tab.Navigator>

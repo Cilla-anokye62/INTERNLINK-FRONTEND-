@@ -1,9 +1,14 @@
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
 export default function ApplicationSentScreen({ navigation }: any) {
+  const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleTrackApplication = () => {
     navigation.navigate('Applications');
@@ -14,10 +19,10 @@ export default function ApplicationSentScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       {/* Back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backArrow}>←</Text>
+        <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
       </TouchableOpacity>
 
       {/* Center content */}
@@ -73,10 +78,10 @@ export default function ApplicationSentScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5FBFA',
+    backgroundColor: colors.background,
     paddingHorizontal: 24,
   },
 
@@ -84,14 +89,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: height * 0.02,
   },
   backArrow: {
     fontSize: 18,
-    color: '#024D60',
+    color: colors.title,
     fontWeight: 'bold',
   },
 
@@ -105,7 +110,7 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: '#D4F0EE',
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 28,
@@ -114,12 +119,12 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkMark: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 36,
     fontWeight: 'bold',
   },
@@ -127,13 +132,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.title,
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 28,
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     width: '100%',
@@ -180,23 +185,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#024D60',
+    color: colors.cardTitle,
     flexShrink: 1,
   },
   statusBadge: {
-    backgroundColor: '#D4F0EE',
+    backgroundColor: colors.iconCircle,
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   statusText: {
     fontSize: 11,
-    color: '#2CACAD',
+    color: colors.accent,
     fontWeight: '700',
   },
   cardSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: colors.placeholder,
   },
 
   bottomBar: {
@@ -204,26 +209,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   trackButton: {
-    backgroundColor: '#2CACAD',
+    backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
   },
   trackButtonText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
   browseButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.inputBorder,
   },
   browseButtonText: {
-    color: '#024D60',
+    color: colors.title,
     fontSize: 16,
     fontWeight: 'bold',
   },
