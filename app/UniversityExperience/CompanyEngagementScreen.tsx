@@ -19,7 +19,7 @@
  * ─────────────────────────────────────────────────────────────────
  */
 
-// ─── IMPORTS ─────────────────────────────────────────────────────
+
 import React from 'react';
 import {
   View,
@@ -105,18 +105,11 @@ export default function CompanyEngagementScreen({ navigation }: any) {
   // was navigated FROM. navigation.goBack() returns to whichever
   // screen called navigation.navigate('CompanyEngagement').
   const handleBackPress = () => {
-    console.log('Back tapped');
-    // TODO: navigation.goBack();
-  };
-
-  const handleMenuPress = () => {
-    console.log('Menu (···) tapped');
-    // TODO: open an options menu/sheet
+    navigation.goBack();
   };
 
   const handleCompanyPress = (companyId: string) => {
-    console.log('Opening company profile:', companyId);
-    // TODO: navigation.navigate('CompanyDetail', { id: companyId });
+    navigation.navigate('CompanyDetail', { companyId });
   };
 
   return (

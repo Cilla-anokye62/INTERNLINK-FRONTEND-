@@ -22,7 +22,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -83,29 +83,6 @@ export default function ReportsScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
-  // This screen lives on the "Reports" tab, so it starts active
-  const [setActiveTab] = useState('reports');
-
-  // Called when the circular "+" button is tapped
-  const handleGenerateReport = () => {
-    console.log('Generate new report tapped');
-    // TODO: open a "create report" modal/sheet, or navigate to a
-    // report-builder screen, e.g. navigation.navigate('GenerateReport');
-  };
-
-  // Called when a report row is tapped (opens/previews the report)
-  const handleReportPress = (reportId: string) => {
-    console.log('Opening report:', reportId);
-    // TODO: navigation.navigate('ReportDetail', { id: reportId });
-  };
-
-  // Called when the download icon on a report row is tapped specifically
-  const handleDownloadPress = (reportId: string) => {
-    console.log('Downloading report:', reportId);
-    // TODO: trigger the actual file download/export here, e.g. using
-    // expo-file-system or a signed URL from your backend
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -116,11 +93,11 @@ export default function ReportsScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── HEADER ROW: title/subtitle + "+" button ─────────────── */}
+        {/* ── HEADER ROW: title/subtitle ─────────────────────────── */}
         <View style={styles.header}>
           <View style={styles.headerTextBlock}>
             <Text style={styles.headerTitle}>Reports</Text>
-            <Text style={styles.headerSubtitle}>Generate & export</Text>
+            <Text style={styles.headerSubtitle}>Generated reports</Text>
           </View>
 
           <TouchableOpacity
@@ -139,16 +116,10 @@ export default function ReportsScreen({ navigation }: any) {
 
 
         {/* ── REPORT LIST ──────────────────────────────────────────── */}
-        {/*
-          .map() loops over REPORTS and renders one row per report:
-          file icon circle | title + detail | download icon (+ optional dot)
-        */}
         {REPORTS.map((report) => (
-          <TouchableOpacity
+          <View
             key={report.id}
             style={styles.reportRow}
-            onPress={() => handleReportPress(report.id)}
-            activeOpacity={0.85}
           >
 
             {/* Left: file icon inside a light teal circle */}
@@ -160,9 +131,7 @@ export default function ReportsScreen({ navigation }: any) {
               />
             </View>
 
-            {/* Middle: title + detail line, fills remaining space.
-                Title can wrap onto 2 lines for longer report names
-                (e.g. "Student outcomes — Class of 2025"). */}
+            {/* Middle: title + detail line, fills remaining space */}
             <View style={styles.reportTextBlock}>
               <Text style={styles.reportTitle}>{report.title}</Text>
               <Text style={styles.reportDetail}>{report.detail}</Text>
@@ -186,7 +155,7 @@ export default function ReportsScreen({ navigation }: any) {
               </TouchableOpacity>
             </View>
 
-          </TouchableOpacity>
+          </View>
         ))}
         {/* ── END REPORT LIST ─────────────────────────────────────── */}
 
@@ -223,7 +192,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginBottom: 16,
   },
   headerTextBlock: {
-    flex: 1, // fills space to the left of the "+" button
+    flex: 1,
   },
   headerTitle: {
     fontSize: 22,
@@ -257,7 +226,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.rowBg,
     borderRadius: 16,
     padding: 14,
-    marginBottom: 12, // space between each report's row
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -273,34 +242,27 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  // Title + detail column — flex: 1 fills the space between icon and download button
   reportTextBlock: {
     flex: 1,
-    marginRight: 10, // keeps text from running right up against the download icon
+    marginRight: 10,
   },
   reportTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: colors.reportTitle,
     marginBottom: 3,
-    // No numberOfLines limit — title is allowed to wrap onto 2 lines
-    // naturally for longer report names, matching the design.
   },
   reportDetail: {
     fontSize: 12,
     color: colors.reportDetail,
   },
 
-  // ── Download icon + optional "new" dot ─────────────────────────
-  // This column holds the small dot (top) and the download button (below)
-  downloadColumn: {
-    alignItems: 'center',
-  },
-  // Small teal dot shown above the download icon for new/unread reports
+  // ── "New" dot indicator ────────────────────────────────────────
   newDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
+    backgroundColor: COLORS.newDot,
     backgroundColor: colors.newDot,
     marginBottom: 6,
   },

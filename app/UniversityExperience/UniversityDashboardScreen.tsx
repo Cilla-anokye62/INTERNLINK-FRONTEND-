@@ -88,10 +88,6 @@ export default function UniversityDashboardScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
-  // Tracks which bottom tab is currently active so we can highlight it.
-  // Starts on 'overview' since that's this screen.
-  const [ setActiveTab] = React.useState('overview');
-
   // Placeholder data for the placement rate card.
   // Later this will likely come from your backend/API.
   const placementRate = {
@@ -101,15 +97,27 @@ export default function UniversityDashboardScreen({ navigation }: any) {
 
   // Called when a quick-access grid card is tapped
   const handleCardPress = (cardId: string) => {
-    console.log('Opening:', cardId);
-    // TODO: navigate to the matching screen, e.g.:
-    // if (cardId === 'students') navigation.navigate('StudentsList');
+    switch (cardId) {
+      case 'students':
+        navigation.navigate('Students');
+        break;
+      case 'companies':
+        navigation.navigate('CompanyEngagement');
+        break;
+      case 'analytics':
+        navigation.navigate('Analytics');
+        break;
+      case 'reports':
+        navigation.navigate('Reports');
+        break;
+      default:
+        break;
+    }
   };
 
   // Called when a company row in "Top placements" is tapped
   const handlePlacementPress = (companyId: string) => {
-    console.log('Viewing placement details for:', companyId);
-    // TODO: navigation.navigate('CompanyDetail', { id: companyId });
+    navigation.navigate('CompanyDetail', { companyId });
   };
 
   return (
@@ -139,7 +147,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
           {/* Right: notification bell button */}
           <TouchableOpacity
             style={styles.bellBtn}
-            onPress={() => console.log('Notifications tapped')}
+            onPress={() => navigation.navigate('UniversityNotifications')}
             activeOpacity={0.7}
           >
             <Ionicons
@@ -238,7 +246,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
         {/* ── TOP PLACEMENTS SECTION ──────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Top placements</Text>
-          <TouchableOpacity onPress={() => console.log('View all tapped')}>
+          <TouchableOpacity onPress={() => navigation.navigate('CompanyEngagement')}>
             <Text style={styles.viewAllText}>View all</Text>
           </TouchableOpacity>
         </View>

@@ -29,7 +29,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -92,9 +92,6 @@ export default function PlacementAnalyticsScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
-  // This screen lives on the "Analytics" tab, so it starts active
-  const [ setActiveTab] = useState('analytics');
-
   // Placeholder data for the Offers Accepted card.
   // Later this will likely come from your backend/API.
   const offersAccepted = {
@@ -103,8 +100,7 @@ export default function PlacementAnalyticsScreen({ navigation }: any) {
   };
 
   const handleMenuPress = () => {
-    console.log('Menu (···) tapped');
-    // TODO: open an options menu/sheet
+    navigation.navigate('PlacementOverview');
   };
 
 

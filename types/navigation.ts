@@ -24,38 +24,27 @@ export type RootStackParamList = {
   InstitutionDetails: undefined;
   CareerServicesSetup: undefined;
   ReviewComplete: undefined;
+  UniversityTabs: undefined;
   UniversityDashboard: undefined;
   PlacementAnalytics: undefined;
   PlacementOverview: undefined;
   StudentMonitoring: undefined;
   CompanyEngagement: undefined;
+  StudentDetail: { studentId: string } | undefined;
+  CompanyDetail: { companyId: string } | undefined;
+  UniversityNotifications: undefined;
+  UniversityEditProfile: undefined;
+  EditProfile: undefined;
   Reports: undefined;
   Settings: undefined;
   InternshipDetails: undefined;
-
-  // Student application flow
-  ApplicationReview: { internship: any } | undefined;
-  ResumeSelection: { internship: any; resumeId?: string } | undefined;
-  AdditionalInfo: { internship: any; resumeId?: string } | undefined;
-  PortfolioLinks: { internship: any; resumeId?: string; coverLetter?: string; motivation?: string; whyThis?: string; strongCandidate?: string } | undefined;
-  Availability: { internship: any; resumeId?: string; coverLetter?: string; motivation?: string; whyThis?: string; strongCandidate?: string; portfolioLinks?: any } | undefined;
-  ReviewApplication: { internship: any; resumeId?: string; coverLetter?: string; motivation?: string; whyThis?: string; strongCandidate?: string; portfolioLinks?: any; availability?: any } | undefined;
-  ApplicationSubmitted: { applicationId?: string; company?: string; title?: string } | undefined;
-  MyApplications: undefined;
-  ApplicationDetails: { applicationId: string } | undefined;
-  Notifications: undefined;
-  StudentChatScreen: { conversationId: string; participantName: string; participantInitials: string; participantColor: string; internshipTitle?: string } | undefined;
-
-  // Employer screens
-  ApplicantProfile: { applicationId: string } | undefined;
-  InterviewSchedule: { applicationId: string } | undefined;
-  OfferSend: { applicationId: string } | undefined;
-  PostInternshipWizard: undefined;
-  Messages: undefined;
-  ChatScreen: { conversationId: string; participantName: string; participantInitials: string; participantColor: string; internshipTitle?: string } | undefined;
-  Insights: undefined;
-  PremiumPaywall: undefined;
-  Payment: undefined;
-  PremiumConfirmation: undefined;
-  PremiumManage: undefined;
+  PersonalInfo: undefined;
+  EmailPassword: undefined;
+  ConnectedAccounts: undefined;
+  NotificationSettings: undefined;
+  PrivacySettings: undefined;
+  LanguageSettings: undefined;
+  AppearanceSettings: undefined;
+  HelpCenter: undefined;
+  SendFeedback: undefined;
 };

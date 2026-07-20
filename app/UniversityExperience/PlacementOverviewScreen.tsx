@@ -19,7 +19,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,36 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
+import FilterModal from './FilterModal';
+
+
+// ─── COLOR PALETTE ───────────────────────────────────────────────
+const COLORS = {
+  background:        '#F5FBFA', // mint — full screen background
+  backBtnBg:         '#FFFFFF',
+  backArrow:         '#0D3B47',
+  headerTitle:       '#0D3B47', // "Placements"
+  headerSubtitle:    '#4A7C75', // "Spring 2026 cohort"
+
+  statCardBg:        '#FFFFFF',
+  statLabel:         '#9BB8B4',
+  statValue:         '#0D3B47',
+  statChangePositive:'#2EC4B6',
+
+  sectionCardBg:     '#FFFFFF',
+  sectionTitle:      '#0D3B47',
+  filterText:        '#2EC4B6',
+  deptName:          '#0D3B47',
+  deptPercent:       '#0D3B47',
+  barTrack:          '#E5F2F0',
+  barFill:           '#2EC4B6',
+
+  trendCardBg:       '#FFFFFF',
+  trendTitle:        '#0D3B47',
+  chartAreaBg:        '#FFFFFF',
+  chartAreaBorder:   '#F0F6F5',
+  monthLabel:        '#9BB8B4',
+};
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -74,18 +104,22 @@ const MONTH_LABELS = ['S', 'O', 'N', 'D', 'J', 'F', 'M'];
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PlacementOverviewScreen({ navigation }: any) {
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
   const handleBackPress = () => {
-    console.log('Back tapped');
-    // TODO: navigation.goBack();
+    navigation.goBack();
   };
 
   const handleFilterPress = () => {
-    console.log('Filter tapped');
-    // TODO: open a filter modal/sheet
+    setFilterVisible(true);
+  };
+
+  const handleFilterApply = (filters: string[]) => {
+    setActiveFilters(filters);
   };
 
   return (
@@ -183,6 +217,14 @@ export default function PlacementOverviewScreen({ navigation }: any) {
         </View>
 
       </ScrollView>
+
+      {/* ── FILTER MODAL ───────────────────────────────────────── */}
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={handleFilterApply}
+        activeFilters={activeFilters}
+      />
     </SafeAreaView>
   );
 }

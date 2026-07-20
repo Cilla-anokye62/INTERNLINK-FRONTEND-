@@ -37,6 +37,19 @@ import UniversityDashboardScreen from './UniversityDashboardScreen';
 import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
+import SettingsScreen from './SettingsScreen';
+
+
+// ─── COLOR PALETTE ───────────────────────────────────────────────
+// Same teal/mint colors used as the active/inactive tab colors
+// across your custom tab bars, so the look stays identical.
+const COLORS = {
+  tabBarBg:      '#FFFFFF',
+  tabActive:     '#2EC4B6',
+  tabInactive:   '#9BB8B4',
+  tabBarBorder:  '#EAF5F3',
+};
+
 import SettingsScreen from '../SettingsComponents/SettingsScreen';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
