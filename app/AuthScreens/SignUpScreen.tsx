@@ -79,7 +79,7 @@ export default function SignUpScreen({ navigation, route }: any) {
           <Ionicons name="person-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { color: colors.inputText }]}
-            placeholder="Jane Doe"
+            placeholder="Enter full name"
             placeholderTextColor={colors.placeholder}
             value={fullName}
             onChangeText={setFullName}
@@ -103,7 +103,7 @@ export default function SignUpScreen({ navigation, route }: any) {
           <Ionicons name="mail-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { color: colors.inputText }]}
-            placeholder="jane.doe@email.com"
+            placeholder="Enter email address"
             placeholderTextColor={colors.placeholder}
             value={email}
             onChangeText={setEmail}
@@ -128,13 +128,13 @@ export default function SignUpScreen({ navigation, route }: any) {
           <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { color: colors.inputText }]}
-            placeholder="••••••••"
+            placeholder="Enter password"
             placeholderTextColor={colors.placeholder}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
-            textContentType="password"
-            autoComplete="password"
+            textContentType="none"
+            autoComplete="off"
             onFocus={() => handleFocus('password')}
             onBlur={() => { setFocusedInput(null); markTouched('password'); }}
           />
@@ -161,7 +161,7 @@ export default function SignUpScreen({ navigation, route }: any) {
           <Ionicons name="lock-closed-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { color: colors.inputText }]}
-            placeholder="••••••••"
+            placeholder="Re-enter password"
             placeholderTextColor={colors.placeholder}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
