@@ -156,9 +156,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   filterChip: {
     alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 22, paddingVertical: 12, borderRadius: 30,
+    paddingHorizontal: 22, paddingVertical: 14, borderRadius: 30,
     backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.inputBorder,
-    minHeight: 44, flexShrink: 0,
+    minHeight: 48, flexShrink: 0,
   },
   filterChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   filterText: { fontSize: 14, color: colors.subtitle, fontWeight: '600' },

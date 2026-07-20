@@ -151,14 +151,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.headerTitle,
   },
   content: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
   },
   title: {
     fontSize: 24,

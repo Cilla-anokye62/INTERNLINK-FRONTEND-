@@ -228,7 +228,7 @@ const createStyles = (colors: any) => StyleSheet.create({
 
   // Categories
   categoriesScroll: {
-    flexGrow: 0,
+    height: 64,
     marginBottom: 14,
   },
   categoriesRow: {
@@ -240,12 +240,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 30,
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.inputBorder,
-    minHeight: 44,
     flexShrink: 0,
   },
   categoryChipActive: {

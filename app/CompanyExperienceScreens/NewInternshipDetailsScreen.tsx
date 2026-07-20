@@ -19,6 +19,8 @@ type LocationType = 'Remote' | 'Hybrid' | 'On-site';
 // ---------- Main Screen ----------
 const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useAppTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [roleTitle, setRoleTitle] = useState<string>('Frontend Engineering Intern');
   const [department, setDepartment] = useState<string>('Engineering');
   const [type, setType] = useState<string>('Internship');
@@ -94,7 +96,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
           value={roleTitle}
           onChangeText={setRoleTitle}
           placeholder="e.g. Frontend Engineering Intern"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.placeholder}
         />
 
         {/* Department + Type */}
@@ -106,7 +108,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
               value={department}
               onChangeText={setDepartment}
               placeholder="e.g. Engineering"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
             />
           </View>
           <View style={styles.twoColumnItem}>
@@ -116,7 +118,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
               value={type}
               onChangeText={setType}
               placeholder="e.g. Internship"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
             />
           </View>
         </View>
@@ -157,7 +159,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
                 value={startDate}
                 onChangeText={setStartDate}
                 placeholder="Start date"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
               />
             </View>
           </View>
@@ -168,7 +170,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
               value={duration}
               onChangeText={setDuration}
               placeholder="e.g. 12 weeks"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.placeholder}
             />
           </View>
         </View>
@@ -180,7 +182,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
           value={compensation}
           onChangeText={setCompensation}
           placeholder="e.g. $48 / hour"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.placeholder}
         />
 
         {/* Required skills */}
@@ -216,7 +218,7 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
             value={description}
             onChangeText={setDescription}
             placeholder="Describe the internship role..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.placeholder}
             multiline
             numberOfLines={5}
             textAlignVertical="top"
@@ -246,16 +248,10 @@ const NewInternshipDetailsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ---------- Styles ----------
-const TEAL = '#2BA9A0';
-const TEAL_DARK = '#1E8A82';
-const TEXT_DARK = '#1A1A1A';
-const TEXT_GRAY = '#6B7280';
-const BORDER_COLOR = '#E5E7EB';
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -263,26 +259,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
+    borderBottomColor: colors.inputBorder,
   },
   backButton: {
     padding: 4,
   },
   backIcon: {
     fontSize: 18,
-    color: TEXT_DARK,
+    color: colors.title,
     fontWeight: '600',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   publishLink: {
     fontSize: 14,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '600',
   },
   scrollContent: {
@@ -297,50 +293,50 @@ const styles = StyleSheet.create({
   },
   stepText: {
     fontSize: 12,
-    color: TEAL,
+    color: colors.accent,
     fontWeight: '500',
   },
   stepPercent: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.inputBorder,
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 20,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     marginBottom: 6,
     marginTop: 4,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
     marginBottom: 16,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 16,
@@ -352,7 +348,7 @@ const styles = StyleSheet.create({
   inputFlex: {
     flex: 1,
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
   },
   twoColumnRow: {
     flexDirection: 'row',
@@ -371,27 +367,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
   },
   locationButtonSelected: {
-    backgroundColor: TEAL,
-    borderColor: TEAL,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   locationButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   locationButtonTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   skillsContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     padding: 12,
     marginBottom: 16,
   },
@@ -403,7 +399,7 @@ const styles = StyleSheet.create({
   skillChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -411,38 +407,38 @@ const styles = StyleSheet.create({
   },
   skillChipText: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '600',
   },
   skillChipRemove: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '700',
   },
   addSkillButton: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
   addSkillText: {
     fontSize: 12,
-    color: TEXT_GRAY,
+    color: colors.subtitle,
     fontWeight: '600',
   },
   textAreaContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     paddingHorizontal: 14,
     paddingVertical: 12,
     marginBottom: 16,
   },
   textArea: {
     fontSize: 14,
-    color: TEXT_DARK,
+    color: colors.text,
     minHeight: 100,
   },
   bottomRow: {
@@ -451,33 +447,33 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: BORDER_COLOR,
-    backgroundColor: '#FFFFFF',
+    borderTopColor: colors.inputBorder,
+    backgroundColor: colors.card,
   },
   saveDraftButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: colors.inputBorder,
     alignItems: 'center',
   },
   saveDraftText: {
     fontSize: 14,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: colors.title,
   },
   continueButton: {
     flex: 2,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: TEAL,
+    backgroundColor: colors.accent,
     alignItems: 'center',
   },
   continueText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
 });
 
