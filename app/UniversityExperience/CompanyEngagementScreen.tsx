@@ -108,6 +108,11 @@ export default function CompanyEngagementScreen({ navigation }: any) {
     navigation.goBack();
   };
 
+  const handleMenuPress = () => {
+    console.log('Menu (···) tapped');
+    // TODO: open an options menu/sheet
+  };
+
   const handleCompanyPress = (companyId: string) => {
     navigation.navigate('CompanyDetail', { companyId });
   };
