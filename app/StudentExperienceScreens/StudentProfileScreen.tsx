@@ -38,6 +38,10 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const isPremium = useAppStore((state) => state.isPremium);
+  const university = useAppStore((state) => state.university);
+  const programme = useAppStore((state) => state.programme);
+  const academicLevel = useAppStore((state) => state.academicLevel);
+  const graduationYear = useAppStore((state) => state.graduationYear);
 
   const [username, setUsername] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -109,8 +113,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   };
 
   const handleExperienceEdit = () => {
-    setShowExperienceModal(true);
-    navigation.navigate('StudentOnboarding', { screen: 'Skills', params: { isEditing: true, initialSkills: skills, fromProfile: true } });
+    navigation.navigate('Skills', { isEditing: true, initialSkills: skills, fromProfile: true });
   };
 
   const handleAddExperience = () => {
@@ -271,6 +274,29 @@ export default function StudentProfileScreen({ navigation, route }: any) {
         <View style={styles.card}>
           <Text style={styles.aboutText}>{aboutText}</Text>
         </View>
+
+        {/* Education section */}
+        {(university || programme) && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Education</Text>
+            </View>
+            <View style={styles.card}>
+              <View style={styles.educationItem}>
+                <Ionicons name="school-outline" size={20} color={colors.accent} style={{ marginRight: 12 }} />
+                <View style={styles.educationInfo}>
+                  <Text style={styles.educationTitle}>{programme || 'Programme not set'}</Text>
+                  <Text style={styles.educationSubtitle}>{university || 'University not set'}</Text>
+                  {(academicLevel || graduationYear) && (
+                    <Text style={styles.educationDetail}>
+                      {academicLevel}{academicLevel && graduationYear ? ' · ' : ''}{graduationYear ? `Graduating ${graduationYear}` : ''}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Skills section */}
         <View style={styles.sectionHeader}>
@@ -589,6 +615,28 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
     color: colors.subtitle,
     lineHeight: 22,
+  },
+  educationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  educationInfo: {
+    flex: 1,
+  },
+  educationTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.cardTitle,
+    marginBottom: 2,
+  },
+  educationSubtitle: {
+    fontSize: 13,
+    color: colors.subtitle,
+    marginBottom: 2,
+  },
+  educationDetail: {
+    fontSize: 12,
+    color: colors.placeholder,
   },
   skillsRow: {
     flexDirection: 'row',

@@ -4,9 +4,10 @@ import { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
-const FILTERS = ['All (14)', 'Engineering (8)', 'Design (4)', 'Closing soon'];
+const FILTERS = ['All ', 'Engineering ', 'Design', 'Closing soon'];
 
 const SAVED_INTERNSHIPS = [
   { id: '1', title: 'Frontend Intern', company: 'Stripe', daysLeft: 4, location: 'Remote', color: '#7C3AED', match: 96, pay: 'GHS 45/hr', duration: '12 weeks', workMode: 'remote' },
@@ -18,17 +19,17 @@ const SAVED_INTERNSHIPS = [
 export default function SavedScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const { savedInternships, toggleSavedInternship } = useAppStore();
 
   const [activeFilter, setActiveFilter] = useState('All (14)');
-  const [savedItems, setSavedItems] = useState<string[]>(['1', '2', '3', '4']);
   const [search, setSearch] = useState('');
 
   const toggleSave = useCallback((id: string) => {
-    setSavedItems(prev => prev.filter(i => i !== id));
-  }, []);
+    toggleSavedInternship(id);
+  }, [toggleSavedInternship]);
 
   const filtered = SAVED_INTERNSHIPS.filter(item => {
-    const matchesSaved = savedItems.includes(item.id);
+    const matchesSaved = savedInternships.includes(item.id);
     const matchesSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.company.toLowerCase().includes(search.toLowerCase());
@@ -107,7 +108,10 @@ export default function SavedScreen({ navigation }: any) {
             onPress={() => setActiveFilter(filter)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>
+            <Text
+              style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}
+              numberOfLines={1}
+            >
               {filter}
             </Text>
           </TouchableOpacity>
@@ -116,6 +120,7 @@ export default function SavedScreen({ navigation }: any) {
 
       {/* Saved list */}
       <FlatList
+        style={styles.list}
         data={filtered}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
@@ -176,10 +181,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.text,
   },
 
-  // Filters
+  // Filters — sized to match DiscoverScreen / MyApplicationsScreen chips
   filtersScroll: {
     flexGrow: 0,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   filtersRow: {
     paddingHorizontal: 24,
@@ -190,30 +195,20 @@ const createStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 22,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 30,
     backgroundColor: colors.card,
     borderWidth: 1.5,
     borderColor: colors.inputBorder,
-    minHeight: 48,
     flexShrink: 0,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
   },
   filterChipActive: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.subtitle,
     fontWeight: '600',
   },
@@ -223,6 +218,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
 
   // List
+  list: {
+    flex: 1,
+  },
   listContent: {
     paddingHorizontal: 24,
     paddingBottom: TAB_BAR_BOTTOM_PADDING,

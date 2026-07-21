@@ -150,7 +150,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     width: '100%',
     shadowColor: '#000',
     shadowOpacity: 0.05,

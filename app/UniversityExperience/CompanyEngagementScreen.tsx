@@ -99,6 +99,10 @@ export default function CompanyEngagementScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  const handleMenuPress = () => {
+    console.log('Menu pressed');
+  };
+
 
   // Now that this is a regular stack screen (not a tab), the back
   // arrow has a real, working destination: the Dashboard screen this

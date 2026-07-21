@@ -13,6 +13,8 @@ import {
   Dimensions,
   Keyboard,
   TouchableWithoutFeedback,
+  SafeAreaView,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +30,7 @@ export default function LoginScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const login = useAppStore((s) => s.login);
+  const userRole = useAppStore((s) => s.userRole);
   const scrollRef = useRef<ScrollView>(null);
   const fieldY = useRef<Record<string, number>>({});
 
@@ -61,8 +64,10 @@ export default function LoginScreen({ navigation }: any) {
   const handleLogin = () => {
     setTouched({ email: true, password: true });
     if (!isFormValid) return;
-    login('student');
-    navigation.replace('HomeDashboard');
+    const role = userRole || 'student';
+    login(role);
+    const dashboard = role === 'employer' ? 'CompanyTabs' : role === 'university' ? 'UniversityTabs' : 'HomeDashboard';
+    navigation.replace(dashboard);
   };
 
   const handleGoogleLogin = () => {
@@ -189,7 +194,7 @@ export default function LoginScreen({ navigation }: any) {
             onPress={handleGoogleLogin}
             activeOpacity={0.85}
           >
-            <Text style={styles.googleG}>G</Text>
+            <Image source={require('../../assets/google logo.png')} style={styles.googleIcon} />
             <Text style={styles.googleBtnText}>Continue with Google</Text>
           </TouchableOpacity>
 
@@ -346,10 +351,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  googleG: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4285F4',
+  googleIcon: {
+    width: 20,
+    height: 20,
     marginRight: 10,
   },
   googleBtnText: {

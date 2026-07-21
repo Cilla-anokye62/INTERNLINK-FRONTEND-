@@ -2,107 +2,40 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Circle, G } from 'react-native-svg';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 
 const { height } = Dimensions.get('window');
 
-const WORK_SETUP = ['Remote', 'Hybrid', 'On-site'];
-
-// Simple Ghana map SVG placeholder
-function GhanaMap({ selectedCity, styles, colors }: { selectedCity: string, styles: any, colors: any }) {
-  return (
-    <View style={styles.mapContainer}>
-      <Svg viewBox="0 0 300 380" width="100%" height="100%">
-        {/* Ghana shape */}
-        <Path
-          d="M80,20 L220,20 L240,60 L250,120 L240,180 L220,240 L200,300 L180,340 L150,360 L120,340 L100,300 L80,240 L60,180 L50,120 L60,60 Z"
-          fill={colors.accent}
-          opacity={0.3}
-          stroke={colors.accent}
-          strokeWidth={2}
-        />
-
-        {/* Accra dot */}
-        <Circle
-          cx="185"
-          cy="300"
-          r={selectedCity === 'Accra' ? 10 : 6}
-          fill={colors.accent}
-          opacity={selectedCity === 'Accra' ? 1 : 0.5}
-        />
-        <G>
-          <Path
-            d="M185,280 Q185,270 185,265"
-            stroke={colors.accent}
-            strokeWidth={1}
-            opacity={0.4}
-          />
-        </G>
-
-        {/* Kumasi dot */}
-        <Circle
-          cx="140"
-          cy="200"
-          r={selectedCity === 'Kumasi' ? 10 : 6}
-          fill={colors.accent}
-          opacity={selectedCity === 'Kumasi' ? 1 : 0.5}
-        />
-
-        {/* Takoradi dot */}
-        <Circle
-          cx="100"
-          cy="290"
-          r={selectedCity === 'Takoradi' ? 10 : 6}
-          fill={colors.accent}
-          opacity={selectedCity === 'Takoradi' ? 1 : 0.5}
-        />
-
-        {/* Tamale dot */}
-        <Circle
-          cx="150"
-          cy="100"
-          r={selectedCity === 'Tamale' ? 10 : 6}
-          fill={colors.accent}
-          opacity={selectedCity === 'Tamale' ? 1 : 0.5}
-        />
-
-        {/* Center pin for selected */}
-        <Circle cx="150" cy="190" r="30" fill="none" stroke={colors.accent} strokeWidth={1} opacity={0.3} />
-        <Path
-          d="M150,175 C144,175 139,180 139,186 C139,194 150,205 150,205 C150,205 161,194 161,186 C161,180 156,175 150,175 Z M150,190 C147.8,190 146,188.2 146,186 C146,183.8 147.8,182 150,182 C152.2,182 154,183.8 154,186 C154,188.2 152.2,190 150,190 Z"
-          fill={colors.accent}
-          opacity={0.4}
-        />
-      </Svg>
-    </View>
-  );
-}
+const WORK_SETUP: Array<'Remote' | 'Hybrid' | 'On-site'> = ['Remote', 'Hybrid', 'On-site'];
 
 export default function PreferredLocationScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const [location, setLocation] = useState('Accra, Ghana');
-  const [workSetup, setWorkSetup] = useState('Hybrid');
-  const [willingToRelocate, setWillingToRelocate] = useState(true);
-  const [selectedCity, setSelectedCity] = useState('Accra');
+  const { preferredLocation, workSetup: storeWorkSetup, willingToRelocate: storeRelocate, setLocationPreferences } = useAppStore();
 
-  const CITIES = ['Accra', 'Kumasi', 'Takoradi', 'Tamale', 'Remote'];
+  const [location, setLocation] = useState(preferredLocation);
+  const [workSetup, setWorkSetup] = useState<'Remote' | 'Hybrid' | 'On-site'>(storeWorkSetup);
+  const [willingToRelocate, setWillingToRelocate] = useState(storeRelocate);
+  const [selectedCity, setSelectedCity] = useState(preferredLocation.split(',')[0] || 'Accra');
+
+  const LOCATIONS = [
+    'Accra', 'Kumasi', 'Takoradi', 'Tamale', 'Cape Coast',
+    'Sunyani', 'Koforidua', 'Ho', 'Bolgatanga', 'Wa',
+    'Teshie', 'Tema', 'Madina', 'Spintex', 'East Legon',
+  ];
 
   const handleCitySelect = (city: string) => {
     setSelectedCity(city);
-    if (city !== 'Remote') {
-      setLocation(`${city}, Ghana`);
-    } else {
-      setLocation('Remote');
-    }
+    setLocation(`${city}, Ghana`);
   };
 
   const handleFinish = () => {
+    setLocationPreferences(location, workSetup, willingToRelocate);
     navigation.navigate('ProfileCompletion');
-    // navigation.navigate('HomeScreen');
   };
 
   return (
@@ -143,29 +76,31 @@ export default function PreferredLocationScreen({ navigation }: any) {
           />
         </View>
 
-        {/* City chips */}
-        <View style={styles.chipsRow}>
-          {CITIES.map(city => {
+        {/* Location list */}
+        <View style={styles.locationsList}>
+          {LOCATIONS.map(city => {
             const isSelected = selectedCity === city;
             return (
               <TouchableOpacity
                 key={city}
-                style={[styles.chip, isSelected && styles.chipSelected]}
+                style={[styles.locationItem, isSelected && styles.locationItemSelected]}
                 onPress={() => handleCitySelect(city)}
                 activeOpacity={0.7}
               >
-                {city === 'Remote' && <Ionicons name="wifi-outline" size={14} color={colors.accent} style={{ marginRight: 4 }} />}
-                {isSelected && city !== 'Remote' && <Text style={styles.chipCheck}>✓ </Text>}
-                <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                <Ionicons
+                  name="location-outline"
+                  size={16}
+                  color={isSelected ? colors.accent : colors.placeholder}
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={[styles.locationText, isSelected && styles.locationTextSelected]}>
                   {city}
                 </Text>
+                {isSelected && <Ionicons name="checkmark-circle" size={18} color={colors.accent} />}
               </TouchableOpacity>
             );
           })}
         </View>
-
-        {/* Ghana Map */}
-        <GhanaMap selectedCity={selectedCity} styles={styles} colors={colors} />
 
         {/* Work setup */}
         <View style={styles.card}>
@@ -346,15 +281,34 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Map
-  mapContainer: {
-    width: '100%',
-    height: 260,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    overflow: 'hidden',
+  // Location list
+  locationsList: {
     marginBottom: 20,
-    padding: 10,
+    gap: 6,
+  },
+  locationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+  },
+  locationItemSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.card,
+  },
+  locationText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  locationTextSelected: {
+    color: colors.accent,
+    fontWeight: '700',
   },
 
   // Cards

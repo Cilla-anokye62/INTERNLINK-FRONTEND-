@@ -28,6 +28,7 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -166,6 +167,18 @@ export default function SettingsScreen({ navigation, route }: any) {
     });
   };
 
+  const confirmSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'No', style: 'cancel' },
+        { text: 'Yes', style: 'destructive', onPress: handleSignOut },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -254,7 +267,7 @@ export default function SettingsScreen({ navigation, route }: any) {
         {/* Sign Out */}
         <TouchableOpacity
           style={styles.signOutBtn}
-          onPress={handleSignOut}
+          onPress={confirmSignOut}
           activeOpacity={0.7}
         >
           <Text style={styles.signOutText}>Sign out</Text>

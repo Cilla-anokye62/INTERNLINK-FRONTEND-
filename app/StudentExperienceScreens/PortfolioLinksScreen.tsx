@@ -107,7 +107,7 @@ export default function PortfolioLinksScreen({ navigation, route }: any) {
                 autoCorrect={false}
               />
             </View>
-            <Text style={{ fontSize: 12, color: colors.placeholder, marginBottom: 12, marginTop: -8 }}>{field.helper}</Text>
+            <Text style={{ fontSize: 12, color: colors.placeholder, marginBottom: 12, marginTop: 4 }}>{field.helper}</Text>
             {links[field.key] && !validateUrl(links[field.key]) && (
               <Text style={[styles.errorText, { color: colors.error }]}>Please enter a valid URL starting with http:// or https://</Text>
             )}

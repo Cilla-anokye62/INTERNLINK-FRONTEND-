@@ -82,6 +82,14 @@ export default function ReportsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  const handleGenerateReport = () => {
+    console.log('Generate report pressed');
+  };
+
+  const handleDownloadPress = (reportId: string) => {
+    console.log('Download report:', reportId);
+  };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -226,6 +234,11 @@ const createStyles = (colors: any) => StyleSheet.create({
   reportDetail: {
     fontSize: 12,
     color: colors.reportDetail,
+  },
+
+  downloadColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // ── "New" dot indicator ────────────────────────────────────────
