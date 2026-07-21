@@ -107,18 +107,6 @@ export default function ReportsScreen({ navigation }: any) {
             <Text style={styles.headerTitle}>Reports</Text>
             <Text style={styles.headerSubtitle}>Generated reports</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={handleGenerateReport}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name="add"
-              size={22}
-              color={colors.addBtnIcon}
-            />
-          </TouchableOpacity>
         </View>
         {/* ── END HEADER ──────────────────────────────────────────── */}
 
@@ -145,23 +133,7 @@ export default function ReportsScreen({ navigation }: any) {
               <Text style={styles.reportDetail}>{report.detail}</Text>
             </View>
 
-            {/* Right: download icon, with an optional small "new" dot
-                rendered above-left of it for unread/new reports */}
-            <View style={styles.downloadColumn}>
-              {report.isNew && <View style={styles.newDot} />}
-
-              <TouchableOpacity
-                onPress={() => handleDownloadPress(report.id)}
-                activeOpacity={0.7}
-                style={styles.downloadBtn}
-              >
-                <Ionicons
-                  name="download-outline"
-                  size={18}
-                  color={colors.downloadIcon}
-                />
-              </TouchableOpacity>
-            </View>
+            {report.isNew && <View style={styles.newDot} />}
 
           </View>
         ))}
@@ -219,7 +191,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.addBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
-    // Teal glow shadow to make this primary action stand out
     shadowColor: colors.addBtnBg,
     shadowOpacity: 0.4,
     shadowRadius: 10,
@@ -276,10 +247,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.newDot,
-    marginBottom: 6,
-  },
-  downloadBtn: {
-    padding: 2, // slightly larger tap target than the icon's visual size
   },
 
 

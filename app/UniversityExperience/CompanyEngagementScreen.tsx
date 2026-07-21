@@ -145,18 +145,6 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             <Text style={styles.headerSubtitle}>238 companies engaged</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.menuBtn}
-            onPress={handleMenuPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={18}
-              color={colors.menuBtnIcon}
-            />
-          </TouchableOpacity>
-
         </View>
 
 
