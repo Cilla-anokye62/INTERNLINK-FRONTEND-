@@ -27,8 +27,26 @@ interface AppState {
   userRole: 'student' | 'employer' | 'university' | null;
   userId: string;
   userName: string;
+  setUserName: (name: string) => void;
   login: (role: 'student' | 'employer' | 'university') => void;
   logout: () => void;
+
+  // Location Preferences
+  preferredLocation: string;
+  workSetup: 'Remote' | 'Hybrid' | 'On-site';
+  willingToRelocate: boolean;
+  setLocationPreferences: (location: string, workSetup: 'Remote' | 'Hybrid' | 'On-site', willingToRelocate: boolean) => void;
+
+  // Academic Info
+  university: string;
+  programme: string;
+  academicLevel: string;
+  graduationYear: string;
+  setAcademicInfo: (university: string, programme: string, academicLevel: string, graduationYear: string) => void;
+
+  // Career Interests
+  careerInterests: string[];
+  setCareerInterests: (interests: string[]) => void;
 
   // Premium State
   isPremium: boolean;
@@ -563,13 +581,33 @@ export const useAppStore = create<AppState>()(
       userRole: null as 'student' | 'employer' | 'university' | null,
       userId: 'student-1',
       userName: 'Alex Morgan',
-      login: (role: 'student' | 'employer' | 'university') => set({
+      setUserName: (name: string) => set({ userName: name }),
+      login: (role: 'student' | 'employer' | 'university') => set((state) => ({
         isAuthenticated: true,
         userRole: role,
         userId: role === 'student' ? 'student-1' : role === 'employer' ? 'employer-1' : 'university-1',
-        userName: role === 'student' ? 'Alex Morgan' : role === 'employer' ? 'Acme Tech' : 'MIT',
-      }),
-      logout: () => set({ isAuthenticated: false, userRole: null, userId: '', userName: '' }),
+        userName: state.userName || (role === 'student' ? 'Student' : role === 'employer' ? 'Employer' : 'University'),
+      })),
+      logout: () => set({ isAuthenticated: false, userId: '', userName: '' }),
+
+      // Location Preferences
+      preferredLocation: 'Accra, Ghana',
+      workSetup: 'Hybrid' as 'Remote' | 'Hybrid' | 'On-site',
+      willingToRelocate: true,
+      setLocationPreferences: (location: string, workSetup: 'Remote' | 'Hybrid' | 'On-site', willingToRelocate: boolean) =>
+        set({ preferredLocation: location, workSetup, willingToRelocate }),
+
+      // Academic Info
+      university: '',
+      programme: '',
+      academicLevel: '',
+      graduationYear: '',
+      setAcademicInfo: (university: string, programme: string, academicLevel: string, graduationYear: string) =>
+        set({ university, programme, academicLevel, graduationYear }),
+
+      // Career interests
+      careerInterests: [],
+      setCareerInterests: (interests: string[]) => set({ careerInterests: interests }),
 
       // Default premium state
       isPremium: true,
@@ -627,6 +665,10 @@ export const useAppStore = create<AppState>()(
                   ...app,
                   status: 'withdrawn' as ApplicationStatus,
                   updatedAt: new Date().toISOString(),
+                  timeline: [
+                    ...app.timeline,
+                    createTimelineEvent('withdrawn', STATUS_LABELS['withdrawn'], STATUS_DESCRIPTIONS['withdrawn'], true),
+                  ],
                 }
               : app
           ),
@@ -732,7 +774,7 @@ export const useAppStore = create<AppState>()(
         return newConv;
       },
       getConversationsByEmployer: (employerId: string) => {
-        return get().conversations;
+        return get().conversations.filter((c) => c.ownerId === employerId);
       },
       markConversationRead: (convId: string) => {
         const { conversations } = get();

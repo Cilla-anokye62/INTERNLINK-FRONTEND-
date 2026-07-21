@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
@@ -26,21 +24,8 @@ const QUICK_ACTIONS = [
 export default function HomeDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const isPremium = useAppStore((state) => state.isPremium);
-
-  const [username, setUsername] = useState('');
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const savedUsername = await AsyncStorage.getItem('username');
-      if (savedUsername) setUsername(savedUsername);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
+  const { isPremium, userName } = useAppStore();
+  const username = userName;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -55,7 +40,7 @@ export default function HomeDashboardScreen({ navigation }: any) {
           </View>
           <View style={styles.greetingBlock}>
             <View style={styles.greetingRow}>
-              <Text style={styles.greeting}>Hi, {username || 'there !'}</Text>
+              <Text style={styles.greeting}>Hi{username ? `, ${username}` : ''}</Text>
             </View>
             <Text style={styles.greetingSub}>Let's find your perfect role</Text>
           </View>

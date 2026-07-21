@@ -37,7 +37,7 @@ import UniversityDashboardScreen from './UniversityDashboardScreen';
 import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
-import SettingsScreen from './SettingsScreen';
+
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────

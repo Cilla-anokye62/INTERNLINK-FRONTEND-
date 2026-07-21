@@ -9,7 +9,7 @@ import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 export default function EmployerDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { userId, getAnalytics, applications, conversations, listings } = useAppStore();
+  const { userId, userName, getAnalytics, applications, conversations, listings } = useAppStore();
 
   const analytics = useMemo(() => getAnalytics(userId), [userId]);
   const unreadMessages = useMemo(() => conversations.filter((c) => !c.isArchived && c.unreadCount > 0).reduce((s, c) => s + c.unreadCount, 0), [conversations]);
@@ -35,10 +35,10 @@ export default function EmployerDashboardScreen({ navigation }: any) {
         <View style={styles.headerRow}>
           <View style={styles.headerLeft}>
             <View style={styles.companyAvatar}>
-              <Text style={styles.companyAvatarText}>A</Text>
+              <Text style={styles.companyAvatarText}>{userName ? userName.charAt(0).toUpperCase() : 'E'}</Text>
             </View>
             <View>
-              <Text style={styles.companyName}>Acme Tech</Text>
+              <Text style={styles.companyName}>{userName || 'Employer'}</Text>
               <Text style={styles.companySubtitle}>Employer dashboard</Text>
             </View>
           </View>

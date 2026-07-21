@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 
 const { height } = Dimensions.get('window');
 
@@ -53,10 +54,12 @@ export default function AcademicInfoScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const [university, setUniversity] = useState('');
-  const [programme, setProgramme] = useState('');
-  const [level, setLevel] = useState('');
-  const [graduationYear, setGraduationYear] = useState('');
+  const { university: storeUniversity, programme: storeProgramme, academicLevel: storeLevel, graduationYear: storeYear, setAcademicInfo } = useAppStore();
+
+  const [university, setUniversity] = useState(storeUniversity);
+  const [programme, setProgramme] = useState(storeProgramme);
+  const [level, setLevel] = useState(storeLevel);
+  const [graduationYear, setGraduationYear] = useState(storeYear);
   const [openDropdown, setOpenDropdown] = useState<'university' | 'level' | 'year' | null>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -65,6 +68,7 @@ export default function AcademicInfoScreen({ navigation }: any) {
       alert('Please fill in all fields before continuing.');
       return;
     }
+    setAcademicInfo(university, programme, level, graduationYear);
     navigation.navigate('Skills');
   };
 

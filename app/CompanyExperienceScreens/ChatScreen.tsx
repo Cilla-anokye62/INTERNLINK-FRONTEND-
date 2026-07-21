@@ -43,7 +43,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { conversationId, participantName, participantInitials, participantColor, internshipTitle } = route.params;
-  const { chatMessages, addChatMessage, userId, getMessagesByConversation } = useAppStore();
+  const { chatMessages, addChatMessage, userId, userName, getMessagesByConversation } = useAppStore();
   const [inputText, setInputText] = useState('');
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -66,7 +66,7 @@ export default function ChatScreen({ route, navigation }: any) {
       id: 'msg-' + Date.now().toString(36),
       conversationId,
       senderId: userId,
-      senderName: 'Employer',
+      senderName: userName || 'Employer',
       content,
       timestamp: new Date().toISOString(),
       isRead: false,

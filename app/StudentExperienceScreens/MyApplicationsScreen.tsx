@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -7,8 +7,6 @@ import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 import { useAppStore } from '../../src/store/useAppStore';
 import { Application, ApplicationStatus, STATUS_CONFIG, TIMELINE_STEPS } from '../../src/types/application';
 import StatusBadge from '../../src/components/StatusBadge';
-
-const { height } = Dimensions.get('window');
 
 const FILTERS: { label: string; value: ApplicationStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -67,7 +65,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
 
         {/* Stage dots */}
         <View style={styles.stagesRow}>
-          {TIMELINE_STEPS.slice(0, 5).map((step, index) => {
+          {TIMELINE_STEPS.slice(0, 5).map((step) => {
             const stepIdx = TIMELINE_STEPS.indexOf(step);
             const isCompleted = stepIdx <= TIMELINE_STEPS.indexOf(item.status) && item.status !== 'rejected';
             return (
@@ -87,7 +85,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
         </Text>
       </TouchableOpacity>
     );
-  }, [navigation, styles, colors, getProgress]);
+  }, [navigation, styles, colors]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -100,14 +98,23 @@ export default function MyApplicationsScreen({ navigation }: any) {
       </View>
 
       {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={{gap: 8}}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filtersScroll}
+        contentContainerStyle={styles.filtersRow}
+      >
         {FILTERS.map((filter) => (
           <TouchableOpacity
             key={filter.value}
             style={[styles.filterChip, activeFilter === filter.value && styles.filterChipActive]}
             onPress={() => setActiveFilter(filter.value)}
+            activeOpacity={0.7}
           >
-            <Text style={[styles.filterText, activeFilter === filter.value && styles.filterTextActive]}>
+            <Text
+              style={[styles.filterText, activeFilter === filter.value && styles.filterTextActive]}
+              numberOfLines={1}
+            >
               {filter.label}
             </Text>
           </TouchableOpacity>
@@ -116,6 +123,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
 
       {/* List */}
       <FlatList
+        style={styles.list}
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -151,18 +159,34 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: colors.title },
   headerSub: { fontSize: 13, color: colors.subtitle, marginTop: 2 },
+
+  // Filters — sized to match DiscoverScreen chips
   filtersScroll: {
-    paddingHorizontal: 24, marginBottom: 16,
+    flexGrow: 0,
+    marginBottom: 14,
+  },
+  filtersRow: {
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    gap: 8,
   },
   filterChip: {
-    alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 22, paddingVertical: 14, borderRadius: 30,
-    backgroundColor: colors.card, borderWidth: 1.5, borderColor: colors.inputBorder,
-    minHeight: 48, flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 30,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
+    flexShrink: 0,
   },
   filterChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  filterText: { fontSize: 14, color: colors.subtitle, fontWeight: '600' },
+  filterText: { fontSize: 13, color: colors.subtitle, fontWeight: '600' },
   filterTextActive: { color: '#FFF', fontWeight: '700' },
+
+  list: { flex: 1 },
   listContent: { paddingHorizontal: 24, paddingBottom: TAB_BAR_BOTTOM_PADDING, gap: 12 },
   card: {
     backgroundColor: colors.card, borderRadius: 16, padding: 16,

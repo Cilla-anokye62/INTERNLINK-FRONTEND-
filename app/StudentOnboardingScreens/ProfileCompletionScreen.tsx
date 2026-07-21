@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -46,6 +47,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [completionItems, setCompletionItems] = useState(COMPLETION_ITEMS);
   const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [resumeFileName, setResumeFileName] = useState('');
   const [portfolioLink, setPortfolioLink] = useState('');
   const [bio, setBio] = useState('');
   const [showResumeModal, setShowResumeModal] = useState(false);
@@ -94,10 +96,25 @@ export default function ProfileCompletionScreen({ navigation }: any) {
     }
   };
 
-  const handleResumeUpload = () => {
-    // TODO: Implement actual file picker for resume
-    setResumeUploaded(true);
-    setShowResumeModal(false);
+  const handleResumeUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const file = result.assets[0];
+        const name = file.name;
+        const uri = file.uri;
+        await AsyncStorage.setItem('userResumeName', name);
+        await AsyncStorage.setItem('userResumeUri', uri);
+        setResumeFileName(name);
+        setResumeUploaded(true);
+        setShowResumeModal(false);
+      }
+    } catch (error) {
+      console.error('Document pick error:', error);
+    }
   };
 
   const handlePortfolioSave = () => {
@@ -137,7 +154,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.stepLabel}>Step 5 of 5</Text>
-          <TouchableOpacity onPress={() => navigation.replace('StudentApp')}>
+          <TouchableOpacity onPress={() => navigation.replace('HomeDashboard')}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -274,12 +291,18 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Upload Resume</Text>
-            <Text style={styles.modalSubtitle}>Select a PDF file (max 5MB)</Text>
+            <Text style={styles.modalSubtitle}>Select a PDF or DOCX file (max 5MB)</Text>
+            {resumeUploaded && resumeFileName ? (
+              <View style={styles.uploadedFile}>
+                <Ionicons name="document-text-outline" size={18} color={colors.accent} style={{ marginRight: 8 }} />
+                <Text style={styles.uploadedFileName} numberOfLines={1}>{resumeFileName}</Text>
+              </View>
+            ) : null}
             <TouchableOpacity 
               style={styles.modalButton}
               onPress={handleResumeUpload}
             >
-              <Text style={styles.modalButtonText}>Choose File</Text>
+              <Text style={styles.modalButtonText}>{resumeUploaded ? 'Choose Different File' : 'Choose File'}</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.modalCancelButton}
@@ -651,6 +674,23 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
     color: colors.subtitle,
     marginBottom: 20,
+  },
+  uploadedFile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.inputBg,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  uploadedFileName: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '500',
   },
   modalInput: {
     borderWidth: 1,

@@ -22,7 +22,7 @@ const WORK_MODES: { value: WorkMode; label: string; icon: React.ComponentProps<t
 export default function PostInternshipWizard({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { addListing, userId } = useAppStore();
+  const { addListing, userId, userName } = useAppStore();
   const [step, setStep] = useState(0);
 
   const [title, setTitle] = useState('');
@@ -273,7 +273,7 @@ export default function PostInternshipWizard({ navigation }: any) {
       case 5: return (
         <View>
           <Text style={[styles.previewTitle, { color: colors.title }]}>{title || 'Untitled Internship'}</Text>
-          <Text style={[styles.previewCompany, { color: colors.subtitle }]}>Acme Tech · {location || 'Location TBD'}</Text>
+          <Text style={[styles.previewCompany, { color: colors.subtitle }]}>{userName || 'Employer'} · {location || 'Location TBD'}</Text>
           <View style={styles.previewTags}>
             <View style={[styles.previewTag, { backgroundColor: colors.matchPillBg }]}><Text style={[styles.previewTagText, { color: colors.matchPillText }]}>{workMode}</Text></View>
             {isPaid && <View style={[styles.previewTag, { backgroundColor: colors.iconCircle }]}><Text style={[styles.previewTagText, { color: colors.accent }]}>{monthlyStipend || 'Paid'}</Text></View>}

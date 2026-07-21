@@ -1,57 +1,51 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList } from 'react-native';
 import { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
+import { useAppStore } from '../../src/store/useAppStore';
 
-const { width } = Dimensions.get('window');
-
-const CATEGORIES = ['Recommended', 'All', 'Engineering', 'Design', 'Data', 'Business', 'Remote'];
+const CATEGORIES = ['All', 'Engineering', 'Design', 'Data', 'Marketing', 'Finance'];
 
 const INTERNSHIPS = [
-  { id: '1', title: 'Software Engineering Intern', company: 'Airbnb', location: 'San Francisco, CA · Hybrid', match: 94, pay: 'GHS 48/hr', duration: "Summer '26", color: '#EF4444', saved: true },
-  { id: '2', title: 'Product Design Intern', company: 'Spotify', location: 'New York, NY · On-site', match: 89, pay: 'GHS 42/hr', duration: "Summer '26", color: '#10B981', saved: false },
-  { id: '3', title: 'ML Research Intern', company: 'OpenAI', location: 'Remote', match: 86, pay: 'GHS 60/hr', duration: "Summer '26", color: '#6B7280', saved: false },
-  { id: '4', title: 'Frontend Intern', company: 'Linear', location: 'Remote', match: 84, pay: 'GHS 50/hr', duration: "Summer '26", color: '#7C3AED', saved: false },
-  { id: '5', title: 'Data Analyst Intern', company: 'MTN', location: 'Accra · Hybrid', match: 81, pay: 'GHS 45/hr', duration: "Summer '26", color: '#F59E0B', saved: false },
-  { id: '6', title: 'UX Research Intern', company: 'Google', location: 'Remote', match: 79, pay: 'GHS 55/hr', duration: "Summer '26", color: '#2CACAD', saved: false },
+  { id: '1', title: 'Software Engineering Intern', company: 'Airbnb', location: 'San Francisco, CA · Hybrid', match: 94, pay: 'GHS 48/hr', duration: "Summer '26", color: '#EF4444' },
+  { id: '2', title: 'Product Design Intern', company: 'Spotify', location: 'New York, NY · On-site', match: 89, pay: 'GHS 42/hr', duration: "Summer '26", color: '#10B981' },
+  { id: '3', title: 'ML Research Intern', company: 'OpenAI', location: 'Remote', match: 86, pay: 'GHS 60/hr', duration: "Summer '26", color: '#6B7280' },
+  { id: '4', title: 'Frontend Intern', company: 'Linear', location: 'Remote', match: 84, pay: 'GHS 50/hr', duration: "Summer '26", color: '#7C3AED' },
+  { id: '5', title: 'Data Analyst Intern', company: 'MTN', location: 'Accra · Hybrid', match: 81, pay: 'GHS 45/hr', duration: "Summer '26", color: '#F59E0B' },
+  { id: '6', title: 'UX Research Intern', company: 'Google', location: 'Remote', match: 79, pay: 'GHS 55/hr', duration: "Summer '26", color: '#2CACAD' },
 ];
 
 export default function DiscoverScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const { savedInternships, toggleSavedInternship } = useAppStore();
 
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Recommended');
-  const [savedItems, setSavedItems] = useState<string[]>(['1']);
+  const [activeCategory, setActiveCategory] = useState('All');
 
   const toggleSave = useCallback((id: string) => {
-    setSavedItems(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  }, []);
+    toggleSavedInternship(id);
+  }, [toggleSavedInternship]);
 
   const filtered = INTERNSHIPS.filter(item => {
     const matchesSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.company.toLowerCase().includes(search.toLowerCase());
     const matchesCategory =
-      activeCategory === 'Recommended' ||
       activeCategory === 'All' ||
       item.title.toLowerCase().includes(activeCategory.toLowerCase()) ||
       item.company.toLowerCase().includes(activeCategory.toLowerCase());
     return matchesSearch && matchesCategory;
   });
 
-  const handleBrowseAll = useCallback(() => {
-    setSearch('');
-    setActiveCategory('All');
-  }, []);
-
   const renderItem = useCallback(({ item }: { item: typeof INTERNSHIPS[0] }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('InternshipDetails', { internship: item })}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.85}
+      onPress={() => navigation.navigate('InternshipDetails', { internship: item })}
+    >
       {/* Left: company avatar */}
       <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
         <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
@@ -62,7 +56,7 @@ export default function DiscoverScreen({ navigation }: any) {
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardCompany}>{item.company}</Text>
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{marginRight: 4}} />
+          <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{ marginRight: 4 }} />
           <Text style={styles.cardLocation}>{item.location}</Text>
         </View>
         <View style={styles.tagsRow}>
@@ -85,13 +79,13 @@ export default function DiscoverScreen({ navigation }: any) {
         activeOpacity={0.7}
       >
         <Ionicons
-          name={savedItems.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+          name={savedInternships.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
           size={18}
-          color={savedItems.includes(item.id) ? colors.accent : colors.placeholder}
+          color={savedInternships.includes(item.id) ? colors.accent : colors.placeholder}
         />
       </TouchableOpacity>
     </TouchableOpacity>
-  ), [navigation, colors, savedItems, toggleSave]);
+  ), [navigation, colors, savedInternships, toggleSave, styles]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -110,7 +104,7 @@ export default function DiscoverScreen({ navigation }: any) {
           <Ionicons name="search-outline" size={16} color={colors.searchIcon} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search internships..."
+            placeholder="React, design, remote..."
             placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
@@ -132,46 +126,31 @@ export default function DiscoverScreen({ navigation }: any) {
             onPress={() => setActiveCategory(cat)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.categoryText, activeCategory === cat && styles.categoryTextActive]}>
+            <Text
+              style={[styles.categoryText, activeCategory === cat && styles.categoryTextActive]}
+              numberOfLines={1}
+            >
               {cat}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {filtered.length === 0 ? (
-
-        // ── EMPTY STATE ──────────────────────────────────────────
-        <View style={styles.emptyState}>
-          <View style={styles.illustrationCard}>
-            <Ionicons name="search-outline" size={44} color={colors.placeholder} />
+      {/* Internship list */}
+      <FlatList
+        style={styles.list}
+        data={filtered}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        renderItem={renderItem}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={40} color={colors.placeholder} />
+            <Text style={styles.emptyText}>No internships match your search</Text>
           </View>
-          <Text style={styles.emptyHeadline}>Nothing here yet</Text>
-          <Text style={styles.emptySubtext}>
-            Try adjusting your filters or search terms to find what you're looking for.
-          </Text>
-          <TouchableOpacity
-            style={styles.browseBtn}
-            onPress={handleBrowseAll}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.browseBtnIcon}>↻</Text>
-            <Text style={styles.browseBtnText}>Browse All</Text>
-          </TouchableOpacity>
-        </View>
-
-      ) : (
-
-        // ── RESULTS LIST ──────────────────────────────────────
-        <FlatList
-          data={filtered}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderItem}
-        />
-
-      )}
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -228,7 +207,7 @@ const createStyles = (colors: any) => StyleSheet.create({
 
   // Categories
   categoriesScroll: {
-    height: 64,
+    flexGrow: 0,
     marginBottom: 14,
   },
   categoriesRow: {
@@ -237,10 +216,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     gap: 8,
   },
   categoryChip: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 22,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 30,
     backgroundColor: colors.card,
     borderWidth: 1.5,
@@ -252,7 +232,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderColor: colors.accent,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.subtitle,
     fontWeight: '600',
   },
@@ -262,10 +242,14 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
 
   // List
+  list: {
+    flex: 1,
+  },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: TAB_BAR_BOTTOM_PADDING,
+    paddingBottom: 24,
     gap: 12,
+    flexGrow: 1,
   },
 
   // Card
@@ -353,58 +337,14 @@ const createStyles = (colors: any) => StyleSheet.create({
 
   // Empty state
   emptyState: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 60,
+    paddingTop: 80,
+    gap: 12,
   },
-  illustrationCard: {
-    width: 160,
-    height: 160,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  emptyHeadline: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.title,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  emptySubtext: {
+  emptyText: {
     fontSize: 14,
     color: colors.subtitle,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 22,
-  },
-  browseBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.accent,
-    borderRadius: 30,
-    paddingVertical: 13,
-    paddingHorizontal: 26,
-  },
-  browseBtnIcon: {
-    fontSize: 14,
-    color: colors.onPrimary,
-    marginRight: 8,
-    fontWeight: '700',
-  },
-  browseBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.onPrimary,
   },
 });

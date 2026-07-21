@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimens
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 import { isValidName, isValidEmail, isValidPassword, passwordsMatch } from '../../src/utils/validateCard';
 
 const { height } = Dimensions.get('window');
@@ -13,6 +14,7 @@ export default function SignUpScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const fieldY = useRef<Record<string, number>>({});
+  const setUserName = useAppStore((s) => s.setUserName);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +51,7 @@ export default function SignUpScreen({ navigation, route }: any) {
   const handleSignUp = () => {
     setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
     if (!isFormValid) return;
+    setUserName(fullName.trim());
     navigation.navigate('Verification', { role: route.params?.role });
   };
 

@@ -27,6 +27,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppStore } from '../../src/store/useAppStore';
 
 
 
@@ -38,7 +39,8 @@ export default function JobPreferencesScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [preferredLocation, setPreferredLocation] = useState('');
+  const { preferredLocation: storeLocation, workSetup: storeWorkSetup, willingToRelocate: storeRelocate, setLocationPreferences } = useAppStore();
+  const [preferredLocation, setPreferredLocation] = useState(storeLocation);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -63,6 +65,7 @@ export default function JobPreferencesScreen({ navigation }: any) {
         industries: selectedIndustries,
         location: preferredLocation,
       }));
+      setLocationPreferences(preferredLocation, storeWorkSetup, storeRelocate);
       Alert.alert('Success', 'Job preferences saved successfully');
       navigation.goBack();
     } catch (error) {
