@@ -18,7 +18,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import {
   View,
@@ -32,8 +32,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppStore } from '../../src/store/useAppStore';
+import { signOut } from '../../src/api';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -77,49 +77,35 @@ const SETTINGS_SECTIONS = [
 export default function SettingsScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const userRole = route.params?.role || 'student'; // Default to student if not provided
-  const logout = useAppStore((state) => state.logout);
+  const storedRole = useAppStore((state) => state.userRole);
+  const userRole = route.params?.role || storedRole || 'student';
   const isPremium = useAppStore((state) => state.isPremium);
-
-  const [username, setUsername] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [profile, setProfile] = useState({
-    initials: 'U',
-    name: 'Your Name',
-    email: 'user@example.com',
-  });
-
-  // Load user data on mount
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const savedUsername = await AsyncStorage.getItem('username');
-      const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
-
-
-      if (savedUsername) {
-        setUsername(savedUsername);
-        setProfile(prev => ({
-          ...prev,
-          name: savedUsername,
-          initials: savedUsername.charAt(0).toUpperCase(),
-        }));
-      }
-      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
+  const userName = useAppStore((state) => state.userName);
+  const userProfile = useAppStore((state) => state.profile);
+  const displayName = userName || (userRole === 'student' ? 'Student' : userRole === 'employer' ? 'Employer' : 'University');
+  const profilePhoto = userProfile.photoUri;
+  const profile = {
+    initials: displayName.charAt(0).toUpperCase(),
+    name: displayName,
+    email: userProfile.email || 'user@example.com',
   };
 
   const handleBackPress = () => {
+    if (userRole === 'employer') {
+      navigation.navigate('Dashboard');
+      return;
+    }
+
     navigation.goBack();
   };
 
   const handleProfilePress = () => {
-    navigation.goBack();
+    if (userRole === 'employer') {
+      navigation.navigate('Company');
+      return;
+    }
+
+    navigation.navigate('StudentEditProfile');
   };
 
   const handleRowPress = (rowId: string) => {
@@ -160,11 +146,7 @@ export default function SettingsScreen({ navigation, route }: any) {
   };
 
   const handleSignOut = () => {
-    logout();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
+    void signOut();
   };
 
   const confirmSignOut = () => {

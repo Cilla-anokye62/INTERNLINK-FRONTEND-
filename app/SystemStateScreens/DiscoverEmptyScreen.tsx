@@ -67,15 +67,11 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
   const userAvatarUrl = 'https://via.placeholder.com/100';
 
   const handleNotificationsPress = () => {
-    console.log('Notifications tapped');
-    // TODO: navigation.navigate('Notifications'); — this would be a
-    // screen OUTSIDE the tab navigator, reached via the parent Stack
+    navigation.navigate('Notifications');
   };
 
   const handleBrowseAll = () => {
-    console.log('Browse All tapped');
-    // TODO: clear any active filters/search and reload the full
-    // internship list, e.g.: setFilters({}); refetchInternships();
+    navigation.navigate('StudentApp', { screen: 'Discover' });
   };
 
   return (
@@ -85,7 +81,7 @@ export default function DiscoverEmptyScreen({ navigation }: any) {
       {/* ── TOP HEADER BAR ───────────────────────────────────────── */}
       <View style={styles.header}>
 
-        <TouchableOpacity onPress={() => console.log('Avatar tapped')}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentApp', { screen: 'Profile' })}>
           <Image
             source={{ uri: userAvatarUrl }}
             style={styles.avatar}

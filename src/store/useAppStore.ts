@@ -15,21 +15,86 @@ import {
   EmployerAnalytics,
 } from '../types/application';
 
-type ThemePreference = 'light' | 'dark' | 'system';
+export type ThemePreference = 'light' | 'dark' | 'system';
+export type UserRole = 'student' | 'employer' | 'university';
+export type AuthEntryRoute = 'welcome' | 'login';
+
+export interface ProfileExperience {
+  id: string;
+  ionicon: string;
+  title: string;
+  subtitle: string;
+}
+
+export interface UserProfile {
+  email: string;
+  phone: string;
+  photoUri: string | null;
+  bio: string;
+  about: string;
+  skills: string[];
+  experience: ProfileExperience[];
+  portfolioLink: string;
+  resumeName: string;
+  resumeUri: string;
+  resumeUploaded: boolean;
+  jobTypes: string[];
+  industries: string[];
+}
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  onboardingComplete: boolean;
+}
+
+const EMPTY_PROFILE: UserProfile = {
+  email: '',
+  phone: '',
+  photoUri: null,
+  bio: '',
+  about: '',
+  skills: [],
+  experience: [],
+  portfolioLink: '',
+  resumeName: '',
+  resumeUri: '',
+  resumeUploaded: false,
+  jobTypes: [],
+  industries: [],
+};
 
 interface AppState {
+  // Persistence hydration
+  hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
+  sessionInitialized: boolean;
+  setSessionInitialized: (value: boolean) => void;
+
   // Theme State
   themePreference: ThemePreference;
   setThemePreference: (theme: ThemePreference) => void;
 
   // Auth State
+  authEntryRoute: AuthEntryRoute;
   isAuthenticated: boolean;
-  userRole: 'student' | 'employer' | 'university' | null;
+  onboardingComplete: boolean;
+  userRole: UserRole | null;
   userId: string;
   userName: string;
+  profile: UserProfile;
   setUserName: (name: string) => void;
-  login: (role: 'student' | 'employer' | 'university') => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+  establishSession: (user: SessionUser) => void;
+  login: (role: UserRole) => void;
+  beginOnboarding: (role: UserRole) => void;
+  completeOnboarding: () => void;
+  cancelOnboarding: () => void;
+  clearSession: () => void;
   logout: () => void;
+  resetAccount: () => void;
 
   // Location Preferences
   preferredLocation: string;
@@ -105,6 +170,63 @@ interface AppState {
   // Analytics
   getAnalytics: (employerId: string) => EmployerAnalytics;
 }
+
+const LEGACY_PROFILE_KEYS = [
+  'username',
+  'userEmail',
+  'userPhone',
+  'userProfilePhoto',
+  'userBio',
+  'userAbout',
+  'userSkills',
+  'userExperience',
+  'userPortfolioLink',
+  'userResumeName',
+  'userResumeUri',
+  'userResumeUploaded',
+  'jobPreferences',
+];
+
+const parseLegacyJson = <T,>(value: string | null, fallback: T): T => {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+};
+
+const migrateLegacyProfileStorage = async (state?: AppState) => {
+  if (!state) return;
+  const entries = Object.fromEntries(await AsyncStorage.multiGet(LEGACY_PROFILE_KEYS));
+  const legacyJobPreferences = parseLegacyJson<{
+    jobTypes?: string[];
+    industries?: string[];
+  }>(entries.jobPreferences, {});
+
+  if (!state.userName && entries.username) state.setUserName(entries.username);
+  state.updateProfile({
+    email: state.profile.email || entries.userEmail || '',
+    phone: state.profile.phone || entries.userPhone || '',
+    photoUri: state.profile.photoUri || entries.userProfilePhoto || null,
+    bio: state.profile.bio || entries.userBio || '',
+    about: state.profile.about || entries.userAbout || entries.userBio || '',
+    skills: state.profile.skills.length
+      ? state.profile.skills
+      : parseLegacyJson<string[]>(entries.userSkills, []),
+    experience: state.profile.experience.length
+      ? state.profile.experience
+      : parseLegacyJson<ProfileExperience[]>(entries.userExperience, []),
+    portfolioLink: state.profile.portfolioLink || entries.userPortfolioLink || '',
+    resumeName: state.profile.resumeName || entries.userResumeName || '',
+    resumeUri: state.profile.resumeUri || entries.userResumeUri || '',
+    resumeUploaded: state.profile.resumeUploaded
+      || parseLegacyJson<boolean>(entries.userResumeUploaded, false),
+    jobTypes: state.profile.jobTypes.length ? state.profile.jobTypes : legacyJobPreferences.jobTypes || [],
+    industries: state.profile.industries.length ? state.profile.industries : legacyJobPreferences.industries || [],
+  });
+  await AsyncStorage.multiRemove(LEGACY_PROFILE_KEYS);
+};
 
 const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 
@@ -569,26 +691,93 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
   },
 ];
 
+const createAccountResetState = (authEntryRoute: AuthEntryRoute): Partial<AppState> => ({
+  authEntryRoute,
+  isAuthenticated: false,
+  onboardingComplete: false,
+  userRole: null,
+  userId: '',
+  userName: '',
+  profile: { ...EMPTY_PROFILE },
+  preferredLocation: 'Accra, Ghana',
+  workSetup: 'Hybrid',
+  willingToRelocate: true,
+  university: '',
+  programme: '',
+  academicLevel: '',
+  graduationYear: '',
+  careerInterests: [],
+  isPremium: false,
+  applicationsUsed: 0,
+  applicationLimit: 3,
+  applications: [...DEFAULT_APPLICATIONS],
+  draftApplication: null,
+  notifications: [...DEFAULT_NOTIFICATIONS],
+  savedInternships: [],
+  listings: [...DEFAULT_LISTINGS],
+  conversations: [...DEFAULT_CONVERSATIONS],
+  chatMessages: [...DEFAULT_CHAT_MESSAGES],
+});
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      hasHydrated: false,
+      setHasHydrated: (value: boolean) => set({ hasHydrated: value }),
+      sessionInitialized: false,
+      setSessionInitialized: (value: boolean) => set({ sessionInitialized: value }),
+
       // Default theme preference
       themePreference: 'system' as ThemePreference,
       setThemePreference: (theme: ThemePreference) => set({ themePreference: theme }),
 
       // Default auth state
+      authEntryRoute: 'welcome' as AuthEntryRoute,
       isAuthenticated: false,
-      userRole: null as 'student' | 'employer' | 'university' | null,
-      userId: 'student-1',
-      userName: 'Alex Morgan',
+      onboardingComplete: false,
+      userRole: null as UserRole | null,
+      userId: '',
+      userName: '',
+      profile: { ...EMPTY_PROFILE },
       setUserName: (name: string) => set({ userName: name }),
-      login: (role: 'student' | 'employer' | 'university') => set((state) => ({
+      updateProfile: (updates: Partial<UserProfile>) => set((state) => ({
+        profile: { ...state.profile, ...updates },
+      })),
+      establishSession: (user: SessionUser) => set((state) => ({
         isAuthenticated: true,
+        onboardingComplete: user.onboardingComplete,
+        userRole: user.role,
+        userId: user.id,
+        userName: user.name,
+        profile: { ...state.profile, email: user.email },
+      })),
+      login: (role: UserRole) => set((state) => ({
+        isAuthenticated: true,
+        onboardingComplete: state.userRole === role && !state.onboardingComplete
+          ? false
+          : true,
         userRole: role,
         userId: role === 'student' ? 'student-1' : role === 'employer' ? 'employer-1' : 'university-1',
         userName: state.userName || (role === 'student' ? 'Student' : role === 'employer' ? 'Employer' : 'University'),
       })),
-      logout: () => set({ isAuthenticated: false, userId: '', userName: '' }),
+      beginOnboarding: (role: UserRole) => set({
+        isAuthenticated: true,
+        onboardingComplete: false,
+        userRole: role,
+        userId: '',
+      }),
+      completeOnboarding: () => set((state) => {
+        if (!state.userRole) return state;
+        return {
+          isAuthenticated: true,
+          onboardingComplete: true,
+          userName: state.userName || (state.userRole === 'student' ? 'Student' : state.userRole === 'employer' ? 'Employer' : 'University'),
+        };
+      }),
+      cancelOnboarding: () => set(createAccountResetState('login')),
+      clearSession: () => set((state) => createAccountResetState(state.authEntryRoute)),
+      logout: () => set(createAccountResetState('login')),
+      resetAccount: () => set(createAccountResetState('welcome')),
 
       // Location Preferences
       preferredLocation: 'Accra, Ghana',
@@ -610,12 +799,12 @@ export const useAppStore = create<AppState>()(
       setCareerInterests: (interests: string[]) => set({ careerInterests: interests }),
 
       // Default premium state
-      isPremium: true,
+      isPremium: false,
       applicationsUsed: 0,
       applicationLimit: 3,
       setPremium: (value: boolean) => set({
         isPremium: value,
-        applicationLimit: value ? Infinity : 3,
+        applicationLimit: 3,
       }),
       incrementApplicationsUsed: () => {
         const { applicationsUsed } = get();
@@ -869,6 +1058,47 @@ export const useAppStore = create<AppState>()(
     {
       name: 'internlink-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 3,
+      partialize: (state) => ({
+        themePreference: state.themePreference,
+        authEntryRoute: state.authEntryRoute,
+        profile: state.profile,
+        preferredLocation: state.preferredLocation,
+        workSetup: state.workSetup,
+        willingToRelocate: state.willingToRelocate,
+        university: state.university,
+        programme: state.programme,
+        academicLevel: state.academicLevel,
+        graduationYear: state.graduationYear,
+        careerInterests: state.careerInterests,
+        isPremium: state.isPremium,
+        applicationsUsed: state.applicationsUsed,
+        applicationLimit: state.applicationLimit,
+      }),
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<AppState>;
+        return {
+          ...state,
+          ...(version < 1 && !state.isAuthenticated ? { userRole: null, userId: '' } : {}),
+          onboardingComplete: version < 2 ? Boolean(state.isAuthenticated) : state.onboardingComplete ?? false,
+          ...(version < 3 ? {
+            isAuthenticated: false,
+            onboardingComplete: false,
+            userRole: null,
+            userId: '',
+            userName: '',
+          } : {}),
+          profile: { ...EMPTY_PROFILE, ...(state.profile ?? {}) },
+          applicationLimit: 3,
+          isPremium: state.isPremium ?? false,
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        void migrateLegacyProfileStorage(state).finally(() => {
+          if (state) state.setHasHydrated(true);
+          else useAppStore.setState({ hasHydrated: true });
+        });
+      },
     }
   )
 );

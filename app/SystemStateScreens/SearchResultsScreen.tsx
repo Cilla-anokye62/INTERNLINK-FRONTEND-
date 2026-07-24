@@ -33,6 +33,7 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -119,6 +120,7 @@ export default function SearchResultsScreen({ navigation }: any) {
   // Tracks which internship cards the student has bookmarked.
   // Stored as an array of ids; toggling adds/removes from this array.
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+  const [sortMode, setSortMode] = useState<'match' | 'company'>('match');
 
   // Removes one filter chip when its ✕ is tapped
   const removeFilter = (filterId: string) => {
@@ -139,18 +141,45 @@ export default function SearchResultsScreen({ navigation }: any) {
   };
 
   const handleFiltersPress = () => {
-    console.log('Filters tapped');
-    // TODO: navigation.navigate('FilterModal') or open a bottom sheet
+    Alert.alert(
+      'Search filters',
+      activeFilters.length > 0
+        ? `${activeFilters.length} filter${activeFilters.length === 1 ? '' : 's'} currently applied.`
+        : 'No filters are currently applied.',
+      [
+        { text: 'Clear all', onPress: () => setActiveFilters([]) },
+        {
+          text: 'Restore defaults',
+          onPress: () => setActiveFilters(
+            ACTIVE_FILTERS.filter((filter) => filter.removable).map((filter) => filter.id),
+          ),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
   };
 
   const handleChangeSortPress = () => {
-    console.log('Change sort tapped');
-    // TODO: open a sort-options modal/sheet
+    Alert.alert('Sort results', 'Choose how internships are ordered.', [
+      { text: 'Best match', onPress: () => setSortMode('match') },
+      { text: 'Company A-Z', onPress: () => setSortMode('company') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
-  const handleCardPress = (resultId: string) => {
-    console.log('Opening internship:', resultId);
-    // TODO: navigation.navigate('InternshipDetail', { id: resultId });
+  const handleCardPress = (result: (typeof SEARCH_RESULTS)[number]) => {
+    navigation.navigate('InternshipDetails', {
+      internship: {
+        id: result.id,
+        title: result.roleTitle,
+        company: result.company,
+        companyLogo: result.avatarLetter,
+        companyColor: result.avatarColor,
+        location: result.location,
+        salary: result.rate,
+        matchScore: Number.parseInt(result.matchPercent, 10),
+      },
+    });
   };
 
   // Only the chips whose id is still in activeFilters get shown as
@@ -159,6 +188,17 @@ export default function SearchResultsScreen({ navigation }: any) {
   const visibleFilterChips = ACTIVE_FILTERS.filter(
     (filter) => !filter.removable || activeFilters.includes(filter.id)
   );
+
+  const displayedResults = SEARCH_RESULTS
+    .filter((result) => {
+      const query = searchText.trim().toLowerCase();
+      return !query
+        || result.roleTitle.toLowerCase().includes(query)
+        || result.company.toLowerCase().includes(query);
+    })
+    .sort((left, right) => sortMode === 'company'
+      ? left.company.localeCompare(right.company)
+      : Number.parseInt(right.matchPercent, 10) - Number.parseInt(left.matchPercent, 10));
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -184,12 +224,12 @@ export default function SearchResultsScreen({ navigation }: any) {
           <View style={styles.headerTextBlock}>
             <Text style={styles.headerTitle}>Search</Text>
             <Text style={styles.headerSubtitle}>
-              42 results for '{searchText}'
+              {displayedResults.length} results for '{searchText}'
             </Text>
           </View>
 
           <TouchableOpacity onPress={handleFiltersPress}>
-            <Text style={styles.filtersLink}>Filters · 3</Text>
+            <Text style={styles.filtersLink}>Filters · {activeFilters.length}</Text>
           </TouchableOpacity>
 
         </View>
@@ -251,7 +291,9 @@ export default function SearchResultsScreen({ navigation }: any) {
 
         {/* ── SORTED BY ROW ────────────────────────────────────────── */}
         <View style={styles.sortRow}>
-          <Text style={styles.sortedByText}>Sorted by: Best match</Text>
+          <Text style={styles.sortedByText}>
+            Sorted by: {sortMode === 'match' ? 'Best match' : 'Company A-Z'}
+          </Text>
           <TouchableOpacity onPress={handleChangeSortPress}>
             <Text style={styles.changeLink}>Change</Text>
           </TouchableOpacity>
@@ -265,14 +307,14 @@ export default function SearchResultsScreen({ navigation }: any) {
           internship: avatar | title/company/location | match% + rate pills
           A bookmark icon sits in the top-right corner of each card.
         */}
-        {SEARCH_RESULTS.map((result) => {
+        {displayedResults.map((result) => {
           const isBookmarked = bookmarkedIds.includes(result.id);
 
           return (
             <TouchableOpacity
               key={result.id}
               style={styles.resultCard}
-              onPress={() => handleCardPress(result.id)}
+              onPress={() => handleCardPress(result)}
               activeOpacity={0.85}
             >
 

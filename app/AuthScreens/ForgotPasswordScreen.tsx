@@ -1,25 +1,48 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ImageBackground, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TextInput, TouchableOpacity, ImageBackground, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useState, useMemo } from 'react';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { isValidEmail } from '../../src/utils/validateCard';
+import type { StackScreenProps } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../types/navigation';
+import { authApi, getAuthErrorMessage } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 
-export default function ForgotPasswordScreen({ navigation }: any) {
+type Props = StackScreenProps<RootStackParamList, 'ForgotPassword'>;
+
+export default function ForgotPasswordScreen({ navigation, route }: Props) {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const emailError = useMemo(() => isValidEmail(email), [email]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setTouched(true);
-    if (emailError) return;
-    setSent(true);
+    if (emailError || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setRequestError('');
+    setStatusMessage('');
+    try {
+      const response = await authApi.forgotPassword({
+        email: email.trim().toLowerCase(),
+        role: route.params?.role ?? 'student',
+      });
+      setStatusMessage(response.message);
+      setSent(true);
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,18 +82,38 @@ export default function ForgotPasswordScreen({ navigation }: any) {
           />
         </View>
         {touched && emailError && <Text style={styles.errorText}>{emailError}</Text>}
+        {requestError ? <Text style={[styles.requestErrorText, { color: colors.error }]}>{requestError}</Text> : null}
+        {statusMessage ? <Text style={[styles.statusText, { color: colors.accent }]}>{statusMessage}</Text> : null}
 
         {/* Button */}
         <TouchableOpacity
           style={[styles.button, sent && styles.buttonSent]}
-          onPress={handleSend}
-          disabled={sent}
+          onPress={() => void handleSend()}
+          disabled={sent || isSubmitting}
         >
-          <Text style={styles.buttonText}>{sent ? 'Link Sent ✓' : 'Send Reset Link'}</Text>
+          {isSubmitting
+            ? <ActivityIndicator color={colors.buttonText} />
+            : <Text style={styles.buttonText}>{sent ? 'Link Sent ✓' : 'Send Reset Link'}</Text>}
         </TouchableOpacity>
 
+        {sent ? (
+          <TouchableOpacity
+            style={[
+              styles.manualResetButton,
+              { backgroundColor: colors.card, borderColor: colors.accent },
+            ]}
+            onPress={() => navigation.navigate('ResetPassword')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="key-outline" size={17} color={colors.accent} />
+            <Text style={[styles.manualResetButtonText, { color: colors.accent }]}>
+              Enter reset token manually
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
         {/* Back to sign in */}
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity onPress={() => navigation.replace('Login')}>
           <Text style={[styles.backToLogin, { color: colors.title }]}>
             Back to <Text style={[styles.link, { color: colors.accent }]}>Sign in</Text>
           </Text>
@@ -151,6 +194,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginLeft: 16,
   },
+  requestErrorText: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 12,
+    marginLeft: 16,
+  },
+  statusText: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 12,
+    marginLeft: 16,
+  },
   button: {
     backgroundColor: '#2CACAD',
     borderRadius: 30,
@@ -165,6 +220,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  manualResetButton: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  manualResetButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   backToLogin: {
     textAlign: 'center',

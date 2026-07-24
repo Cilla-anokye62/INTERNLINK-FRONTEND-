@@ -45,22 +45,24 @@ import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
-export default function NoConnectionScreen({ navigation }: any) {
+export default function NoConnectionScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
   // Called when "Retry" is tapped — should re-attempt whatever failed
   const handleRetry = () => {
-    console.log('Retry tapped');
-    // TODO: re-run the failed request/navigation, e.g.:
-    // navigation.replace('PreviousScreenName');
+    if (typeof route.params?.onRetry === 'function') {
+      route.params.onRetry();
+      return;
+    }
+
+    navigation.goBack();
   };
 
   // Called when "Go Back" is tapped
   const handleGoBack = () => {
-    console.log('Go Back tapped');
-    // TODO: navigation.goBack();
+    navigation.goBack();
   };
 
   return (

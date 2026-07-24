@@ -1,30 +1,84 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
+import { applicationApi, getAuthErrorMessage, listingApi } from '../../src/api';
+import type { BackendApplicantResponse, ListingResponse } from '../../src/api';
+
+type DashboardListing = ListingResponse & { applicantCount: number };
 
 export default function EmployerDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { userId, userName, getAnalytics, applications, conversations, listings } = useAppStore();
+  const { userId, userName, getAnalytics, applications, conversations, listings: localListings } = useAppStore();
+  const [backendListings, setBackendListings] = useState<DashboardListing[]>([]);
+  const [backendApplicants, setBackendApplicants] = useState<BackendApplicantResponse[]>([]);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
-  const analytics = useMemo(() => getAnalytics(userId), [userId]);
-  const unreadMessages = useMemo(() => conversations.filter((c) => !c.isArchived && c.unreadCount > 0).reduce((s, c) => s + c.unreadCount, 0), [conversations]);
-  const activeListings = useMemo(() => listings.filter((l) => l.status === 'active'), [listings]);
-  const pendingApps = useMemo(() => applications.filter((a) => a.status === 'submitted' || a.status === 'viewed'), [applications]);
+  const analytics = useMemo(() => getAnalytics(userId), [applications, getAnalytics, localListings, userId]);
+  const unreadMessages = useMemo(
+    () => conversations
+      .filter((conversation) => conversation.ownerId === userId && !conversation.isArchived && conversation.unreadCount > 0)
+      .reduce((sum, conversation) => sum + conversation.unreadCount, 0),
+    [conversations, userId]
+  );
+  const loadDashboard = useCallback(async () => {
+    try {
+      setDashboardError(null);
+      const ownListings = await listingApi.listOwn();
+      const applicantGroups = await Promise.all(
+        ownListings.map((listing) => applicationApi.listApplicants(listing.id)),
+      );
+
+      setBackendApplicants(applicantGroups.flat());
+      setBackendListings(
+        ownListings.map((listing, index) => ({
+          ...listing,
+          applicantCount: applicantGroups[index]?.length ?? 0,
+        })),
+      );
+    } catch (error) {
+      setDashboardError(getAuthErrorMessage(error));
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
+
+  const activeListings = useMemo(
+    () => backendListings.filter((listing) => listing.status === 'OPEN'),
+    [backendListings],
+  );
+  const pendingApps = useMemo(
+    () => backendApplicants.filter(
+      (application) => application.status === 'APPLIED' || application.status === 'UNDER_REVIEW',
+    ),
+    [backendApplicants],
+  );
+  const applicationsThisWeek = useMemo(() => {
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return backendApplicants.filter((application) => {
+      const appliedAt = new Date(application.appliedAt).getTime();
+      return Number.isFinite(appliedAt) && appliedAt >= oneWeekAgo;
+    }).length;
+  }, [backendApplicants]);
 
   const quickActions = [
     { icon: 'add-circle-outline' as const, title: 'Post Internship', subtitle: `Publish a new role`, highlighted: true, screen: 'PostInternshipWizard' },
     { icon: 'people-outline' as const, title: 'Review Applicants', subtitle: `${pendingApps.length} awaiting review`, highlighted: false, screen: 'Applicants' },
     { icon: 'chatbubble-outline' as const, title: 'Messages', subtitle: unreadMessages > 0 ? `${unreadMessages} unread` : 'All read', highlighted: unreadMessages > 0, screen: 'Messages' },
-    { icon: 'bar-chart-outline' as const, title: 'Insights', subtitle: `${analytics.totalApplications} total apps`, highlighted: false, screen: 'Insights' },
+    { icon: 'bar-chart-outline' as const, title: 'Insights', subtitle: `${backendApplicants.length} total apps`, highlighted: false, screen: 'Insights' },
   ];
 
   const stats = [
-    { label: 'Active', value: String(analytics.activeInternships) },
+    { label: 'Active', value: String(activeListings.length) },
     { label: 'Interviews', value: String(analytics.interviewsScheduled) },
     { label: 'Offers Sent', value: String(analytics.offersSent) },
   ];
@@ -50,8 +104,8 @@ export default function EmployerDashboardScreen({ navigation }: any) {
 
         <View style={styles.statsCard}>
           <Text style={styles.statsCardLabel}>This month</Text>
-          <Text style={styles.statsCardValue}>{analytics.totalApplications} applicants</Text>
-          <Text style={styles.statsCardChange}>{analytics.applicationsThisWeek} new this week</Text>
+          <Text style={styles.statsCardValue}>{backendApplicants.length} applicants</Text>
+          <Text style={styles.statsCardChange}>{applicationsThisWeek} new this week</Text>
           <View style={styles.statsRow}>
             {stats.map((stat, index) => (
               <View key={stat.label} style={[styles.statBox, index < stats.length - 1 && styles.statBoxDivider]}>
@@ -61,6 +115,17 @@ export default function EmployerDashboardScreen({ navigation }: any) {
             ))}
           </View>
         </View>
+
+        {dashboardError ? (
+          <TouchableOpacity
+            style={[styles.errorCard, { backgroundColor: colors.card, borderColor: colors.error }]}
+            activeOpacity={0.8}
+            onPress={() => void loadDashboard()}
+          >
+            <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
+            <Text style={[styles.errorText, { color: colors.error }]}>{dashboardError} Tap to retry.</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <Text style={[styles.sectionTitle, { color: colors.title }]}>Quick actions</Text>
         <View style={styles.quickActionsGrid}>
@@ -98,26 +163,28 @@ export default function EmployerDashboardScreen({ navigation }: any) {
               <View style={styles.listingTopRow}>
                 <View style={styles.listingInfo}>
                   <Text style={[styles.listingTitle, { color: colors.title }]} numberOfLines={1}>{listing.title}</Text>
-                  <Text style={[styles.listingSub, { color: colors.subtitle }]}>{listing.applicantCount} applicants · {listing.views} views</Text>
+                  <Text style={[styles.listingSub, { color: colors.subtitle }]}>
+                    {listing.applicantCount} applicants · {listing.location || (listing.remote ? 'Remote' : 'Location not set')}
+                  </Text>
                 </View>
                 <View style={[styles.listingBadge, { backgroundColor: colors.iconCircle }]}>
                   <Text style={[styles.listingBadgeText, { color: colors.accent }]}>
-                    {listing.status === 'active' ? 'Active' : listing.status}
+                    {listing.status === 'OPEN' ? 'Active' : listing.status}
                   </Text>
                 </View>
               </View>
               <View style={[styles.listingMetrics, { backgroundColor: colors.background }]}>
                 <View style={[styles.listingMetric, { borderRightColor: colors.inputBorder }]}>
-                  <Text style={[styles.listingMetricLabel, { color: colors.subtitle }]}>Views</Text>
-                  <Text style={[styles.listingMetricValue, { color: colors.title }]}>{listing.views}</Text>
+                  <Text style={[styles.listingMetricLabel, { color: colors.subtitle }]}>Duration</Text>
+                  <Text style={[styles.listingMetricValue, { color: colors.title }]}>{listing.duration || '—'}</Text>
                 </View>
                 <View style={[styles.listingMetric, { borderRightColor: colors.inputBorder }]}>
                   <Text style={[styles.listingMetricLabel, { color: colors.subtitle }]}>Applied</Text>
                   <Text style={[styles.listingMetricValue, { color: colors.title }]}>{listing.applicantCount}</Text>
                 </View>
                 <View style={styles.listingMetric}>
-                  <Text style={[styles.listingMetricLabel, { color: colors.subtitle }]}>Positions</Text>
-                  <Text style={[styles.listingMetricValue, { color: colors.title }]}>{listing.openPositions}</Text>
+                  <Text style={[styles.listingMetricLabel, { color: colors.subtitle }]}>Skills</Text>
+                  <Text style={[styles.listingMetricValue, { color: colors.title }]}>{listing.requiredSkills.length}</Text>
                 </View>
               </View>
             </View>
@@ -148,6 +215,8 @@ const createStyles = (colors: any) => StyleSheet.create({
   statBoxDivider: { borderRightWidth: 1, borderRightColor: 'rgba(255,255,255,0.2)' },
   statLabel: { fontSize: 11, color: '#D7F0EE', marginBottom: 4 },
   statValue: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
+  errorCard: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 16 },
+  errorText: { flex: 1, marginLeft: 8, fontSize: 12 },
   sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: 12 },
   quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 },
   quickActionCard: { width: '48%', borderRadius: 16, padding: 14, marginBottom: 12 },

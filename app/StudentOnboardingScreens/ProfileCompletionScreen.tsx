@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput, Modal } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
+import { completeStudentOnboarding, getAuthErrorMessage } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 
@@ -39,34 +40,68 @@ const STAND_OUT_ITEMS = [
   },
 ];
 
-export default function ProfileCompletionScreen({ navigation }: any) {
+export default function ProfileCompletionScreen() {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const userName = useAppStore((state) => state.userName);
+  const profile = useAppStore((state) => state.profile);
+  const university = useAppStore((state) => state.university);
+  const programme = useAppStore((state) => state.programme);
+  const academicLevel = useAppStore((state) => state.academicLevel);
+  const careerInterests = useAppStore((state) => state.careerInterests);
+  const preferredLocation = useAppStore((state) => state.preferredLocation);
+  const willingToRelocate = useAppStore((state) => state.willingToRelocate);
+  const setUserName = useAppStore((state) => state.setUserName);
+  const updateProfile = useAppStore((state) => state.updateProfile);
 
-  const [username, setUsername] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [fullName, setFullName] = useState(userName);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(profile.photoUri);
   const [completionItems, setCompletionItems] = useState(COMPLETION_ITEMS);
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [resumeFileName, setResumeFileName] = useState('');
-  const [portfolioLink, setPortfolioLink] = useState('');
-  const [bio, setBio] = useState('');
+  const [resumeUploaded, setResumeUploaded] = useState(profile.resumeUploaded);
+  const [resumeFileName, setResumeFileName] = useState(profile.resumeName);
+  const [resumeUri, setResumeUri] = useState(profile.resumeUri);
+  const [portfolioLink, setPortfolioLink] = useState(profile.portfolioLink);
+  const [bio, setBio] = useState(profile.bio);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [showBioModal, setShowBioModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleComplete = async () => {
-    // Save all profile data to AsyncStorage
+    if (isSubmitting) return;
+
+    const savedFullName = fullName.trim() || userName;
+    setUserName(savedFullName);
+    updateProfile({
+      bio,
+      about: bio,
+      photoUri: profilePhoto,
+      portfolioLink,
+      resumeUploaded,
+      resumeName: resumeFileName,
+      resumeUri,
+    });
+
+    setIsSubmitting(true);
+    setSubmitError('');
     try {
-      await AsyncStorage.setItem('username', username);
-      await AsyncStorage.setItem('userBio', bio);
-      await AsyncStorage.setItem('userProfilePhoto', profilePhoto || '');
-      await AsyncStorage.setItem('userPortfolioLink', portfolioLink);
-      await AsyncStorage.setItem('userResumeUploaded', JSON.stringify(resumeUploaded));
-      
-      navigation.navigate('HomeDashboard');
+      await completeStudentOnboarding({
+        universityName: university,
+        profile: {
+          fullName: savedFullName,
+          program: programme.trim(),
+          level: academicLevel.trim(),
+          skills: profile.skills,
+          careerInterests,
+          preferredLocation: preferredLocation.trim(),
+          willingToRelocate,
+        },
+      });
     } catch (error) {
-      console.error('Error saving profile data:', error);
-      alert('Failed to save profile data');
+      setSubmitError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,9 +141,8 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         const file = result.assets[0];
         const name = file.name;
         const uri = file.uri;
-        await AsyncStorage.setItem('userResumeName', name);
-        await AsyncStorage.setItem('userResumeUri', uri);
         setResumeFileName(name);
+        setResumeUri(uri);
         setResumeUploaded(true);
         setShowResumeModal(false);
       }
@@ -123,10 +157,8 @@ export default function ProfileCompletionScreen({ navigation }: any) {
     }
   };
 
-  const handleBioSave = async () => {
+  const handleBioSave = () => {
     if (bio.trim()) {
-      // Save bio to AsyncStorage
-      await AsyncStorage.setItem('userBio', bio);
       setShowBioModal(false);
     }
   };
@@ -154,7 +186,7 @@ export default function ProfileCompletionScreen({ navigation }: any) {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.stepLabel}>Step 5 of 5</Text>
-          <TouchableOpacity onPress={() => navigation.replace('HomeDashboard')}>
+          <TouchableOpacity onPress={handleComplete} disabled={isSubmitting}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -187,15 +219,16 @@ export default function ProfileCompletionScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
 
-        {/* Username input */}
+        {/* Full-name input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Username</Text>
+          <Text style={styles.inputLabel}>Full Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
+            placeholder="Enter your full name"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
+            editable={!isSubmitting}
           />
         </View>
 
@@ -274,13 +307,23 @@ export default function ProfileCompletionScreen({ navigation }: any) {
           })}
         </View>
 
+        {submitError ? <Text style={styles.submitError}>{submitError}</Text> : null}
+
         {/* Complete button */}
         <TouchableOpacity
-          style={styles.completeButton}
+          style={[styles.completeButton, isSubmitting && styles.completeButtonDisabled]}
           onPress={handleComplete}
           activeOpacity={0.85}
+          disabled={isSubmitting}
         >
-          <Text style={styles.completeButtonText}>Complete Profile & Start Matching</Text>
+          {isSubmitting ? (
+            <View style={styles.submittingRow}>
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+              <Text style={styles.completeButtonText}>Finishing setup...</Text>
+            </View>
+          ) : (
+            <Text style={styles.completeButtonText}>Complete Profile & Start Matching</Text>
+          )}
         </TouchableOpacity>
 
         <View style={{ height: height * 0.03 }} />
@@ -479,7 +522,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Username input
+  // Full-name input
   inputContainer: {
     marginBottom: height * 0.03,
   },
@@ -734,6 +777,21 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
+  },
+  completeButtonDisabled: {
+    opacity: 0.65,
+  },
+  submittingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  submitError: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   completeButtonText: {
     color: colors.onPrimary,

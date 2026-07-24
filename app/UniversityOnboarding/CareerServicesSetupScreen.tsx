@@ -10,7 +10,6 @@
  *      - Title + subtitle
  *      - Career Services Contact (single-line input)
  *      - Department Email (single-line input)
- *      - Placement Office (multi-line info box: location, phone, hours)
  *      - Internship Coordinator name (single-line input)
  *      - Internship Coordinator email (single-line input)
  *      - Continue button
@@ -24,8 +23,9 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   TextInput,
@@ -38,6 +38,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getAuthErrorMessage, universityApi } from '../../src/api';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
@@ -48,58 +49,56 @@ const SIMPLE_FIELDS = [
   {
     id: 'contactName',
     label: 'CAREER SERVICES CONTACT',
-    placeholder: 'Dr. Sarah Whitman',
+    placeholder: 'e.g. Career Services Director',
     icon: 'person-outline',
     keyboardType: 'default' as const,
   },
   {
     id: 'departmentEmail',
     label: 'DEPARTMENT EMAIL',
-    placeholder: 'career.services@mit.edu',
+    placeholder: 'careers@university.edu',
     icon: 'mail-outline',
     keyboardType: 'email-address' as const,
   },
 ];
 
-// The second group of fields (coordinator) sits AFTER the placement
-// office info box, so it's kept as a separate array rather than merging
-// everything into one list — this keeps the layout order easy to follow.
+// Coordinator fields stay in a separate group to preserve the design's spacing.
 const COORDINATOR_FIELDS = [
   {
     id: 'coordinatorName',
     label: 'INTERNSHIP COORDINATOR',
-    placeholder: 'Marcus Liu',
+    placeholder: 'e.g. Internship Coordinator',
     icon: 'person-outline',
     keyboardType: 'default' as const,
   },
   {
     id: 'coordinatorEmail',
     label: '', // no label shown above this one in the design — it sits right under the name field
-    placeholder: 'm.liu@mit.edu',
+    placeholder: 'coordinator@university.edu',
     icon: 'mail-outline',
     keyboardType: 'email-address' as const,
   },
 ];
 
-// ─── DATA: placement office info rows ────────────────────────────
-// The Placement Office box shows three rows, each with a different icon.
-// Looping over this array avoids writing the same row markup three times.
-const PLACEMENT_INFO_ROWS = [
-  { id: 'location', icon: 'location-outline', text: 'Building E39, 2nd Floor' },
-  { id: 'phone', icon: 'call-outline', text: '+233 24 123 4567' },
-  { id: 'hours', icon: 'time-outline', text: 'Mon – Fri · 9:00 – 17:00' },
-];
+type FormValues = {
+  contactName: string;
+  departmentEmail: string;
+  coordinatorName: string;
+  coordinatorEmail: string;
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function CareerServicesSetupScreen({ navigation }: any) {
-  const { colors } = useAppTheme();
+  const { colors, theme } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
 
   // Single state object holding every text field's value.
   // The key is the field's id (e.g. 'contactName', 'departmentEmail').
-  const [formValues, setFormValues] = useState<Record<string, string>>({
+  const [formValues, setFormValues] = useState<FormValues>({
     contactName: '',
     departmentEmail: '',
     coordinatorName: '',
@@ -108,16 +107,86 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
 
   // Tracks which input is currently focused, so we can highlight its border
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    setIsLoading(true);
+    setLoadError(null);
+    universityApi.getMe()
+      .then((profile) => {
+        if (!active) return;
+        setFormValues({
+          contactName: profile.careerServicesContactName ?? '',
+          departmentEmail: profile.departmentEmail ?? '',
+          coordinatorName: profile.internshipCoordinatorName ?? '',
+          coordinatorEmail: profile.internshipCoordinatorEmail ?? '',
+        });
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(getAuthErrorMessage(error));
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt]);
 
   // Updates just one field in formValues without touching the others
-  const handleChange = (id: string, value: string) => {
+  const handleChange = (id: keyof FormValues, value: string) => {
+    setSubmitError(null);
     setFormValues(prev => ({ ...prev, [id]: value }));
   };
 
   // Called when the Continue button is tapped
-  const handleContinue = () => {
-    console.log('Career services info submitted:', formValues);
-    navigation.navigate('ReviewComplete'); // step 4 of 4
+  const handleContinue = async (): Promise<void> => {
+    if (isSubmitting) return;
+
+    const contactName = formValues.contactName.trim();
+    const departmentEmail = formValues.departmentEmail.trim().toLowerCase();
+    const coordinatorName = formValues.coordinatorName.trim();
+    const coordinatorEmail = formValues.coordinatorEmail.trim().toLowerCase();
+
+    if (!contactName || !departmentEmail || !coordinatorName || !coordinatorEmail) {
+      setSubmitError('Complete all four career services fields.');
+      return;
+    }
+    if (contactName.length > 255 || coordinatorName.length > 255) {
+      setSubmitError('Contact names must be 255 characters or fewer.');
+      return;
+    }
+    if (departmentEmail.length > 320 || coordinatorEmail.length > 320) {
+      setSubmitError('Email addresses must be 320 characters or fewer.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(departmentEmail) || !EMAIL_PATTERN.test(coordinatorEmail)) {
+      setSubmitError('Enter valid email addresses for both contacts.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await universityApi.updateMe({
+        careerServicesContactName: contactName,
+        departmentEmail,
+        internshipCoordinatorName: coordinatorName,
+        internshipCoordinatorEmail: coordinatorEmail,
+      });
+      navigation.navigate('ReviewComplete');
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Step 3 of 4 = 75%
@@ -146,10 +215,13 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
           style={styles.input}
           placeholder={field.placeholder}
           placeholderTextColor={colors.placeholder}
-          value={formValues[field.id]}
-          onChangeText={(value) => handleChange(field.id, value)}
+          value={formValues[field.id as keyof FormValues]}
+          onChangeText={(value) => handleChange(field.id as keyof FormValues, value)}
           keyboardType={field.keyboardType}
           autoCapitalize={field.keyboardType === 'default' ? 'words' : 'none'}
+          autoCorrect={false}
+          maxLength={field.keyboardType === 'email-address' ? 320 : 255}
+          editable={!isSubmitting}
           onFocus={() => setFocusedInput(field.id)}
           onBlur={() => setFocusedInput(null)}
         />
@@ -157,9 +229,39 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.stateText}>Loading career services details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <Text style={styles.errorText}>{loadError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => setLoadAttempt((attempt) => attempt + 1)}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -195,55 +297,23 @@ export default function CareerServicesSetupScreen({ navigation }: any) {
             {SIMPLE_FIELDS.map(renderField)}
 
 
-            {/* ── PLACEMENT OFFICE INFO BOX ─────────────────────────
-                This is NOT an editable input in the design — it's a
-                read-only style box showing location, phone, and hours
-                as three stacked rows with icons.
-                If you want this editable later, swap the Text rows
-                for TextInput fields following the same pattern as above.
-            */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>PLACEMENT OFFICE</Text>
-
-              <View style={styles.infoBox}>
-                {/*
-                  .map() loops over the three rows (location, phone, hours)
-                  so we don't repeat the same icon + text markup 3 times.
-                */}
-                {PLACEMENT_INFO_ROWS.map((row, index) => (
-                  <View
-                    key={row.id}
-                    style={[
-                      styles.infoRow,
-                      // Remove the bottom margin on the last row so spacing looks even
-                      index === PLACEMENT_INFO_ROWS.length - 1 && styles.infoRowLast,
-                    ]}
-                  >
-                    <Ionicons
-                      name={row.icon as any}
-                      size={15}
-                      color={colors.infoBoxIcon}
-                      style={styles.infoRowIcon}
-                    />
-                    <Text style={styles.infoRowText}>{row.text}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-            {/* ── END PLACEMENT OFFICE BOX ──────────────────────────── */}
-
-
             {/* ── Coordinator fields: Name + Email ──────────────────── */}
             {COORDINATOR_FIELDS.map(renderField)}
 
+            {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
 
             {/* ── CONTINUE BUTTON ────────────────────────────────────── */}
             <TouchableOpacity
-              style={styles.continueBtn}
+              style={[styles.continueBtn, isSubmitting && styles.continueBtnDisabled]}
               onPress={handleContinue}
               activeOpacity={0.85}
+              disabled={isSubmitting}
             >
-              <Text style={styles.continueBtnText}>Continue</Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={colors.continueBtnText} />
+              ) : (
+                <Text style={styles.continueBtnText}>Continue</Text>
+              )}
             </TouchableOpacity>
 
           </View>
@@ -267,6 +337,38 @@ const createStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 14,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  retryButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
   },
 
   // ScrollView keeps mint visible around the white card
@@ -369,38 +471,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.inputText,
   },
 
-  // ── Placement Office info box ──────────────────────────────────
-  // A bordered box containing 3 stacked rows (location, phone, hours)
-  infoBox: {
-    backgroundColor: colors.infoBoxBg,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.infoBoxBorder,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-  },
-  // Each row: icon on the left, text filling the rest of the space
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    marginBottom: 0,
-  },
-  // Removes the divider feel on the very last row (no-op currently, kept
-  // here in case you want to add a bottom border on all but the last row)
-  infoRowLast: {
-    marginBottom: 0,
-  },
-  infoRowIcon: {
-    marginRight: 12,
-    width: 20, // fixed width keeps all icons vertically aligned regardless of glyph width
-  },
-  infoRowText: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.infoBoxText,
-  },
-
   // ── Continue button ────────────────────────────────────────────
   continueBtn: {
     backgroundColor: colors.continueBtn,
@@ -408,6 +478,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 6,
+  },
+  continueBtnDisabled: {
+    opacity: 0.6,
   },
   continueBtnText: {
     fontSize: 16,

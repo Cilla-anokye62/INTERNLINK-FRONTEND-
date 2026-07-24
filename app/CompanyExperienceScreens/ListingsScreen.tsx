@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   TouchableOpacity,
@@ -8,23 +9,16 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
+import { getAuthErrorMessage, listingApi, type ListingResponse } from '../../src/api';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
-type ListingStatus = 'Active' | 'Paused' | 'Draft' | 'Closed';
-type FilterTab = 'All' | 'Active' | 'Paused' | 'Drafts' | 'Closed';
-
-interface Listing {
-  id: string;
-  title: string;
-  applicants: number;
-  views: string;
-  growth: string;
-  status: ListingStatus;
-}
+type ListingStatus = 'Active' | 'Closed';
+type FilterTab = 'All' | ListingStatus;
 
 // ---------- Main Screen ----------
 const ListingsScreen: React.FC<Props> = ({ navigation }) => {
@@ -32,72 +26,43 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
+  const [listings, setListings] = useState<ListingResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const listings: Listing[] = [
-    {
-      id: '1',
-      title: 'Frontend Engineering Intern',
-      applicants: 124,
-      views: '1.2K views',
-      growth: '+12% wk',
-      status: 'Active',
-    },
-    {
-      id: '2',
-      title: 'Product Design Intern',
-      applicants: 86,
-      views: '1.2K views',
-      growth: '+12% wk',
-      status: 'Active',
-    },
-    {
-      id: '3',
-      title: 'Data Science Intern',
-      applicants: 52,
-      views: '1.2K views',
-      growth: '+12% wk',
-      status: 'Paused',
-    },
-    {
-      id: '4',
-      title: 'Marketing Intern',
-      applicants: 0,
-      views: '1.2K views',
-      growth: '+12% wk',
-      status: 'Draft',
-    },
-    {
-      id: '5',
-      title: 'Backend Intern',
-      applicants: 198,
-      views: '1.2K views',
-      growth: '+12% wk',
-      status: 'Closed',
-    },
-  ];
+  const loadListings = useCallback(async () => {
+    setLoadError('');
+    try {
+      setListings(await listingApi.listOwn());
+    } catch (error) {
+      setLoadError(getAuthErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      void loadListings();
+    }, [loadListings]),
+  );
 
   const filterTabs: { label: FilterTab; count: number }[] = [
-    { label: 'All', count: 6 },
-    { label: 'Active', count: 3 },
-    { label: 'Paused', count: 1 },
-    { label: 'Drafts', count: 1 },
-    { label: 'Closed', count: 1 },
+    { label: 'All', count: listings.length },
+    { label: 'Active', count: listings.filter((listing) => listing.status === 'OPEN').length },
+    { label: 'Closed', count: listings.filter((listing) => listing.status === 'CLOSED').length },
   ];
 
   const filteredListings = listings.filter((listing) => {
     if (activeFilter === 'All') return true;
-    if (activeFilter === 'Drafts') return listing.status === 'Draft';
-    return listing.status === activeFilter;
+    return activeFilter === 'Active' ? listing.status === 'OPEN' : listing.status === 'CLOSED';
   });
 
   const getStatusStyle = (status: ListingStatus) => {
     switch (status) {
       case 'Active':
         return { badge: styles.badgeActive, text: styles.badgeTextActive };
-      case 'Paused':
-        return { badge: styles.badgePaused, text: styles.badgeTextPaused };
-      case 'Draft':
-        return { badge: styles.badgeDraft, text: styles.badgeTextDraft };
       case 'Closed':
         return { badge: styles.badgeClosed, text: styles.badgeTextClosed };
     }
@@ -109,12 +74,12 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Listings</Text>
-          <Text style={styles.headerSubtitle}>6 internships</Text>
+          <Text style={styles.headerSubtitle}>{listings.length} internships</Text>
         </View>
         <TouchableOpacity
           style={styles.addButton}
           activeOpacity={0.8}
-          onPress={() => console.log('Add new listing')}
+          onPress={() => navigation.navigate('PostInternshipWizard')}
         >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
@@ -155,44 +120,61 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {isLoading && listings.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={styles.stateText}>Loading listings...</Text>
+          </View>
+        ) : null}
+
+        {loadError && listings.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <Ionicons name="cloud-offline-outline" size={36} color={colors.subtitle} />
+            <Text style={styles.stateText}>{loadError}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => void loadListings()}>
+              <Text style={styles.retryButtonText}>Try again</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {filteredListings.map((listing) => {
-          const statusStyle = getStatusStyle(listing.status);
+          const displayStatus: ListingStatus = listing.status === 'OPEN' ? 'Active' : 'Closed';
+          const statusStyle = getStatusStyle(displayStatus);
           return (
             <View key={listing.id} style={styles.listingCard}>
               <View style={styles.listingHeader}>
                 <Text style={styles.listingTitle}>{listing.title}</Text>
                 <View style={[styles.statusBadge, statusStyle.badge]}>
                   <Text style={[styles.statusBadgeText, statusStyle.text]}>
-                    {listing.status}
+                    {displayStatus}
                   </Text>
                 </View>
               </View>
 
-              <Text style={styles.applicantsText}>
-                {listing.applicants} applicants
-              </Text>
+              <Text style={styles.applicantsText}>{listing.location || 'Location not specified'}</Text>
 
               <View style={styles.listingFooter}>
                 <View style={styles.listingStats}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="eye-outline" size={12} color={colors.subtitle} />
-                    <Text style={styles.statItem}>{listing.views}</Text>
+                    <Ionicons name="time-outline" size={12} color={colors.subtitle} />
+                    <Text style={styles.statItem}>{listing.duration || 'Duration not specified'}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="trending-up-outline" size={12} color={colors.subtitle} />
-                    <Text style={styles.statItem}>{listing.growth}</Text>
+                    <Ionicons name="cash-outline" size={12} color={colors.subtitle} />
+                    <Text style={styles.statItem}>{listing.allowance || 'Allowance not specified'}</Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  onPress={() => console.log('Manage:', listing.title)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.manageLink}>Manage {'>'}</Text>
-                </TouchableOpacity>
               </View>
             </View>
           );
         })}
+
+        {!isLoading && !loadError && filteredListings.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <Ionicons name="briefcase-outline" size={36} color={colors.subtitle} />
+            <Text style={styles.stateText}>No {activeFilter.toLowerCase()} listings yet.</Text>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -345,6 +327,28 @@ const createStyles = (colors: any) => StyleSheet.create({
   statItem: {
     fontSize: 12,
     color: colors.subtitle,
+  },
+  stateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+    gap: 12,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: colors.onPrimary,
+    fontSize: 13,
+    fontWeight: '700',
   },
   manageLink: {
     fontSize: 13,

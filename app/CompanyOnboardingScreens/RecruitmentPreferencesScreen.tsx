@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   TouchableOpacity,
@@ -7,16 +8,44 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { companyApi, getAuthErrorMessage } from '../../src/api';
+import type { CompanyWorkSetup } from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 // ---------- Types ----------
-type WorkSetup = 'Remote' | 'Hybrid' | 'On-site';
-
 interface ChipData {
   label: string;
   selected: boolean;
 }
+
+const CATEGORY_OPTIONS = [
+  'Engineering',
+  'Design',
+  'Product',
+  'Data',
+  'Marketing',
+  'Operations',
+];
+
+const QUALIFICATION_OPTIONS = [
+  "Bachelor's+",
+  '3.0+ GPA',
+  'Final year',
+  'Visa sponsorship',
+  'Portfolio required',
+];
+
+const WORK_SETUP_OPTIONS: CompanyWorkSetup[] = ['Remote', 'Hybrid', 'On-site'];
+
+const hydrateChips = (options: string[], selectedValues: string[]): ChipData[] => {
+  const selected = new Set(selectedValues);
+  const serverOnlyOptions = selectedValues.filter((value) => !options.includes(value));
+
+  return [...options, ...serverOnlyOptions].map((label) => ({
+    label,
+    selected: selected.has(label),
+  }));
+};
 
 // ---------- Reusable Chip Component ----------
 interface ChipProps {
@@ -70,29 +99,49 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  // Internship categories state
-  const [categories, setCategories] = useState<ChipData[]>([
-    { label: 'Engineering', selected: true },
-    { label: 'Design', selected: true },
-    { label: 'Product', selected: true },
-    { label: 'Data', selected: false },
-    { label: 'Marketing', selected: false },
-    { label: 'Operations', selected: false },
-  ]);
+  const [categories, setCategories] = useState<ChipData[]>(() =>
+    hydrateChips(CATEGORY_OPTIONS, []),
+  );
+  const [qualifications, setQualifications] = useState<ChipData[]>(() =>
+    hydrateChips(QUALIFICATION_OPTIONS, []),
+  );
+  const [workSetup, setWorkSetup] = useState<CompanyWorkSetup | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
-  // Preferred qualifications state
-  const [qualifications, setQualifications] = useState<ChipData[]>([
-    { label: "Bachelor's+", selected: true },
-    { label: '3.0+ GPA', selected: true },
-    { label: 'Final year', selected: false },
-    { label: 'Visa sponsorship', selected: false },
-    { label: 'Portfolio required', selected: true },
-  ]);
+  useEffect(() => {
+    let active = true;
 
-  // Work setup state (single select)
-  const [workSetup, setWorkSetup] = useState<WorkSetup>('Hybrid');
+    setIsLoading(true);
+    setLoadError(null);
+    companyApi.getMe()
+      .then((profile) => {
+        if (!active) return;
+        setCategories(hydrateChips(CATEGORY_OPTIONS, profile.internshipCategories));
+        setQualifications(hydrateChips(
+          QUALIFICATION_OPTIONS,
+          profile.preferredQualifications,
+        ));
+        setWorkSetup(profile.workSetup);
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(getAuthErrorMessage(error));
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt]);
 
   const toggleCategory = (index: number) => {
+    if (isSubmitting) return;
+    setSubmitError(null);
     setCategories((prev) =>
       prev.map((item, i) =>
         i === index ? { ...item, selected: !item.selected } : item
@@ -101,6 +150,8 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const toggleQualification = (index: number) => {
+    if (isSubmitting) return;
+    setSubmitError(null);
     setQualifications((prev) =>
       prev.map((item, i) =>
         i === index ? { ...item, selected: !item.selected } : item
@@ -108,9 +159,71 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
-  const handleContinue = (): void => {
-    navigation.navigate('CompanyProfileCompletion');
+  const handleContinue = async (): Promise<void> => {
+    if (isSubmitting) return;
+
+    const selectedCategories = categories
+      .filter((item) => item.selected)
+      .map((item) => item.label);
+    const selectedQualifications = qualifications
+      .filter((item) => item.selected)
+      .map((item) => item.label);
+
+    if (selectedCategories.length === 0) {
+      setSubmitError('Select at least one internship category.');
+      return;
+    }
+    if (selectedQualifications.length === 0) {
+      setSubmitError('Select at least one preferred qualification.');
+      return;
+    }
+    if (!workSetup) {
+      setSubmitError('Select a work setup.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await companyApi.updateMe({
+        internshipCategories: selectedCategories,
+        preferredQualifications: selectedQualifications,
+        workSetup,
+      });
+      navigation.navigate('CompanyProfileCompletion');
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.stateText}>Loading recruitment preferences...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <Text style={styles.errorText}>{loadError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => setLoadAttempt((attempt) => attempt + 1)}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -168,19 +281,10 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Internship locations */}
-        <Text style={styles.sectionLabel}>INTERNSHIP LOCATIONS</Text>
-        <View style={styles.locationCard}>
-          <Ionicons name="location-outline" size={16} color={colors.accent} style={{ marginRight: 8 }} />
-          <Text style={styles.locationText}>
-            San Francisco · New York · Remote
-          </Text>
-        </View>
-
         {/* Work setup */}
         <Text style={styles.sectionLabel}>WORK SETUP</Text>
         <View style={styles.workSetupRow}>
-          {(['Remote', 'Hybrid', 'On-site'] as WorkSetup[]).map((option) => {
+          {WORK_SETUP_OPTIONS.map((option) => {
             const isSelected = workSetup === option;
             return (
               <TouchableOpacity
@@ -189,8 +293,12 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
                   styles.workSetupButton,
                   isSelected && styles.workSetupButtonSelected,
                 ]}
-                onPress={() => setWorkSetup(option)}
+                onPress={() => {
+                  setWorkSetup(option);
+                  setSubmitError(null);
+                }}
                 activeOpacity={0.7}
+                disabled={isSubmitting}
               >
                 <Text
                   style={[
@@ -205,13 +313,20 @@ const RecruitmentPreferencesScreen: React.FC<Props> = ({ navigation }) => {
           })}
         </View>
 
+        {submitError ? <Text style={styles.errorText}>{submitError}</Text> : null}
+
         {/* Continue button */}
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, isSubmitting && styles.continueButtonDisabled]}
           onPress={handleContinue}
           activeOpacity={0.8}
+          disabled={isSubmitting}
         >
-          <Text style={styles.continueButtonText}>Next  →</Text>
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color={colors.onPrimary} />
+          ) : (
+            <Text style={styles.continueButtonText}>Next →</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -232,6 +347,38 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 40,
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 14,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  retryButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
   },
   stepRow: {
     flexDirection: 'row',
@@ -313,26 +460,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   chipTextSelected: {
     color: colors.onPrimary,
   },
-  locationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 20,
-  },
-  locationIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  locationText: {
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: '500',
-  },
   workSetupRow: {
     flexDirection: 'row',
     gap: 10,
@@ -364,6 +491,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
+  },
+  continueButtonDisabled: {
+    opacity: 0.6,
   },
   continueButtonText: {
     color: colors.onPrimary,

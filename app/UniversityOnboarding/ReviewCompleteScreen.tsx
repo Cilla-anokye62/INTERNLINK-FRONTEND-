@@ -1,525 +1,376 @@
-/**
- * ReviewCompleteScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — University Onboarding: Step 4 of 4
- * "Review & Complete"
- *
- * Content (from design):
- *  - Progress header: step label + 100% progress bar (mint background)
- *  - White card containing:
- *      - Title + subtitle
- *      - University summary card (avatar, name, location, completeness %)
- *      - Four review rows (University info, Institution details,
- *        Career services, Coordinator) each with an edit icon
- *      - Info banner about review time
- *      - "Complete Setup" button (filled teal)
- *      - "Save & finish later" button (outlined)
- *
- * HOW TO USE:
- *  1. Drop inside your "University Onboarding" folder
- *  2. Add to App.tsx:
- *     import ReviewCompleteScreen from './app/University Onboarding/ReviewCompleteScreen';
- *     <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
+  View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { useFocusEffect } from '@react-navigation/native';
+import type { StackScreenProps } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  completeUniversityOnboarding,
+  getAuthErrorMessage,
+  signOut,
+  universityApi,
+  type UniversityProfileResponse,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import type { RootStackParamList } from '../../types/navigation';
 
+type Props = StackScreenProps<RootStackParamList, 'ReviewComplete'>;
+type EditRoute = 'UniversityInfo' | 'InstitutionDetails' | 'CareerServicesSetup';
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-// ─── DATA ─────────────────────────────────────────────────────────
-// Each review row's content lives in this array.
-// To add another reviewable section later, just add an object here —
-// the .map() below will render it automatically.
-const REVIEW_ROWS = [
-  {
-    id: 'universityInfo',
-    icon: 'school-outline',
-    title: 'University info',
-    detail: 'MIT · careers@mit.edu',
-  },
-  {
-    id: 'institutionDetails',
-    icon: 'business-outline',
-    title: 'Institution details',
-    detail: 'Private · 5 programs',
-  },
-  {
-    id: 'careerServices',
-    icon: 'person-outline',
-    title: 'Career services',
-    detail: 'Dr. Sarah Whitman',
-  },
-  {
-    id: 'coordinator',
-    icon: 'briefcase-outline',
-    title: 'Coordinator',
-    detail: 'Marcus Liu',
-  },
-];
+interface ReviewRow {
+  id: string;
+  icon: IconName;
+  title: string;
+  detail: string;
+  route: EditRoute;
+}
 
+const REQUIRED_FIELD_COUNT = 12;
 
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
-export default function ReviewCompleteScreen({ navigation }: any) {
+const hasText = (value: string | null | undefined): boolean => Boolean(value?.trim());
+
+const valueOrMissing = (value: string | null | undefined, fallback: string): string =>
+  hasText(value) ? value!.trim() : fallback;
+
+export default function ReviewCompleteScreen({ navigation }: Props) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [university, setUniversity] = useState<UniversityProfileResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
+  const loadUniversity = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      setUniversity(await universityApi.getMe());
+    } catch (error) {
+      setLoadError(getAuthErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Step 4 of 4 is fully complete, so progress is 100%
-  const PROGRESS = 1;
+  useFocusEffect(
+    useCallback(() => {
+      void loadUniversity();
+    }, [loadUniversity]),
+  );
 
-  // Placeholder values for the university summary card.
-  // Later these will come from the data collected in steps 1-3
-  // (probably passed in via navigation params or a shared context/state).
-  const university = {
-    initial: 'M',                 // first letter shown in the avatar circle
-    name: 'MIT',
-    location: 'Cambridge, MA · 11,520 students',
-    completeness: 95,             // percentage shown in the green pill + bar
+  const missingRequiredFields = useMemo(() => {
+    if (!university) return [];
+
+    const fields = [
+      { label: 'university name', complete: hasText(university.name) },
+      { label: 'phone number', complete: hasText(university.phoneNumber) },
+      { label: 'website', complete: hasText(university.website) },
+      { label: 'institution type', complete: hasText(university.institutionType) },
+      { label: 'country', complete: hasText(university.country) },
+      { label: 'city', complete: hasText(university.city) },
+      { label: 'student count', complete: university.studentCount !== null },
+      { label: 'academic programs', complete: university.academicPrograms.length > 0 },
+      {
+        label: 'career services contact',
+        complete: hasText(university.careerServicesContactName),
+      },
+      { label: 'department email', complete: hasText(university.departmentEmail) },
+      {
+        label: 'internship coordinator',
+        complete: hasText(university.internshipCoordinatorName),
+      },
+      {
+        label: 'coordinator email',
+        complete: hasText(university.internshipCoordinatorEmail),
+      },
+    ];
+
+    return fields.filter((field) => !field.complete).map((field) => field.label);
+  }, [university]);
+
+  const completeness = university
+    ? Math.round(
+        ((REQUIRED_FIELD_COUNT - missingRequiredFields.length) / REQUIRED_FIELD_COUNT) * 100,
+      )
+    : 0;
+  const canComplete = Boolean(university) && missingRequiredFields.length === 0;
+  const isBusy = isCompleting || isSigningOut;
+
+  const reviewRows = useMemo<ReviewRow[]>(() => {
+    if (!university) return [];
+
+    return [
+      {
+        id: 'universityInfo',
+        icon: 'school-outline',
+        title: 'University information',
+        detail: [
+          valueOrMissing(university.name, 'Name missing'),
+          valueOrMissing(university.contactEmail, 'Email missing'),
+          valueOrMissing(university.phoneNumber, 'Phone missing'),
+          valueOrMissing(university.website, 'Website missing'),
+        ].join(' · '),
+        route: 'UniversityInfo',
+      },
+      {
+        id: 'institutionDetails',
+        icon: 'business-outline',
+        title: 'Institution details',
+        detail: [
+          valueOrMissing(university.institutionType, 'Type missing'),
+          [university.city, university.country].filter(hasText).join(', ') || 'Location missing',
+          university.studentCount === null
+            ? 'Student count missing'
+            : `${university.studentCount.toLocaleString()} students`,
+          `${university.academicPrograms.length} ${
+            university.academicPrograms.length === 1 ? 'program' : 'programs'
+          }`,
+        ].join(' · '),
+        route: 'InstitutionDetails',
+      },
+      {
+        id: 'careerServices',
+        icon: 'people-outline',
+        title: 'Career services',
+        detail: [
+          valueOrMissing(university.careerServicesContactName, 'Contact missing'),
+          valueOrMissing(university.departmentEmail, 'Email missing'),
+        ].join(' · '),
+        route: 'CareerServicesSetup',
+      },
+      {
+        id: 'coordinator',
+        icon: 'briefcase-outline',
+        title: 'Internship coordinator',
+        detail: [
+          valueOrMissing(university.internshipCoordinatorName, 'Coordinator missing'),
+          valueOrMissing(university.internshipCoordinatorEmail, 'Email missing'),
+        ].join(' · '),
+        route: 'CareerServicesSetup',
+      },
+    ];
+  }, [university]);
+
+  const handleComplete = async (): Promise<void> => {
+    if (!canComplete || isBusy) return;
+
+    setActionError(null);
+    setIsCompleting(true);
+    try {
+      await completeUniversityOnboarding();
+    } catch (error) {
+      setActionError(getAuthErrorMessage(error));
+      setIsCompleting(false);
+    }
   };
 
-  // Called when the user taps "Complete Setup"
-  const handleCompleteSetup = () => {
-    console.log('Completing university setup...');
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'UniversityTabs' }],
-    });
+  const handleSaveForLater = async (): Promise<void> => {
+    if (isBusy) return;
+
+    setActionError(null);
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      setActionError(getAuthErrorMessage(error));
+      setIsSigningOut(false);
+    }
   };
 
-  // Called when the user taps "Save & finish later"
-  const handleSaveForLater = () => {
-    console.log('Saving progress for later...');
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'RoleSelection' }],
-    });
-  };
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.stateTitle}>Loading university profile</Text>
+          <Text style={styles.stateMessage}>Fetching the information you already saved.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
-  // Called when the pencil icon on a review row is tapped
-  const handleEditRow = (rowId: string) => {
-    console.log('Editing:', rowId);
-    // TODO: navigate back to the specific onboarding step for this row, e.g.:
-    // if (rowId === 'universityInfo') navigation.navigate('UniversityInfo');
-  };
+  if (loadError || !university) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <Ionicons name="alert-circle-outline" size={36} color={colors.accent} />
+          <Text style={styles.stateTitle}>Couldn’t load your university profile</Text>
+          <Text style={styles.stateMessage}>
+            {loadError ?? 'The university profile was not returned. Please try again.'}
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => void loadUniversity()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const universityInitial = university.name.trim().charAt(0).toUpperCase() || 'U';
+  const location = [university.city, university.country].filter(hasText).join(', ');
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      {/* No KeyboardAvoidingView needed here — there are no text inputs on this screen */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* ── PROGRESS HEADER — sits on mint background, outside the card ── */}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.stepRow}>
           <Text style={styles.stepLabel}>University setup · Step 4 of 4</Text>
           <Text style={styles.stepPercent}>100%</Text>
         </View>
-
         <View style={styles.progressTrack}>
-          {/* width is set inline as a percentage so it matches PROGRESS exactly */}
-          <View style={[styles.progressFill, { width: `${PROGRESS * 100}%` }]} />
+          <View style={[styles.progressFill, { width: '100%' }]} />
         </View>
-        {/* ── END PROGRESS HEADER ─────────────────────────────────── */}
 
+        <Text style={styles.title}>Review & complete</Text>
+        <Text style={styles.subtitle}>Confirm your university profile before continuing.</Text>
 
-        {/* ── WHITE CARD — contains everything else on this screen ── */}
-        <View style={styles.card}>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTopRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{universityInitial}</Text>
+            </View>
+            <View style={styles.summaryTextBlock}>
+              <Text style={styles.summaryName}>{university.name}</Text>
+              <Text style={styles.summaryDetail}>
+                {location || 'Location incomplete'}
+                {university.studentCount === null
+                  ? ''
+                  : ` · ${university.studentCount.toLocaleString()} students`}
+              </Text>
+            </View>
+            <View style={styles.completenessPill}>
+              <Text style={styles.completenessText}>{completeness}%</Text>
+            </View>
+          </View>
+          <View style={styles.summaryBarTrack}>
+            <View
+              style={[
+                styles.summaryBarFill,
+                { width: `${completeness}%` as `${number}%` },
+              ]}
+            />
+          </View>
+        </View>
 
-          {/* ── Title ─────────────────────────────────────────────── */}
-          <Text style={styles.title}>Review & complete</Text>
-          <Text style={styles.subtitle}>
-            Confirm your details to publish your university profile.
+        {reviewRows.map((row) => (
+          <View key={row.id} style={styles.reviewRow}>
+            <Ionicons name={row.icon} size={18} color={colors.accent} style={styles.rowIcon} />
+            <View style={styles.rowTextBlock}>
+              <Text style={styles.rowTitle}>{row.title}</Text>
+              <Text style={styles.rowSubtitle} numberOfLines={2}>{row.detail}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => navigation.navigate(row.route)}
+              accessibilityRole="button"
+              accessibilityLabel={`Edit ${row.title}`}
+            >
+              <Ionicons name="create-outline" size={16} color={colors.subtitle} />
+            </TouchableOpacity>
+          </View>
+        ))}
+
+        <View style={styles.banner}>
+          <Ionicons name="information-circle-outline" size={17} color={colors.accent} style={styles.rowIcon} />
+          <Text style={styles.bannerText}>
+            {canComplete
+              ? 'Your university dashboard will open after the server confirms setup.'
+              : `${missingRequiredFields.length} required ${
+                  missingRequiredFields.length === 1 ? 'field is' : 'fields are'
+                } still missing: ${missingRequiredFields.join(', ')}.`}
           </Text>
-
-
-          {/* ── UNIVERSITY SUMMARY CARD ─────────────────────────────
-              Shows the university's avatar letter, name, location,
-              a completeness percentage pill, and a progress bar.
-          */}
-          <View style={styles.summaryCard}>
-
-            {/* Top row: avatar + name/location + completeness pill */}
-            <View style={styles.summaryTopRow}>
-
-              {/* Avatar circle with first letter of university name */}
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{university.initial}</Text>
-              </View>
-
-              {/* Name + location, stacked vertically, fills remaining space */}
-              <View style={styles.summaryTextBlock}>
-                <Text style={styles.summaryName}>{university.name}</Text>
-                <Text style={styles.summaryDetail}>{university.location}</Text>
-              </View>
-
-              {/* Green pill showing the completeness percentage */}
-              <View style={styles.completenessPill}>
-                <Text style={styles.completenessText}>
-                  {university.completeness}%
-                </Text>
-              </View>
-
-            </View>
-
-            {/* Bottom: thin progress bar showing the same percentage visually */}
-            <View style={styles.summaryBarTrack}>
-              <View
-                style={[
-                  styles.summaryBarFill,
-                  { width: `${university.completeness}%` },
-                ]}
-              />
-            </View>
-
-          </View>
-          {/* ── END UNIVERSITY SUMMARY CARD ─────────────────────────── */}
-
-
-          {/* ── REVIEW ROWS ──────────────────────────────────────────
-              .map() loops over REVIEW_ROWS and renders one row per item.
-              Each row has: icon circle | title + detail | edit pencil button
-          */}
-          <View style={styles.rowsContainer}>
-            {REVIEW_ROWS.map((row) => (
-              <View key={row.id} style={styles.row}>
-
-                {/* Left: icon circle */}
-                <Ionicons
-                    name={row.icon as any}
-                    size={18}
-                    color={colors.rowIcon}
-                    style={{ marginRight: 12 }}
-                  />
-
-                {/* Middle: title + detail text, fills remaining space */}
-                <View style={styles.rowTextBlock}>
-                  <Text style={styles.rowTitle}>{row.title}</Text>
-                  <Text style={styles.rowSubtitle}>{row.detail}</Text>
-                </View>
-
-                {/* Right: circular edit button */}
-                <TouchableOpacity
-                  style={styles.editBtn}
-                  onPress={() => handleEditRow(row.id)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    size={14}
-                    color={colors.editIcon}
-                  />
-                </TouchableOpacity>
-
-              </View>
-            ))}
-          </View>
-          {/* ── END REVIEW ROWS ──────────────────────────────────────── */}
-
-
-          {/* ── INFO BANNER ──────────────────────────────────────────
-              Light teal banner reminding the user about the review wait time.
-          */}
-          <View style={styles.banner}>
-            <Ionicons
-                name="shield-checkmark-outline"
-                size={14}
-                color={colors.bannerIcon}
-                style={{ marginRight: 12 }}
-              />
-            <Text style={styles.bannerText}>
-              Your profile will be reviewed within 24 hours before going live.
-            </Text>
-          </View>
-          {/* ── END INFO BANNER ──────────────────────────────────────── */}
-
-
-          {/* ── COMPLETE SETUP BUTTON (filled teal) ─────────────────── */}
-          <TouchableOpacity
-            style={styles.completeBtn}
-            onPress={handleCompleteSetup}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.completeBtnText}>Complete Setup</Text>
-          </TouchableOpacity>
-
-
-          {/* ── SAVE & FINISH LATER BUTTON (outlined) ───────────────── */}
-          <TouchableOpacity
-            style={styles.saveLaterBtn}
-            onPress={handleSaveForLater}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.saveLaterBtnText}>Save & finish later</Text>
-          </TouchableOpacity>
-
         </View>
-        {/* ── END WHITE CARD ─────────────────────────────────────────── */}
 
+        {actionError ? (
+          <View style={styles.errorBanner}>
+            <Ionicons name="alert-circle-outline" size={17} color={colors.error} style={styles.rowIcon} />
+            <Text style={styles.errorText}>{actionError}</Text>
+          </View>
+        ) : null}
+
+        <TouchableOpacity
+          style={[styles.completeButton, (!canComplete || isBusy) && styles.buttonDisabled]}
+          onPress={() => void handleComplete()}
+          disabled={!canComplete || isBusy}
+        >
+          {isCompleting ? (
+            <View style={styles.buttonContent}>
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+              <Text style={styles.completeButtonText}>Completing setup…</Text>
+            </View>
+          ) : (
+            <Text style={styles.completeButtonText}>Complete Setup</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.saveLaterButton, isBusy && styles.buttonDisabled]}
+          onPress={() => void handleSaveForLater()}
+          disabled={isBusy}
+        >
+          {isSigningOut ? (
+            <View style={styles.buttonContent}>
+              <ActivityIndicator size="small" color={colors.title} />
+              <Text style={styles.saveLaterButtonText}>Signing out…</Text>
+            </View>
+          ) : (
+            <Text style={styles.saveLaterButtonText}>Save & finish later</Text>
+          )}
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  // Full mint background, fills the entire screen
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // ScrollView inner padding — keeps mint visible around the card
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-    backgroundColor: colors.background,
-  },
-
-  // ── Progress header (outside card, sits directly on mint) ────────
-  stepRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between', // label on the left, % on the right
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  stepLabel: {
-    fontSize: 12,
-    color: colors.stepLabel,
-    fontWeight: '500',
-    letterSpacing: 0.2,
-  },
-  stepPercent: {
-    fontSize: 12,
-    color: colors.stepPercent,
-    fontWeight: '700',
-  },
-  progressTrack: {
-    width: '100%',
-    height: 5,
-    backgroundColor: colors.progressTrack,
-    borderRadius: 3,
-    marginBottom: 20, // space between progress bar and the white card below
-    overflow: 'hidden', // keeps the fill's corners clipped to match the track
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.progressFill,
-    borderRadius: 3,
-  },
-
-  // ── Card wrapping all main content ──────────────────────────
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: 0,
-  },
-
-  // ── Title section (inside card) ───────────────────────────────────
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.title,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.subtitle,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-
-  // ── University summary card (inside the white card) ───────────────
-  summaryCard: {
-    backgroundColor: colors.summaryCardBg,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.summaryCardBorder,
-    padding: 16,
-    marginBottom: 20,
-  },
-  summaryTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14, // space before the progress bar underneath
-  },
-  // Dark teal circle showing the first letter of the university name
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.avatarBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.avatarText,
-  },
-  // Name + location column — flex: 1 makes it fill remaining space
-  summaryTextBlock: {
-    flex: 1,
-  },
-  summaryName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.summaryName,
-    marginBottom: 2,
-  },
-  summaryDetail: {
-    fontSize: 12,
-    color: colors.summaryDetail,
-  },
-  // Green rounded pill showing the completeness percentage (e.g. "95%")
-  completenessPill: {
-    backgroundColor: colors.completenessBg,
-    borderRadius: 50,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginLeft: 8,
-  },
-  completenessText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.completenessText,
-  },
-  // Thin progress bar underneath the avatar row, mirrors completeness %
-  summaryBarTrack: {
-    width: '100%',
-    height: 6,
-    backgroundColor: colors.summaryBarTrack,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  summaryBarFill: {
-    height: '100%',
-    backgroundColor: colors.summaryBarFill,
-    borderRadius: 3,
-  },
-
-  // ── Review rows (inside white card, below summary card) ────────────
-  rowsContainer: {
-    marginBottom: 20,
-  },
-  // Each row is its own bordered "pill" container
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.rowBorder,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10, // space between stacked rows
-  },
-  // Light teal circle on the left of each row
-  rowIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.rowIconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  // Title + subtitle column — flex: 1 fills the space between icon and edit button
-  rowTextBlock: {
-    flex: 1,
-  },
-  rowTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.rowTitle,
-    marginBottom: 2,
-  },
-  rowSubtitle: {
-    fontSize: 12,
-    color: colors.rowSubtitle,
-  },
-  // Small grey circular button containing the pencil/edit icon
-  editBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.editBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-  },
-
-  // ── Info banner (inside white card) ─────────────────────────────────
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bannerBg,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 20,
-  },
-  // Small solid teal circle holding the shield icon
-  bannerIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.bannerIconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  // flex: 1 lets the banner text wrap onto a second line instead of overflowing
-  bannerText: {
-    flex: 1,
-    fontSize: 12.5,
-    color: colors.bannerText,
-    lineHeight: 18,
-  },
-
-  // ── Complete Setup button (filled teal, primary action) ───────────────
-  completeBtn: {
-    backgroundColor: colors.completeBtnBg,
-    borderRadius: 30, // pill shape
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 12, // space before the second button below
-  },
-  completeBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.completeBtnText,
-  },
-
-  // ── Save & finish later button (outlined, secondary action) ────────────
-  saveLaterBtn: {
-    backgroundColor: colors.saveLaterBtnBg,
-    borderRadius: 30,
-    borderWidth: 1.5,
-    borderColor: colors.saveLaterBtnBorder,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  saveLaterBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.saveLaterBtnText,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 40 },
+  centeredState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
+  stateTitle: { color: colors.title, fontSize: 18, fontWeight: '700', marginTop: 16, marginBottom: 6, textAlign: 'center' },
+  stateMessage: { color: colors.subtitle, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  retryButton: { backgroundColor: colors.accent, borderRadius: 22, paddingHorizontal: 24, paddingVertical: 11, marginTop: 18 },
+  retryButtonText: { color: colors.onPrimary, fontSize: 14, fontWeight: '700' },
+  stepRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  stepLabel: { color: colors.accent, fontSize: 12, fontWeight: '600' },
+  stepPercent: { color: colors.subtitle, fontSize: 12, fontWeight: '600' },
+  progressTrack: { height: 5, backgroundColor: colors.inputBorder, borderRadius: 3, overflow: 'hidden', marginBottom: 22 },
+  progressFill: { height: '100%', backgroundColor: colors.accent },
+  title: { color: colors.title, fontSize: 26, fontWeight: '700', marginBottom: 6 },
+  subtitle: { color: colors.subtitle, fontSize: 14, lineHeight: 20, marginBottom: 20 },
+  summaryCard: { backgroundColor: colors.card, borderColor: colors.inputBorder, borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 16 },
+  summaryTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 13 },
+  avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  avatarText: { color: colors.onPrimary, fontSize: 18, fontWeight: '700' },
+  summaryTextBlock: { flex: 1, marginRight: 8 },
+  summaryName: { color: colors.title, fontSize: 16, fontWeight: '700', marginBottom: 3 },
+  summaryDetail: { color: colors.subtitle, fontSize: 12 },
+  completenessPill: { backgroundColor: colors.iconCircle, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
+  completenessText: { color: colors.accent, fontSize: 12, fontWeight: '700' },
+  summaryBarTrack: { height: 5, backgroundColor: colors.inputBorder, borderRadius: 3, overflow: 'hidden' },
+  summaryBarFill: { height: '100%', backgroundColor: colors.accent },
+  reviewRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderColor: colors.inputBorder, borderWidth: 1, borderRadius: 14, padding: 13, marginBottom: 10 },
+  rowIcon: { marginRight: 10 },
+  rowTextBlock: { flex: 1 },
+  rowTitle: { color: colors.title, fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  rowSubtitle: { color: colors.subtitle, fontSize: 12, lineHeight: 17 },
+  editButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginLeft: 8, backgroundColor: colors.iconCircle },
+  banner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.iconCircle, borderRadius: 13, padding: 13, marginTop: 6, marginBottom: 16 },
+  bannerText: { flex: 1, color: colors.accent, fontSize: 12, lineHeight: 18 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderColor: colors.error, borderWidth: 1, borderRadius: 13, padding: 13, marginBottom: 14 },
+  errorText: { flex: 1, color: colors.error, fontSize: 12, lineHeight: 18 },
+  completeButton: { backgroundColor: colors.accent, borderRadius: 28, paddingVertical: 16, alignItems: 'center', marginBottom: 10 },
+  completeButtonText: { color: colors.onPrimary, fontSize: 16, fontWeight: '700' },
+  saveLaterButton: { backgroundColor: colors.card, borderColor: colors.inputBorder, borderWidth: 1, borderRadius: 28, paddingVertical: 15, alignItems: 'center' },
+  saveLaterButtonText: { color: colors.title, fontSize: 15, fontWeight: '600' },
+  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  buttonDisabled: { opacity: 0.55 },
 });

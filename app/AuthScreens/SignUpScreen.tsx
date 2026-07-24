@@ -1,20 +1,24 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
+import { getAuthErrorMessage, registerAccount } from '../../src/api';
 import { isValidName, isValidEmail, isValidPassword, passwordsMatch } from '../../src/utils/validateCard';
+import type { StackScreenProps } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../types/navigation';
 
 const { height } = Dimensions.get('window');
 
-export default function SignUpScreen({ navigation, route }: any) {
+type Props = StackScreenProps<RootStackParamList, 'SignUp'>;
+
+export default function SignUpScreen({ navigation, route }: Props) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const fieldY = useRef<Record<string, number>>({});
-  const setUserName = useAppStore((s) => s.setUserName);
+  const role = route.params.role;
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +28,14 @@ export default function SignUpScreen({ navigation, route }: any) {
   const [agreed, setAgreed] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState('');
+
+  const accountNameLabel = role === 'employer'
+    ? 'Company Name'
+    : role === 'university'
+      ? 'University Name'
+      : 'Full Name';
 
   const scrollToField = (fieldName: string) => {
     const y = fieldY.current[fieldName];
@@ -48,11 +60,27 @@ export default function SignUpScreen({ navigation, route }: any) {
 
   const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     setTouched({ fullName: true, email: true, password: true, confirmPassword: true });
-    if (!isFormValid) return;
-    setUserName(fullName.trim());
-    navigation.navigate('Verification', { role: route.params?.role });
+    if (!isFormValid || isSubmitting) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    setIsSubmitting(true);
+    setRequestError('');
+    try {
+      await registerAccount({
+        name: fullName.trim(),
+        email: normalizedEmail,
+        password,
+        role,
+        consentAccepted: agreed,
+      });
+      navigation.navigate('Verification', { role, email: normalizedEmail });
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,7 +98,7 @@ export default function SignUpScreen({ navigation, route }: any) {
         <Text style={styles.subtitle}>Enter your details below to get started.</Text>
 
         {/* Full Name */}
-        <Text style={styles.label}>Full Name</Text>
+        <Text style={styles.label}>{accountNameLabel}</Text>
         <View
           style={[
             styles.inputContainer,
@@ -82,7 +110,7 @@ export default function SignUpScreen({ navigation, route }: any) {
           <Ionicons name="person-outline" size={18} color={colors.inputIcon} style={styles.inputIcon} />
           <TextInput
             style={[styles.input, { color: colors.inputText }]}
-            placeholder="Enter full name"
+            placeholder={`Enter ${accountNameLabel.toLowerCase()}`}
             placeholderTextColor={colors.placeholder}
             value={fullName}
             onChangeText={setFullName}
@@ -203,17 +231,21 @@ export default function SignUpScreen({ navigation, route }: any) {
           </Text>
         </TouchableOpacity>
 
+        {requestError ? <Text style={styles.requestErrorText}>{requestError}</Text> : null}
+
         {/* Button */}
         <TouchableOpacity
-          style={[styles.button, !isFormValid && styles.buttonDisabled]}
-          onPress={handleSignUp}
-          disabled={!isFormValid}
+          style={[styles.button, (!isFormValid || isSubmitting) && styles.buttonDisabled]}
+          onPress={() => void handleSignUp()}
+          disabled={!isFormValid || isSubmitting}
         >
-          <Text style={styles.buttonText}>Create Account →</Text>
+          {isSubmitting
+            ? <ActivityIndicator color={colors.buttonText} />
+            : <Text style={styles.buttonText}>Create Account →</Text>}
         </TouchableOpacity>
 
         {/* Login link */}
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity onPress={() => navigation.replace('Login')}>
           <Text style={styles.loginText}>
             Already have an account? <Text style={styles.link}>Log in</Text>
           </Text>
@@ -347,6 +379,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginTop: -10,
     marginBottom: 12,
     marginLeft: 4,
+  },
+  requestErrorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: colors.buttonBg,

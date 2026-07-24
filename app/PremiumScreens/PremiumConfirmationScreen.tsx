@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +18,7 @@ const UNLOCKED_ITEMS = [
 export default function PremiumConfirmationScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const userRole = useAppStore((state) => state.userRole);
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -46,9 +48,18 @@ export default function PremiumConfirmationScreen({ navigation }: any) {
   }, []);
 
   const handleStartExploring = () => {
+    const destination = userRole === 'employer'
+      ? 'CompanyTabs'
+      : userRole === 'university'
+        ? 'UniversityTabs'
+        : 'StudentApp';
+
     navigation.reset({
       index: 0,
-      routes: [{ name: 'HomeDashboard' }],
+      routes: [{
+        name: destination,
+        ...(destination === 'StudentApp' ? { params: { screen: 'Home' } } : {}),
+      }],
     });
   };
 

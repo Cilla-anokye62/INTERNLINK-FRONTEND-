@@ -1,21 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList, RefreshControl } from 'react-native';
 import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
+import { getAuthErrorMessage, listingApi, listingToInternshipData, type ListingResponse } from '../../src/api';
 
 const CATEGORIES = ['All', 'Engineering', 'Design', 'Data', 'Marketing', 'Finance'];
-
-const INTERNSHIPS = [
-  { id: '1', title: 'Software Engineering Intern', company: 'Airbnb', location: 'San Francisco, CA · Hybrid', match: 94, pay: 'GHS 48/hr', duration: "Summer '26", color: '#EF4444' },
-  { id: '2', title: 'Product Design Intern', company: 'Spotify', location: 'New York, NY · On-site', match: 89, pay: 'GHS 42/hr', duration: "Summer '26", color: '#10B981' },
-  { id: '3', title: 'ML Research Intern', company: 'OpenAI', location: 'Remote', match: 86, pay: 'GHS 60/hr', duration: "Summer '26", color: '#6B7280' },
-  { id: '4', title: 'Frontend Intern', company: 'Linear', location: 'Remote', match: 84, pay: 'GHS 50/hr', duration: "Summer '26", color: '#7C3AED' },
-  { id: '5', title: 'Data Analyst Intern', company: 'MTN', location: 'Accra · Hybrid', match: 81, pay: 'GHS 45/hr', duration: "Summer '26", color: '#F59E0B' },
-  { id: '6', title: 'UX Research Intern', company: 'Google', location: 'Remote', match: 79, pay: 'GHS 55/hr', duration: "Summer '26", color: '#2CACAD' },
-];
 
 export default function DiscoverScreen({ navigation }: any) {
   const { colors } = useAppTheme();
@@ -24,50 +17,70 @@ export default function DiscoverScreen({ navigation }: any) {
 
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [internships, setInternships] = useState<ListingResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const loadInternships = useCallback(async () => {
+    setLoadError('');
+    try {
+      setInternships(await listingApi.listOpen());
+    } catch (error) {
+      setLoadError(getAuthErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      void loadInternships();
+    }, [loadInternships]),
+  );
 
   const toggleSave = useCallback((id: string) => {
     toggleSavedInternship(id);
   }, [toggleSavedInternship]);
 
-  const filtered = INTERNSHIPS.filter(item => {
+  const filtered = internships.filter(item => {
     const matchesSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.company.toLowerCase().includes(search.toLowerCase());
+      item.companyName.toLowerCase().includes(search.toLowerCase()) ||
+      item.requiredSkills.some((skill) => skill.toLowerCase().includes(search.toLowerCase()));
     const matchesCategory =
       activeCategory === 'All' ||
-      item.title.toLowerCase().includes(activeCategory.toLowerCase()) ||
-      item.company.toLowerCase().includes(activeCategory.toLowerCase());
+      item.industry?.toLowerCase() === activeCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
-  const renderItem = useCallback(({ item }: { item: typeof INTERNSHIPS[0] }) => (
+  const renderItem = useCallback(({ item }: { item: ListingResponse }) => (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
-      onPress={() => navigation.navigate('InternshipDetails', { internship: item })}
+      onPress={() => navigation.navigate('InternshipDetails', { internship: listingToInternshipData(item) })}
     >
       {/* Left: company avatar */}
-      <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
-        <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
+      <View style={styles.companyAvatar}>
+        <Text style={styles.companyAvatarText}>{item.companyName.charAt(0).toUpperCase()}</Text>
       </View>
 
       {/* Middle: info */}
       <View style={styles.cardInfo}>
         <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardCompany}>{item.company}</Text>
+        <Text style={styles.cardCompany}>{item.companyName}</Text>
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={11} color={colors.placeholder} style={{ marginRight: 4 }} />
-          <Text style={styles.cardLocation}>{item.location}</Text>
+          <Text style={styles.cardLocation}>
+            {item.location || 'Location not specified'}{item.remote ? ' · Remote' : ''}
+          </Text>
         </View>
         <View style={styles.tagsRow}>
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchText}>{item.match}% match</Text>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{item.allowance || 'Allowance not specified'}</Text>
           </View>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>{item.pay}</Text>
-          </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{item.duration}</Text>
+            <Text style={styles.tagText}>{item.duration || 'Duration not specified'}</Text>
           </View>
         </View>
       </View>
@@ -75,13 +88,13 @@ export default function DiscoverScreen({ navigation }: any) {
       {/* Right: save button */}
       <TouchableOpacity
         style={styles.saveButton}
-        onPress={() => toggleSave(item.id)}
+        onPress={() => toggleSave(String(item.id))}
         activeOpacity={0.7}
       >
         <Ionicons
-          name={savedInternships.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+          name={savedInternships.includes(String(item.id)) ? 'bookmark' : 'bookmark-outline'}
           size={18}
-          color={savedInternships.includes(item.id) ? colors.accent : colors.placeholder}
+          color={savedInternships.includes(String(item.id)) ? colors.accent : colors.placeholder}
         />
       </TouchableOpacity>
     </TouchableOpacity>
@@ -94,7 +107,7 @@ export default function DiscoverScreen({ navigation }: any) {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Discover</Text>
-          <Text style={styles.headerSub}>248 open internships</Text>
+          <Text style={styles.headerSub}>{internships.length} open internships</Text>
         </View>
       </View>
 
@@ -140,14 +153,36 @@ export default function DiscoverScreen({ navigation }: any) {
       <FlatList
         style={styles.list}
         data={filtered}
-        keyExtractor={item => item.id}
+        keyExtractor={item => String(item.id)}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={() => void loadInternships()}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={40} color={colors.placeholder} />
-            <Text style={styles.emptyText}>No internships match your search</Text>
+            {isLoading ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : loadError ? (
+              <>
+                <Ionicons name="cloud-offline-outline" size={40} color={colors.placeholder} />
+                <Text style={styles.emptyText}>{loadError}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={() => void loadInternships()}>
+                  <Text style={styles.retryButtonText}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="search-outline" size={40} color={colors.placeholder} />
+                <Text style={styles.emptyText}>No internships match your search</Text>
+              </>
+            )}
           </View>
         }
       />
@@ -269,6 +304,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -346,5 +382,16 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
     color: colors.subtitle,
     textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: colors.onPrimary,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

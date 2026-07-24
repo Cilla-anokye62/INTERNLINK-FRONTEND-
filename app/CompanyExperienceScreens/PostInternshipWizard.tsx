@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { InternshipListing, WorkMode } from '../../src/types/application';
+import { getAuthErrorMessage, listingApi } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 const STEPS = ['Basics', 'Details', 'Requirements', 'Compensation', 'Settings', 'Preview'];
@@ -19,11 +20,30 @@ const WORK_MODES: { value: WorkMode; label: string; icon: React.ComponentProps<t
   { value: 'onsite', label: 'On-site', icon: 'business-outline' },
 ];
 
+const normalizeDeadline = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+  }
+
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+  const candidate = slashMatch
+    ? `${slashMatch[3]}-${slashMatch[1].padStart(2, '0')}-${slashMatch[2].padStart(2, '0')}`
+    : trimmed;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return null;
+
+  const parsed = new Date(`${candidate}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== candidate
+    ? null
+    : candidate;
+};
+
 export default function PostInternshipWizard({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { addListing, userId, userName } = useAppStore();
   const [step, setStep] = useState(0);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('');
@@ -78,7 +98,8 @@ export default function PostInternshipWizard({ navigation }: any) {
     else setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
+    if (isPublishing) return;
     if (!title.trim()) { Alert.alert('Missing', 'Please enter an internship title.'); return; }
     if (!description.trim()) { Alert.alert('Missing', 'Please enter a description.'); return; }
     if (requiredSkills.length === 0) { Alert.alert('Missing', 'Please add at least one required skill.'); return; }
@@ -90,28 +111,53 @@ export default function PostInternshipWizard({ navigation }: any) {
     }
     const maxApp = parseInt(maxApplicants);
     if (isNaN(maxApp) || maxApp < 1) { Alert.alert('Invalid', 'Maximum applicants must be at least 1.'); return; }
-    const newListing: InternshipListing = {
-      id: 'listing-' + Date.now().toString(36),
-      employerId: userId, title: title.trim(), department, employmentType, category, branch,
-      openPositions: parseInt(openPositions) || 1, description: description.trim(),
-      responsibilities: responsibilities.split('\n').filter(Boolean),
-      dailyTasks: dailyTasks.split('\n').filter(Boolean),
-      learningOutcomes: learningOutcomes.split('\n').filter(Boolean),
-      teamInfo: teamInfo.trim(), requiredSkills, preferredSkills, studentLevel,
-      degreeProgramme: degreeProgramme.trim(), minGpa: minGpa.trim(),
-      requiredDocuments: ['Resume'], isPaid, monthlyStipend: monthlyStipend.trim(),
-      benefits: benefits.split(',').map((b) => b.trim()).filter(Boolean),
-      workMode, location: location.trim(), duration, workingHours,
-      deadline: deadline || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-      autoClose: true, maxApplicants: parseInt(maxApplicants) || 200,
-      allowCoverLetter, resumeRequired, portfolioRequired, autoScreening, aiMatching,
-      status: 'active', views: 0, applicantCount: 0,
-      createdAt: new Date().toISOString(), publishedAt: new Date().toISOString(),
-    };
-    addListing(newListing);
-    Alert.alert('Published!', 'Your internship is now live.', [
-      { text: 'View Dashboard', onPress: () => navigation.goBack() },
-    ]);
+    const normalizedDeadline = normalizeDeadline(deadline);
+    if (!normalizedDeadline) {
+      Alert.alert('Invalid', 'Enter the deadline as MM/DD/YYYY or YYYY-MM-DD.');
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const created = await listingApi.create({
+        title: title.trim(),
+        description: description.trim(),
+        duration,
+        location: location.trim(),
+        remote: workMode === 'remote',
+        industry: category || department,
+        deadline: normalizedDeadline,
+        allowance: isPaid ? monthlyStipend.trim() || 'Paid' : 'Unpaid',
+        requiredSkills,
+      });
+
+      const newListing: InternshipListing = {
+        id: String(created.id),
+        employerId: userId || String(created.companyId), title: created.title, department, employmentType,
+        category: created.industry ?? category, branch, openPositions: pos,
+        description: created.description ?? description.trim(),
+        responsibilities: responsibilities.split('\n').filter(Boolean),
+        dailyTasks: dailyTasks.split('\n').filter(Boolean),
+        learningOutcomes: learningOutcomes.split('\n').filter(Boolean),
+        teamInfo: teamInfo.trim(), requiredSkills: created.requiredSkills, preferredSkills, studentLevel,
+        degreeProgramme: degreeProgramme.trim(), minGpa: minGpa.trim(),
+        requiredDocuments: ['Resume'], isPaid, monthlyStipend: created.allowance ?? '',
+        benefits: benefits.split(',').map((benefit) => benefit.trim()).filter(Boolean),
+        workMode, location: created.location ?? '', duration: created.duration ?? duration, workingHours,
+        deadline: created.deadline ?? normalizedDeadline, autoClose: true, maxApplicants: maxApp,
+        allowCoverLetter, resumeRequired, portfolioRequired, autoScreening, aiMatching,
+        status: 'active', views: 0, applicantCount: 0,
+        createdAt: created.createdAt, publishedAt: created.createdAt,
+      };
+      addListing(newListing);
+      Alert.alert('Published!', 'Your internship is now live.', [
+        { text: 'View Listings', onPress: () => navigation.navigate('CompanyTabs', { screen: 'Listings' }) },
+      ]);
+    } catch (error) {
+      Alert.alert('Could not publish internship', getAuthErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleSaveDraft = () => {
@@ -328,20 +374,25 @@ export default function PostInternshipWizard({ navigation }: any) {
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          style={[styles.nextBtn, { backgroundColor: colors.accent, flex: step === 0 ? 1 : 2 }]}
+          style={[styles.nextBtn, { backgroundColor: colors.accent, flex: step === 0 ? 1 : 2 }, isPublishing && { opacity: 0.6 }]}
+          disabled={isPublishing}
           onPress={() => {
             if (step < STEPS.length - 1) {
               if (step === 0 && !title.trim()) { Alert.alert('Missing', 'Please enter an internship title.'); return; }
               if (step === 1 && !description.trim()) { Alert.alert('Missing', 'Please enter a description.'); return; }
               setStep(step + 1);
             } else {
-              handlePublish();
+              void handlePublish();
             }
           }}
         >
-          <Text style={[styles.nextBtnText, { color: colors.onPrimary }]}>
-            {step === STEPS.length - 1 ? 'Publish Internship' : 'Continue'}
-          </Text>
+          {isPublishing ? (
+            <ActivityIndicator color={colors.onPrimary} />
+          ) : (
+            <Text style={[styles.nextBtnText, { color: colors.onPrimary }]}>
+              {step === STEPS.length - 1 ? 'Publish Internship' : 'Continue'}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

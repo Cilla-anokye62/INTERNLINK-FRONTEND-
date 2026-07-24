@@ -13,24 +13,28 @@ import {
   Dimensions,
   Keyboard,
   TouchableWithoutFeedback,
-  SafeAreaView,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppStore } from '../../src/store/useAppStore';
+import type { StackScreenProps } from '@react-navigation/stack';
+import { useAppStore, type UserRole } from '../../src/store/useAppStore';
+import { getAuthErrorMessage, signIn } from '../../src/api';
 import { isValidEmail, nonEmpty } from '../../src/utils/validateCard';
+import type { RootStackParamList } from '../../types/navigation';
 
 const { height } = Dimensions.get('window');
 
 
 
-export default function LoginScreen({ navigation }: any) {
-  const { colors } = useAppTheme();
+type Props = StackScreenProps<RootStackParamList, 'Login'>;
+
+export default function LoginScreen({ navigation }: Props) {
+  const { colors, theme } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const login = useAppStore((s) => s.login);
-  const userRole = useAppStore((s) => s.userRole);
+  const storedRole = useAppStore((s) => s.userRole);
   const scrollRef = useRef<ScrollView>(null);
   const fieldY = useRef<Record<string, number>>({});
 
@@ -48,9 +52,12 @@ export default function LoginScreen({ navigation }: any) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginRole, setLoginRole] = useState<UserRole>(storedRole || 'student');
   const [showPassword, setShowPassword] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState('');
 
   const errors = useMemo(() => ({
     email: isValidEmail(email),
@@ -61,22 +68,34 @@ export default function LoginScreen({ navigation }: any) {
 
   const markTouched = (field: string) => setTouched((prev) => ({ ...prev, [field]: true }));
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setTouched({ email: true, password: true });
-    if (!isFormValid) return;
-    const role = userRole || 'student';
-    login(role);
-    const dashboard = role === 'employer' ? 'CompanyTabs' : role === 'university' ? 'UniversityTabs' : 'HomeDashboard';
-    navigation.replace(dashboard);
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setRequestError('');
+    try {
+      await signIn(loginRole, {
+        email: email.trim().toLowerCase(),
+        password,
+      });
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoogleLogin = () => {
-    console.log('Google login tapped');
+    setRequestError('Google sign-in is not connected yet. Please use email and password.');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar
+        barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -96,6 +115,24 @@ export default function LoginScreen({ navigation }: any) {
             <Text style={styles.subtitle}>
               Log in to continue your internship search
             </Text>
+          </View>
+
+          <View style={styles.roleSection}>
+            <Text style={styles.label}>Role</Text>
+            <View style={styles.roleSelector}>
+              {(['student', 'employer', 'university'] as UserRole[]).map((role) => (
+                <TouchableOpacity
+                  key={role}
+                  style={[styles.roleOption, loginRole === role && styles.roleOptionActive]}
+                  onPress={() => setLoginRole(role)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.roleOptionText, loginRole === role && styles.roleOptionTextActive]}>
+                    {role === 'employer' ? 'Employer' : role === 'university' ? 'University' : 'Student'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {/* Form */}
@@ -165,20 +202,25 @@ export default function LoginScreen({ navigation }: any) {
             {/* Forgot Password */}
             <TouchableOpacity
               style={styles.forgotBtn}
-              onPress={() => navigation.navigate('ForgotPassword')}
+              onPress={() => navigation.navigate('ForgotPassword', { role: loginRole })}
             >
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
           </View>
 
+          {requestError ? <Text style={styles.requestErrorText}>{requestError}</Text> : null}
+
           {/* Login Button */}
           <TouchableOpacity
-            style={styles.loginBtn}
-            onPress={handleLogin}
+            style={[styles.loginBtn, (!isFormValid || isSubmitting) && styles.loginBtnDisabled]}
+            onPress={() => void handleLogin()}
+            disabled={!isFormValid || isSubmitting}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginBtnText}>Login  →</Text>
+            {isSubmitting
+              ? <ActivityIndicator color={colors.buttonText} />
+              : <Text style={styles.loginBtnText}>Login  →</Text>}
           </TouchableOpacity>
 
           {/* OR Divider */}
@@ -201,7 +243,7 @@ export default function LoginScreen({ navigation }: any) {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <TouchableOpacity onPress={() => navigation.navigate('RoleSelection')}>
               <Text style={styles.signUpText}>Sign Up</Text>
             </TouchableOpacity>
           </View>
@@ -242,6 +284,35 @@ const createStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  roleSection: {
+    marginBottom: 20,
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  roleOption: {
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.inputBg,
+  },
+  roleOptionActive: {
+    borderColor: colors.iconSelected,
+    backgroundColor: colors.iconCircle,
+  },
+  roleOptionText: {
+    color: colors.subtitle,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  roleOptionTextActive: {
+    color: colors.iconSelected,
+  },
   form: {
     marginBottom: height * 0.03,      // relative instead of fixed 24
   },
@@ -275,6 +346,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
     marginLeft: 4,
+  },
+  requestErrorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   inputIcon: {
     fontSize: 16,

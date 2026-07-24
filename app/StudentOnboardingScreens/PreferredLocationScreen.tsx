@@ -50,7 +50,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
             <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
           </TouchableOpacity>
           <Text style={styles.stepLabel}>STEP 4 OF 5</Text>
-          <TouchableOpacity onPress={() => navigation.replace('HomeDashboard')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileCompletion')}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -140,7 +140,7 @@ export default function PreferredLocationScreen({ navigation }: any) {
 
         {/* Finish button */}
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish} activeOpacity={0.85}>
-          <Text style={styles.finishButtonText}>Finish Setup  →</Text>
+          <Text style={styles.finishButtonText}>Continue  →</Text>
         </TouchableOpacity>
 
         <View style={{ height: height * 0.03 }} />
