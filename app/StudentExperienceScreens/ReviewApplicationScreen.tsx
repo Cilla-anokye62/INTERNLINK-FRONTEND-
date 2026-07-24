@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { InternshipData, Application, STATUS_CONFIG, ApplicationStatus } from '../../src/types/application';
+import { ApiError, applicationApi, getAuthErrorMessage } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 
@@ -13,7 +14,9 @@ const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now(
 export default function ReviewApplicationScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { addApplication, incrementApplicationsUsed, isPremium, applicationsUsed, applicationLimit, userId } = useAppStore();
+  const { addApplication, incrementApplicationsUsed, userId } = useAppStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const internship: InternshipData = route.params?.internship;
   const resumeId: string = route.params?.resumeId;
@@ -24,51 +27,73 @@ export default function ReviewApplicationScreen({ navigation, route }: any) {
   const portfolioLinks = route.params?.portfolioLinks || {};
   const availability = route.params?.availability || {};
 
-  const handleSubmit = () => {
-    if (!isPremium && applicationsUsed >= applicationLimit) {
-      navigation.navigate('PremiumPaywall');
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    if (!internship.backendListingId) {
+      setSubmitError('This internship is sample content and cannot accept applications. Apply from Discover instead.');
       return;
     }
 
-    const newApp: Application = {
-      id: generateId(),
-      internshipId: internship.id,
-      studentId: userId,
-      employerId: internship.companyId,
-      status: 'submitted',
-      submittedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      resume: { id: resumeId, name: 'Resume.pdf', type: 'pdf', uri: '', uploadDate: new Date().toISOString(), size: '245 KB' },
-      coverLetter,
-      motivationStatement: motivation,
-      whyThisInternship: whyThis,
-      strongCandidateReason: strongCandidate,
-      portfolioLinks,
-      availability,
-      internship,
-      timeline: [
-        {
-          id: generateId(),
-          status: 'submitted' as ApplicationStatus,
-          label: 'Application Submitted',
-          description: 'Your application was sent successfully',
-          timestamp: new Date().toISOString(),
-          isActive: true,
-        },
-      ],
-      messages: [],
-      interview: null,
-      offer: null,
-    };
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      const submitted = await applicationApi.apply(internship.backendListingId);
+      const localStatus: ApplicationStatus = submitted.status === 'UNDER_REVIEW'
+        ? 'under_review'
+        : submitted.status === 'ACCEPTED'
+          ? 'accepted'
+          : submitted.status === 'REJECTED'
+            ? 'rejected'
+            : 'submitted';
+      const newApp: Application = {
+        id: String(submitted.id),
+        internshipId: String(submitted.listingId),
+        studentId: userId,
+        employerId: String(submitted.companyId),
+        status: localStatus,
+        submittedAt: submitted.appliedAt,
+        updatedAt: submitted.updatedAt,
+        resume: resumeId
+          ? { id: resumeId, name: 'Resume.pdf', type: 'pdf', uri: '', uploadDate: submitted.appliedAt, size: '245 KB' }
+          : null,
+        coverLetter,
+        motivationStatement: motivation,
+        whyThisInternship: whyThis,
+        strongCandidateReason: strongCandidate,
+        portfolioLinks,
+        availability,
+        internship,
+        timeline: [
+          {
+            id: generateId(),
+            status: localStatus,
+            label: localStatus === 'under_review' ? 'Application Under Review' : 'Application Submitted',
+            description: 'Your application was sent successfully',
+            timestamp: submitted.appliedAt,
+            isActive: true,
+          },
+        ],
+        messages: [],
+        interview: null,
+        offer: null,
+      };
 
-    addApplication(newApp);
-    if (!isPremium) incrementApplicationsUsed();
-
-    navigation.navigate('ApplicationSubmitted', {
-      applicationId: newApp.id,
-      company: internship.company,
-      title: internship.title,
-    });
+      addApplication(newApp);
+      incrementApplicationsUsed();
+      navigation.navigate('ApplicationSubmitted', {
+        applicationId: String(submitted.id),
+        company: submitted.companyName,
+        title: submitted.listingTitle,
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 402) {
+        navigation.navigate('PremiumPaywall');
+      } else {
+        setSubmitError(getAuthErrorMessage(error));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!internship) return null;
@@ -188,12 +213,16 @@ export default function ReviewApplicationScreen({ navigation, route }: any) {
 
       {/* Bottom */}
       <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.rowBorder }]}>
+        {submitError ? <Text style={styles.submitError}>{submitError}</Text> : null}
         <TouchableOpacity
-          style={[styles.submitBtn, { backgroundColor: colors.accent }]}
-          onPress={handleSubmit}
+          style={[styles.submitBtn, { backgroundColor: colors.accent }, isSubmitting && { opacity: 0.6 }]}
+          onPress={() => void handleSubmit()}
           activeOpacity={0.85}
+          disabled={isSubmitting}
         >
-          <Text style={[styles.submitText, { color: colors.onPrimary }]}>Submit Application</Text>
+          {isSubmitting
+            ? <ActivityIndicator color={colors.onPrimary} />
+            : <Text style={[styles.submitText, { color: colors.onPrimary }]}>Submit Application</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -252,4 +281,5 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   submitBtn: { borderRadius: 30, paddingVertical: 16, alignItems: 'center' },
   submitText: { fontSize: 16, fontWeight: 'bold' },
+  submitError: { color: colors.error, fontSize: 13, textAlign: 'center', marginBottom: 10 },
 });

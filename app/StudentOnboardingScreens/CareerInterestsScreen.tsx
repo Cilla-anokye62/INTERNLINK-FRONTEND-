@@ -1,35 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { useState } from 'react';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
+import { useStudentOnboardingOptions } from '../../src/hooks/useStudentOnboardingOptions';
 
 const { height, width } = Dimensions.get('window');
-
-const INTERESTS = [
-  { id: 'software',  label: 'Software Dev',     colors: ['#0F2027', '#203A43'] as const },
-  { id: 'data',      label: 'Data Science',      colors: ['#1A1A2E', '#16213E'] as const },
-  { id: 'cyber',     label: 'Cybersecurity',     colors: ['#0D0D0D', '#1A0533'] as const },
-  { id: 'cloud',     label: 'Cloud Computing',   colors: ['#0F3460', '#16213E'] as const },
-  { id: 'uiux',      label: 'UI/UX Design',      colors: ['#1A1A2E', '#2D132C'] as const },
-  { id: 'ai',        label: 'Artificial Intel',  colors: ['#0A3D62', '#1E3799'] as const },
-  { id: 'marketing', label: 'Digital Marketing', colors: ['#3D0C02', '#6A0572'] as const },
-  { id: 'finance',   label: 'Finance',           colors: ['#0B3D0B', '#1A3A1A'] as const },
-];
 
 export default function CareerInterestsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const { careerInterests, setCareerInterests } = useAppStore();
+  const { options, isLoading, error: optionsError, retry } = useStudentOnboardingOptions();
 
   const [selected, setSelected] = useState<string[]>(careerInterests);
 
-  const toggleInterest = (id: string) => {
+  useEffect(() => {
+    if (!options) return;
+
+    const normalized = Array.from(new Set(selected.map((value) => {
+      const matchingOption = options.careerInterests.find(
+        (option) => option.name === value || option.code === value,
+      );
+      return matchingOption?.name ?? value;
+    })));
+
+    if (normalized.length !== selected.length || normalized.some((value, index) => value !== selected[index])) {
+      setSelected(normalized);
+      setCareerInterests(normalized);
+    }
+  }, [options]);
+
+  const toggleInterest = (name: string) => {
     setSelected(prev => {
-      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      const next = prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name];
       setCareerInterests(next);
       return next;
     });
@@ -37,7 +44,7 @@ export default function CareerInterestsScreen({ navigation }: any) {
 
   const handleContinue = () => {
     if (selected.length < 2) {
-      alert('Please select at least 2 interests.');
+      Alert.alert('Choose more interests', 'Please select at least 2 interests.');
       return;
     }
     navigation.navigate('PreferredLocation');
@@ -77,13 +84,35 @@ export default function CareerInterestsScreen({ navigation }: any) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {isLoading && !options ? (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={styles.stateText}>Loading career interests...</Text>
+          </View>
+        ) : null}
+
+        {optionsError && !options ? (
+          <View style={styles.stateContainer}>
+            <Text style={styles.errorText}>{optionsError}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={retry}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {options && options.careerInterests.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <Text style={styles.stateText}>No career interests are available yet. You can skip this step for now.</Text>
+          </View>
+        ) : null}
+
         <View style={styles.grid}>
-          {INTERESTS.map(item => {
-            const isSelected = selected.includes(item.id);
+          {(options?.careerInterests ?? []).map(item => {
+            const isSelected = selected.includes(item.name);
             return (
               <TouchableOpacity
                 key={item.id}
-                onPress={() => toggleInterest(item.id)}
+                onPress={() => toggleInterest(item.name)}
                 activeOpacity={0.85}
                 style={[
                   styles.card,
@@ -92,7 +121,9 @@ export default function CareerInterestsScreen({ navigation }: any) {
                 ]}
               >
                 <LinearGradient
-                  colors={item.colors}
+                  colors={(isSelected
+                    ? [colors.primary, colors.accent]
+                    : [colors.card, colors.iconCircle]) as [string, string]}
                   style={styles.cardGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
@@ -102,7 +133,9 @@ export default function CareerInterestsScreen({ navigation }: any) {
                       <Text style={styles.checkmarkText}>✓</Text>
                     </View>
                   )}
-                  <Text style={styles.cardLabel}>{item.label}</Text>
+                  <Text style={[styles.cardLabel, { color: isSelected ? colors.onPrimary : colors.text }]}>
+                    {item.name}
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             );
@@ -119,9 +152,10 @@ export default function CareerInterestsScreen({ navigation }: any) {
           <Text style={styles.minText}>Select at least 2</Text>
         </View>
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, isLoading && styles.continueButtonDisabled]}
           onPress={handleContinue}
           activeOpacity={0.85}
+          disabled={isLoading}
         >
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
@@ -210,6 +244,36 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
   },
+  stateContainer: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    gap: 12,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  retryButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -241,14 +305,14 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
   },
   checkmarkText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 12,
     fontWeight: 'bold',
   },
   cardLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text,
   },
   bottomBar: {
     paddingHorizontal: 24,
@@ -275,6 +339,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
+  },
+  continueButtonDisabled: {
+    opacity: 0.6,
   },
   continueButtonText: {
     color: colors.onPrimary,

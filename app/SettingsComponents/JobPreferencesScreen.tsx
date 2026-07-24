@@ -26,7 +26,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppStore } from '../../src/store/useAppStore';
 
 
@@ -37,8 +36,10 @@ const INDUSTRIES = ['Technology', 'Finance', 'Healthcare', 'Education', 'Marketi
 export default function JobPreferencesScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const profile = useAppStore((state) => state.profile);
+  const updateProfile = useAppStore((state) => state.updateProfile);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(profile.jobTypes);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(profile.industries);
   const { preferredLocation: storeLocation, workSetup: storeWorkSetup, willingToRelocate: storeRelocate, setLocationPreferences } = useAppStore();
   const [preferredLocation, setPreferredLocation] = useState(storeLocation);
 
@@ -58,19 +59,11 @@ export default function JobPreferencesScreen({ navigation }: any) {
     );
   };
 
-  const handleSave = async () => {
-    try {
-      await AsyncStorage.setItem('jobPreferences', JSON.stringify({
-        jobTypes: selectedJobTypes,
-        industries: selectedIndustries,
-        location: preferredLocation,
-      }));
-      setLocationPreferences(preferredLocation, storeWorkSetup, storeRelocate);
-      Alert.alert('Success', 'Job preferences saved successfully');
-      navigation.goBack();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save preferences');
-    }
+  const handleSave = () => {
+    updateProfile({ jobTypes: selectedJobTypes, industries: selectedIndustries });
+    setLocationPreferences(preferredLocation, storeWorkSetup, storeRelocate);
+    Alert.alert('Success', 'Job preferences saved successfully');
+    navigation.goBack();
   };
 
   return (

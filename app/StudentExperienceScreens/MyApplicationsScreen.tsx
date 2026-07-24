@@ -140,7 +140,7 @@ export default function MyApplicationsScreen({ navigation }: any) {
             </Text>
             <TouchableOpacity
               style={[styles.browseBtn, { backgroundColor: colors.accent }]}
-              onPress={() => navigation.navigate('HomeDashboard')}
+              onPress={() => navigation.navigate('Discover')}
             >
               <Text style={[styles.browseBtnText, { color: colors.onPrimary }]}>Browse Internships</Text>
             </TouchableOpacity>

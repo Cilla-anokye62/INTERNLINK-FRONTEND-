@@ -1,546 +1,662 @@
-/**
- * InstitutionDetailsScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — University Onboarding: Step 2 of 4
- * "Institution details"
- *
- * Content (from design):
- *  - Progress header: step label + 50% progress bar (mint background)
- *  - White card containing:
- *      - Title + subtitle
- *      - Institution Type (3 selectable pill buttons: Public/Private/Hybrid)
- *      - Country + City (two inputs side by side)
- *      - Number of Students (single input with icon)
- *      - Academic Programs Offered (multi-select chip grid inside a box)
- *      - Continue button
- *
- * HOW TO USE:
- *  1. Drop inside your "University Onboarding" folder
- *  2. Add to App.tsx:
- *     import InstitutionDetailsScreen from './app/University Onboarding/InstitutionDetailsScreen';
- *     <Stack.Screen name="InstitutionDetails" component={InstitutionDetailsScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { getAuthErrorMessage, universityApi } from '../../src/api';
+import type { UniversityInstitutionType } from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
+const INSTITUTION_TYPES: UniversityInstitutionType[] = ['Public', 'Private', 'Hybrid'];
+const MAX_PROGRAMS = 50;
+const MAX_PROGRAM_LENGTH = 100;
+const MAX_INTEGER = 2_147_483_647;
 
-// ─── DATA ─────────────────────────────────────────────────────────
-
-// The three Institution Type options. Stored as an array so adding a
-// 4th option later (e.g. "Online") is a one-line change.
-const INSTITUTION_TYPES = ['Public', 'Private', 'Hybrid'];
-
-// All available academic programs shown as selectable chips.
-// Looping over this array avoids writing 7 nearly-identical chip elements.
-const ACADEMIC_PROGRAMS = [
-  'Computer Science',
-  'Engineering',
-  'Business',
-  'Design',
-  'Data Science',
-  'Medicine',
-  'Liberal Arts',
-  'Architecture',
-  'Law',
-];
-
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function InstitutionDetailsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  const [institutionType, setInstitutionType] = useState<UniversityInstitutionType | null>(null);
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+  const [studentCount, setStudentCount] = useState('');
+  const [academicPrograms, setAcademicPrograms] = useState<string[]>([]);
+  const [programInput, setProgramInput] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
-  // Which Institution Type pill is currently selected (starts as 'Private'
-  // to match the design's example — change to null if you want nothing
-  // selected by default).
-  const [institutionType, setInstitutionType] = useState<string>('Private');
+  useEffect(() => {
+    let active = true;
 
-  // Plain text field values
-  const [country, setCountry] = useState('Ghana');
-  const [city, setCity] = useState('Ashanti Region, Kumasi');
-  const [studentCount, setStudentCount] = useState('11,520 students');
+    setIsLoading(true);
+    setLoadError(null);
+    universityApi.getMe()
+      .then((profile) => {
+        if (!active) return;
 
-  // Tracks which text input is focused, for border highlighting
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+        setInstitutionType(profile.institutionType);
+        setCountry(profile.country ?? '');
+        setCity(profile.city ?? '');
+        setStudentCount(profile.studentCount === null ? '' : String(profile.studentCount));
 
-  // Which academic program chips are currently selected.
-  // Stored as an array of strings; starts with the same 3 selected
-  // chips shown in the design (Computer Science, Engineering, Data Science).
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([
-    'Computer Science',
-    'Engineering',
-    'Data Science',
-  ]);
+        const uniquePrograms = profile.academicPrograms.reduce<string[]>((programs, program) => {
+          const cleanProgram = program.trim();
+          const alreadyAdded = programs.some(
+            (savedProgram) => savedProgram.toLocaleLowerCase() === cleanProgram.toLocaleLowerCase(),
+          );
+          if (cleanProgram && !alreadyAdded) programs.push(cleanProgram);
+          return programs;
+        }, []);
+        setAcademicPrograms(uniquePrograms);
+      })
+      .catch((error: unknown) => {
+        if (active) setLoadError(getAuthErrorMessage(error));
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
 
-  // Toggles a single program chip on/off when tapped
-  const toggleProgram = (program: string) => {
-    setSelectedPrograms(prev =>
-      prev.includes(program)
-        ? prev.filter(p => p !== program) // already selected → remove it
-        : [...prev, program]              // not selected → add it
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt]);
+
+  const addProgram = () => {
+    const cleanProgram = programInput.trim();
+
+    if (!cleanProgram) {
+      setFormError('Enter an academic program before tapping Add.');
+      return;
+    }
+    if (cleanProgram.length > MAX_PROGRAM_LENGTH) {
+      setFormError(`Each academic program must be ${MAX_PROGRAM_LENGTH} characters or fewer.`);
+      return;
+    }
+    if (academicPrograms.length >= MAX_PROGRAMS) {
+      setFormError(`You can add up to ${MAX_PROGRAMS} academic programs.`);
+      return;
+    }
+    if (
+      academicPrograms.some(
+        (program) => program.toLocaleLowerCase() === cleanProgram.toLocaleLowerCase(),
+      )
+    ) {
+      setFormError('That academic program has already been added.');
+      return;
+    }
+
+    setAcademicPrograms((programs) => [...programs, cleanProgram]);
+    setProgramInput('');
+    setFormError(null);
+  };
+
+  const removeProgram = (programToRemove: string) => {
+    setAcademicPrograms((programs) => programs.filter((program) => program !== programToRemove));
+    setFormError(null);
+  };
+
+  const handleContinue = async () => {
+    if (isSubmitting) return;
+
+    const cleanCountry = country.trim();
+    const cleanCity = city.trim();
+    const cleanStudentCount = studentCount.trim();
+    const cleanPrograms = academicPrograms.map((program) => program.trim());
+
+    if (!institutionType || !INSTITUTION_TYPES.includes(institutionType)) {
+      setFormError('Select whether your institution is Public, Private, or Hybrid.');
+      return;
+    }
+    if (!cleanCountry) {
+      setFormError('Enter the country where your institution is located.');
+      return;
+    }
+    if (cleanCountry.length > 100) {
+      setFormError('Country must be 100 characters or fewer.');
+      return;
+    }
+    if (!cleanCity) {
+      setFormError('Enter the city where your institution is located.');
+      return;
+    }
+    if (cleanCity.length > 255) {
+      setFormError('City must be 255 characters or fewer.');
+      return;
+    }
+    if (!/^\d+$/.test(cleanStudentCount)) {
+      setFormError('Enter the number of students as a whole number, using digits only.');
+      return;
+    }
+
+    const parsedStudentCount = Number(cleanStudentCount);
+    if (
+      !Number.isSafeInteger(parsedStudentCount)
+      || parsedStudentCount < 0
+      || parsedStudentCount > MAX_INTEGER
+    ) {
+      setFormError('Number of students must be a non-negative whole number.');
+      return;
+    }
+    if (programInput.trim()) {
+      setFormError('Tap Add to include the academic program you entered.');
+      return;
+    }
+    if (cleanPrograms.length === 0) {
+      setFormError('Add at least one academic program.');
+      return;
+    }
+    if (cleanPrograms.length > MAX_PROGRAMS) {
+      setFormError(`You can add up to ${MAX_PROGRAMS} academic programs.`);
+      return;
+    }
+    if (cleanPrograms.some((program) => !program || program.length > MAX_PROGRAM_LENGTH)) {
+      setFormError(`Each academic program must be 1-${MAX_PROGRAM_LENGTH} characters long.`);
+      return;
+    }
+    if (
+      new Set(cleanPrograms.map((program) => program.toLocaleLowerCase())).size
+      !== cleanPrograms.length
+    ) {
+      setFormError('Each academic program must be unique.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormError(null);
+    try {
+      await universityApi.updateMe({
+        institutionType,
+        country: cleanCountry,
+        city: cleanCity,
+        studentCount: parsedStudentCount,
+        academicPrograms: cleanPrograms,
+      });
+      navigation.navigate('CareerServicesSetup');
+    } catch (error) {
+      setFormError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.stateText}>Loading institution details...</Text>
+        </View>
+      </SafeAreaView>
     );
-  };
+  }
 
-  // Called when Continue is tapped
-  const handleContinue = () => {
-    console.log('Institution details submitted:', {
-      institutionType,
-      country,
-      city,
-      studentCount,
-      selectedPrograms,
-    });
-    navigation.navigate('CareerServicesSetup'); // step 3 of 4
-  };
-
-  // Step 2 of 4 = 50%
-  const PROGRESS = 0.5;
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateContainer}>
+          <Ionicons name="cloud-offline-outline" size={34} color={colors.error} />
+          <Text style={styles.errorText}>{loadError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => setLoadAttempt((attempt) => attempt + 1)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-
-          {/* ── PROGRESS HEADER — sits on mint background, outside the card ── */}
           <View style={styles.stepRow}>
-            <Text style={styles.stepLabel}>University setup · Step 2 of 4</Text>
+            <Text style={styles.stepText}>University setup · Step 2 of 4</Text>
             <Text style={styles.stepPercent}>50%</Text>
           </View>
-
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${PROGRESS * 100}%` }]} />
+            <View style={[styles.progressFill, { width: '50%' }]} />
           </View>
-          {/* ── END PROGRESS HEADER ─────────────────────────────────── */}
 
+          <Text style={styles.title}>Institution details</Text>
+          <Text style={styles.subtitle}>Tell employers about your campus.</Text>
 
-          {/* ── WHITE CARD — contains all form content ──────────────── */}
-          <View style={styles.card}>
+          <Text style={styles.sectionLabel}>INSTITUTION TYPE</Text>
+          <View style={styles.typeRow}>
+            {INSTITUTION_TYPES.map((type) => {
+              const isSelected = institutionType === type;
+              return (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.typeButton, isSelected && styles.typeButtonSelected]}
+                  onPress={() => {
+                    setInstitutionType(type);
+                    setFormError(null);
+                  }}
+                  activeOpacity={0.8}
+                  disabled={isSubmitting}
+                >
+                  <Text
+                    style={[styles.typeButtonText, isSelected && styles.typeButtonTextSelected]}
+                  >
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-            {/* ── Title ───────────────────────────────────────────── */}
-            <Text style={styles.title}>Institution details</Text>
-            <Text style={styles.subtitle}>Tell employers about your campus.</Text>
+          <Text style={styles.sectionLabel}>COUNTRY</Text>
+          <View style={styles.inputRow}>
+            <Ionicons name="location-outline" size={18} color={colors.subtitle} />
+            <TextInput
+              style={styles.input}
+              value={country}
+              onChangeText={(value) => {
+                setCountry(value);
+                setFormError(null);
+              }}
+              placeholder="e.g. Ghana"
+              placeholderTextColor={colors.placeholder}
+              maxLength={100}
+              editable={!isSubmitting}
+              autoCapitalize="words"
+            />
+          </View>
 
+          <Text style={styles.sectionLabel}>CITY</Text>
+          <View style={styles.inputRow}>
+            <Ionicons name="business-outline" size={18} color={colors.subtitle} />
+            <TextInput
+              style={styles.input}
+              value={city}
+              onChangeText={(value) => {
+                setCity(value);
+                setFormError(null);
+              }}
+              placeholder="e.g. Kumasi"
+              placeholderTextColor={colors.placeholder}
+              maxLength={255}
+              editable={!isSubmitting}
+              autoCapitalize="words"
+            />
+          </View>
 
-            {/* ── INSTITUTION TYPE — 3 selectable pill buttons ──────── */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>INSTITUTION TYPE</Text>
+          <Text style={styles.sectionLabel}>NUMBER OF STUDENTS</Text>
+          <View style={styles.inputRow}>
+            <Ionicons name="people-outline" size={18} color={colors.subtitle} />
+            <TextInput
+              style={styles.input}
+              value={studentCount}
+              onChangeText={(value) => {
+                setStudentCount(value);
+                setFormError(null);
+              }}
+              placeholder="e.g. 11520"
+              placeholderTextColor={colors.placeholder}
+              keyboardType="number-pad"
+              maxLength={10}
+              editable={!isSubmitting}
+            />
+          </View>
 
-              {/* Row holding the three pill buttons side by side */}
-              <View style={styles.typeRow}>
-                {/*
-                  .map() loops over INSTITUTION_TYPES and renders one
-                  pill per type. isSelected decides which style to use.
-                */}
-                {INSTITUTION_TYPES.map((type) => {
-                  const isSelected = institutionType === type;
-                  return (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.typePill,
-                        isSelected && styles.typePillActive,
-                      ]}
-                      onPress={() => setInstitutionType(type)}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={[
-                        styles.typePillText,
-                        isSelected && styles.typePillTextActive,
-                      ]}>
-                        {type}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+          <View style={styles.programHeader}>
+            <Text style={styles.sectionLabel}>ACADEMIC PROGRAMS OFFERED</Text>
+            <Text style={styles.programCount}>{academicPrograms.length}/{MAX_PROGRAMS}</Text>
+          </View>
+          <Text style={styles.programHelp}>
+            Enter one program at a time, then tap Add.
+          </Text>
+          <View style={styles.programEntryRow}>
+            <View style={[styles.inputRow, styles.programInputRow]}>
+              <Ionicons name="book-outline" size={18} color={colors.subtitle} />
+              <TextInput
+                style={styles.input}
+                value={programInput}
+                onChangeText={(value) => {
+                  setProgramInput(value);
+                  setFormError(null);
+                }}
+                placeholder="e.g. Computer Science"
+                placeholderTextColor={colors.placeholder}
+                maxLength={MAX_PROGRAM_LENGTH}
+                editable={!isSubmitting && academicPrograms.length < MAX_PROGRAMS}
+                autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={addProgram}
+              />
             </View>
-            {/* ── END INSTITUTION TYPE ──────────────────────────────── */}
-
-
-            {/* ── COUNTRY + CITY — two inputs side by side ──────────── */}
-            <View style={styles.sideBySideRow}>
-
-              {/* Country field — flex: 1 makes each half take equal width */}
-              <View style={styles.sideBySideField}>
-                <Text style={styles.label}>COUNTRY</Text>
-                <View style={[
-                  styles.inputWrapper,
-                  focusedInput === 'country' && styles.inputWrapperFocused,
-                ]}>
-                  <Ionicons
-                    name="location-outline"
-                    size={18}
-                    color={colors.inputIcon}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="United States"
-                    placeholderTextColor={colors.placeholder}
-                    value={country}
-                    onChangeText={setCountry}
-                    onFocus={() => setFocusedInput('country')}
-                    onBlur={() => setFocusedInput(null)}
-                  />
-                </View>
-              </View>
-
-              {/* Small gap between the two fields */}
-              <View style={styles.sideBySideGap} />
-
-              {/* City field */}
-              <View style={styles.sideBySideField}>
-                <Text style={styles.label}>CITY</Text>
-                <View style={[
-                  styles.inputWrapper,
-                  focusedInput === 'city' && styles.inputWrapperFocused,
-                ]}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Cambridge, MA"
-                    placeholderTextColor={colors.placeholder}
-                    value={city}
-                    onChangeText={setCity}
-                    onFocus={() => setFocusedInput('city')}
-                    onBlur={() => setFocusedInput(null)}
-                  />
-                </View>
-              </View>
-
-            </View>
-            {/* ── END COUNTRY + CITY ────────────────────────────────── */}
-
-
-            {/* ── NUMBER OF STUDENTS ─────────────────────────────────── */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>NUMBER OF STUDENTS</Text>
-              <View style={[
-                styles.inputWrapper,
-                focusedInput === 'students' && styles.inputWrapperFocused,
-              ]}>
-                  <Ionicons
-                    name="people-outline"
-                    size={18}
-                    color={colors.inputIcon}
-                    style={styles.inputIcon}
-                  />
-                <TextInput
-                  style={styles.input}
-                  placeholder="11,520 students"
-                  placeholderTextColor={colors.placeholder}
-                  value={studentCount}
-                  onChangeText={setStudentCount}
-                  keyboardType="default"
-                  onFocus={() => setFocusedInput('students')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </View>
-            </View>
-            {/* ── END NUMBER OF STUDENTS ────────────────────────────── */}
-
-
-            {/* ── ACADEMIC PROGRAMS OFFERED — multi-select chips ─────── */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>ACADEMIC PROGRAMS OFFERED</Text>
-
-              <View style={styles.programsBox}>
-                <Text style={styles.programsHint}>Select all that apply</Text>
-
-                {/*
-                  flexWrap: 'wrap' on chipsWrapper lets chips flow onto
-                  multiple lines automatically, like text wrapping.
-                  We don't need to manually calculate rows.
-                */}
-                <View style={styles.chipsWrapper}>
-                  {ACADEMIC_PROGRAMS.map((program) => {
-                    const isSelected = selectedPrograms.includes(program);
-                    return (
-                      <TouchableOpacity
-                        key={program}
-                        style={[
-                          styles.chip,
-                          isSelected && styles.chipActive,
-                        ]}
-                        onPress={() => toggleProgram(program)}
-                        activeOpacity={0.8}
-                      >
-                        {/* Checkmark only shows on selected chips */}
-                        {isSelected && (
-                          <Ionicons
-                            name="checkmark"
-                            size={12}
-                            color={colors.chipActiveText}
-                            style={{ marginRight: 2 }}
-                          />
-                        )}
-                        <Text style={[
-                          styles.chipText,
-                          isSelected && styles.chipTextActive,
-                        ]}>
-                          {program}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-            {/* ── END ACADEMIC PROGRAMS ─────────────────────────────── */}
-
-
-            {/* ── CONTINUE BUTTON ────────────────────────────────────── */}
             <TouchableOpacity
-              style={styles.continueBtn}
-              onPress={handleContinue}
-              activeOpacity={0.85}
+              style={[
+                styles.addButton,
+                (isSubmitting || academicPrograms.length >= MAX_PROGRAMS) && styles.disabledButton,
+              ]}
+              onPress={addProgram}
+              activeOpacity={0.8}
+              disabled={isSubmitting || academicPrograms.length >= MAX_PROGRAMS}
             >
-              <Text style={styles.continueBtnText}>Continue</Text>
+              <Ionicons name="add" size={19} color={colors.onPrimary} />
+              <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
-
           </View>
-          {/* ── END WHITE CARD ───────────────────────────────────────── */}
 
+          {academicPrograms.length > 0 ? (
+            <View style={styles.programList}>
+              {academicPrograms.map((program, index) => (
+                <View key={`${program}-${index}`} style={styles.programTag}>
+                  <Text style={styles.programTagText}>{program}</Text>
+                  <TouchableOpacity
+                    onPress={() => removeProgram(program)}
+                    disabled={isSubmitting}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${program}`}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="close-circle" size={18} color={colors.accent} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyPrograms}>
+              <Text style={styles.emptyProgramsText}>No academic programs added yet.</Text>
+            </View>
+          )}
+
+          {formError ? (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
+              <Text style={styles.errorBannerText}>{formError}</Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={[styles.continueButton, isSubmitting && styles.disabledButton]}
+            onPress={handleContinue}
+            activeOpacity={0.8}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+            ) : (
+              <>
+                <Text style={styles.continueButtonText}>Continue</Text>
+                <Ionicons name="arrow-forward" size={18} color={colors.onPrimary} />
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
   flex: {
     flex: 1,
   },
-
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
   },
-
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 40,
-    backgroundColor: colors.background,
   },
-
-  // ── Progress header ────────────────────────────────────────────
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 14,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   stepRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  stepLabel: {
-    fontSize: 12,
-    color: colors.stepLabel,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+  stepText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '600',
   },
   stepPercent: {
-    fontSize: 12,
-    color: colors.stepPercent,
-    fontWeight: '700',
+    color: colors.subtitle,
+    fontSize: 13,
+    fontWeight: '600',
   },
   progressTrack: {
-    width: '100%',
-    height: 5,
-    backgroundColor: colors.progressTrack,
-    borderRadius: 3,
-    marginBottom: 20,
+    height: 4,
+    backgroundColor: colors.inputBorder,
+    borderRadius: 2,
     overflow: 'hidden',
+    marginBottom: 22,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: colors.progressFill,
-    borderRadius: 3,
+    backgroundColor: colors.accent,
+    borderRadius: 2,
   },
-
-  // ── Card ──────────────────────────────────────────────────
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: 0,
-  },
-
-  // ── Title ───────────────────────────────────────────────────────
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
     color: colors.title,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.subtitle,
-    lineHeight: 20,
-    marginBottom: 22,
-  },
-
-  // ── Shared field group + label (used by every section below) ──────
-  fieldGroup: {
-    marginBottom: 18,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.label,
+    fontSize: 26,
+    fontWeight: '700',
     marginBottom: 6,
   },
-
-  // ── Institution Type pills ─────────────────────────────────────
+  subtitle: {
+    color: colors.subtitle,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  sectionLabel: {
+    color: colors.placeholder,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
   typeRow: {
     flexDirection: 'row',
-    gap: 10, // space between the three pills (RN 0.71+; use marginRight on older RN)
+    gap: 10,
+    marginBottom: 22,
   },
-  typePill: {
-    flex: 1, // all three pills share equal width
-    backgroundColor: colors.typeIdleBg,
-    borderWidth: 1.5,
-    borderColor: colors.typeIdleBorder,
-    borderRadius: 50,
-    paddingVertical: 12,
+  typeButton: {
+    flex: 1,
     alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 22,
+    paddingVertical: 12,
   },
-  typePillActive: {
-    backgroundColor: colors.typeActiveBg,
-    borderColor: colors.typeActiveBg,
+  typeButtonSelected: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
-  typePillText: {
+  typeButtonText: {
+    color: colors.title,
     fontSize: 13,
     fontWeight: '600',
-    color: colors.typeIdleText,
   },
-  typePillTextActive: {
-    color: colors.typeActiveText,
-    fontWeight: '700',
+  typeButtonTextSelected: {
+    color: colors.onPrimary,
   },
-
-  // ── Side-by-side fields (Country / City) ───────────────────────
-  sideBySideRow: {
-    flexDirection: 'row',
-    marginBottom: 18,
-  },
-  sideBySideField: {
-    flex: 1, // each field takes up half the row width
-  },
-  sideBySideGap: {
-    width: 12, // fixed gap between the two fields
-  },
-
-  // ── Standard text input wrapper (shared by all single-line fields) ──
-  inputWrapper: {
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBg,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    gap: 10,
+    minHeight: 52,
+    backgroundColor: colors.card,
     borderColor: colors.inputBorder,
-    paddingHorizontal: 16,
-    height: 52,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  inputWrapperFocused: {
-    borderColor: colors.inputBorderFocus,
-  },
-  inputIcon: {
-    marginRight: 10,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginBottom: 20,
   },
   input: {
     flex: 1,
+    color: colors.text,
     fontSize: 14,
-    color: colors.inputText,
+    paddingVertical: 12,
   },
-
-  // ── Academic Programs box ──────────────────────────────────────
-  programsBox: {
-    backgroundColor: colors.programsBoxBg,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.programsBoxBorder,
-    padding: 14,
+  programHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  programsHint: {
+  programCount: {
+    color: colors.subtitle,
     fontSize: 12,
-    color: colors.programsHint,
+    marginBottom: 8,
+  },
+  programHelp: {
+    color: colors.subtitle,
+    fontSize: 12,
+    lineHeight: 17,
     marginBottom: 10,
   },
-  // flexWrap lets chips automatically flow onto new lines as needed
-  chipsWrapper: {
+  programEntryRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8, // space between chips, both horizontally and vertically
+    alignItems: 'stretch',
+    gap: 10,
   },
-  chip: {
+  programInputRow: {
+    flex: 1,
+  },
+  addButton: {
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.chipIdleBg,
-    borderWidth: 1.5,
-    borderColor: colors.chipIdleBorder,
-    borderRadius: 50,
-    paddingVertical: 8,
+    justifyContent: 'center',
+    gap: 3,
+    backgroundColor: colors.accent,
+    borderRadius: 12,
     paddingHorizontal: 14,
   },
-  chipActive: {
-    backgroundColor: colors.chipActiveBg,
-    borderColor: colors.chipActiveBg,
-  },
-  chipText: {
+  addButtonText: {
+    color: colors.onPrimary,
     fontSize: 13,
-    color: colors.chipIdleText,
-    fontWeight: '500',
-  },
-  chipTextActive: {
-    color: colors.chipActiveText,
     fontWeight: '700',
   },
-
-  // ── Continue button ────────────────────────────────────────────
-  continueBtn: {
-    backgroundColor: colors.continueBtn,
-    borderRadius: 30,
-    paddingVertical: 16,
+  programList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 22,
+  },
+  programTag: {
+    maxWidth: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    gap: 7,
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingLeft: 12,
+    paddingRight: 8,
   },
-  continueBtnText: {
+  programTagText: {
+    flexShrink: 1,
+    color: colors.title,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  emptyPrograms: {
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 22,
+  },
+  emptyProgramsText: {
+    color: colors.subtitle,
+    fontSize: 12,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.card,
+    borderColor: colors.error,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: colors.error,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  continueButton: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.accent,
+    borderRadius: 26,
+    paddingVertical: 15,
+  },
+  continueButtonText: {
+    color: colors.onPrimary,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.continueBtnText,
+    fontWeight: '700',
   },
-
+  disabledButton: {
+    opacity: 0.6,
+  },
 });

@@ -24,20 +24,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppStore } from '../../src/store/useAppStore';
 
 
 
 export default function DeleteAccountScreen({ navigation }: any) {
-    const { colors } = useAppTheme();
+  const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const resetAccount = useAppStore((state) => state.resetAccount);
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (!confirmed) {
       Alert.alert('Confirmation Required', 'Please confirm that you understand the consequences.');
       return;
@@ -54,18 +55,8 @@ const [confirmed, setConfirmed] = useState(false);
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              // Clear all AsyncStorage data
-              await AsyncStorage.clear();
-              // Navigate to login screen
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete account. Please try again.');
-            }
+          onPress: () => {
+            resetAccount();
           },
         },
       ]

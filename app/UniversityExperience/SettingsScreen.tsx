@@ -32,6 +32,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
+import { signOut } from '../../src/api';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -160,11 +161,8 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
-  // Called when "Sign out" is tapped
   const handleSignOut = () => {
-    console.log('Signing out...');
-    // TODO: clear auth tokens/session, then:
-    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    void signOut();
   };
 
 

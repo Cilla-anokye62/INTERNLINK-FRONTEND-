@@ -87,7 +87,12 @@ export default function HomeDashboardScreen({ navigation }: any) {
           contentContainerStyle={styles.horizontalScroll}
         >
           {RECOMMENDED.map(item => (
-            <TouchableOpacity key={item.id} style={styles.recommendCard} activeOpacity={0.85}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.recommendCard}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('InternshipDetails', { internship: item })}
+            >
               <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
                 <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
               </View>

@@ -1,31 +1,36 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
+import type { StackScreenProps } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../types/navigation';
+import { getAuthErrorMessage, studentApi } from '../../src/api';
+import { useStudentOnboardingOptions } from '../../src/hooks/useStudentOnboardingOptions';
 
 const { height } = Dimensions.get('window');
 
-const POPULAR_SKILLS = [
-  'Python', 'JavaScript', 'Data Analysis', 'UI/UX Design', 'Leadership', 'Project Management',
-];
+type Props = StackScreenProps<RootStackParamList, 'Skills'>;
 
-const ALL_SKILLS = [
-  'React', 'SQL', 'Figma', 'Node.js', 'Machine Learning', 'Networking',
-  'Communication', 'Graphic Design', 'Excel', 'Tableau', 'Cybersecurity',
-  'Cloud (AWS)', 'Team Collaboration', 'Problem Solving',
-];
-
-export default function SkillsScreen({ navigation, route }: any) {
+export default function SkillsScreen({ navigation, route }: Props) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const storedSkills = useAppStore((state) => state.profile.skills);
+  const onboardingComplete = useAppStore((state) => state.onboardingComplete);
+  const updateProfile = useAppStore((state) => state.updateProfile);
+  const { options, isLoading, error: optionsError, retry } = useStudentOnboardingOptions();
 
-  const isEditing = route.params?.isEditing || false;
-  const initialSkills = route.params?.initialSkills || [];
+  const isEditing = route.params?.isEditing === true || onboardingComplete;
+  const initialSkills = route.params?.initialSkills ?? storedSkills;
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills);
   const [search, setSearch] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  const popularSkills = options?.skills.filter((skill) => skill.popular).map((skill) => skill.name) ?? [];
+  const allSkills = options?.skills.filter((skill) => !skill.popular).map((skill) => skill.name) ?? [];
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills(prev =>
@@ -35,26 +40,45 @@ export default function SkillsScreen({ navigation, route }: any) {
 
   const isSelected = (skill: string) => selectedSkills.includes(skill);
 
-  const filteredAll = ALL_SKILLS.filter(s =>
+  const filteredAll = allSkills.filter(s =>
     s.toLowerCase().includes(search.toLowerCase())
   );
-  const filteredPopular = POPULAR_SKILLS.filter(s =>
+  const filteredPopular = popularSkills.filter(s =>
     s.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleContinue = async () => {
     if (selectedSkills.length < 3) {
-      alert('Please select at least 3 skills.');
+      const remaining = 3 - selectedSkills.length;
+      Alert.alert(
+        'Choose more skills',
+        `Select ${remaining} more ${remaining === 1 ? 'skill' : 'skills'} to continue.`,
+      );
       return;
     }
-    
-    await AsyncStorage.setItem('userSkills', JSON.stringify(selectedSkills));
-    
+
     if (isEditing) {
-      navigation.goBack();
+      if (isSaving) return;
+      setIsSaving(true);
+      setSaveError('');
+      try {
+        const savedProfile = await studentApi.updateMe({ skills: selectedSkills });
+        updateProfile({ skills: savedProfile.skills });
+        navigation.goBack();
+      } catch (error) {
+        setSaveError(getAuthErrorMessage(error));
+      } finally {
+        setIsSaving(false);
+      }
     } else {
-      navigation.navigate('CareerInterests');
+      updateProfile({ skills: selectedSkills });
+      navigation.push('CareerInterests');
     }
+  };
+
+  const handleSkip = () => {
+    updateProfile({ skills: selectedSkills });
+    navigation.push('CareerInterests');
   };
 
   return (
@@ -66,7 +90,7 @@ export default function SkillsScreen({ navigation, route }: any) {
         <View style={styles.progressRow}>
           <Text style={styles.stepLabel}>{isEditing ? 'Edit Skills' : 'Step 2 of 5'}</Text>
           {!isEditing && (
-            <TouchableOpacity onPress={() => navigation.navigate('CareerInterests')}>
+            <TouchableOpacity onPress={handleSkip} disabled={isSaving}>
               <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
           )}
@@ -95,6 +119,7 @@ export default function SkillsScreen({ navigation, route }: any) {
             placeholderTextColor={colors.placeholder}
             value={search}
             onChangeText={setSearch}
+            editable={!isLoading && !isSaving}
           />
         </View>
       </View>
@@ -106,6 +131,28 @@ export default function SkillsScreen({ navigation, route }: any) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {isLoading && !options ? (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator size="small" color={colors.accent} />
+            <Text style={styles.stateText}>Loading skills...</Text>
+          </View>
+        ) : null}
+
+        {optionsError && !options ? (
+          <View style={styles.stateContainer}>
+            <Text style={styles.errorText}>{optionsError}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={retry}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {options && options.skills.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <Text style={styles.stateText}>No skills are available yet. You can skip this step for now.</Text>
+          </View>
+        ) : null}
+
         {/* Popular Skills */}
         {filteredPopular.length > 0 && (
           <View style={styles.section}>
@@ -117,6 +164,7 @@ export default function SkillsScreen({ navigation, route }: any) {
                   style={[styles.chip, isSelected(skill) && styles.chipSelected]}
                   onPress={() => toggleSkill(skill)}
                   activeOpacity={0.7}
+                  disabled={isSaving}
                 >
                   {isSelected(skill) && <Text style={styles.chipCheck}>✓ </Text>}
                   <Text style={[styles.chipText, isSelected(skill) && styles.chipTextSelected]}>
@@ -139,6 +187,7 @@ export default function SkillsScreen({ navigation, route }: any) {
                   style={[styles.chip, isSelected(skill) && styles.chipSelected]}
                   onPress={() => toggleSkill(skill)}
                   activeOpacity={0.7}
+                  disabled={isSaving}
                 >
                   {isSelected(skill) && <Text style={styles.chipCheck}>✓ </Text>}
                   <Text style={[styles.chipText, isSelected(skill) && styles.chipTextSelected]}>
@@ -174,8 +223,26 @@ export default function SkillsScreen({ navigation, route }: any) {
 
       {/* Fixed Continue button */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue} activeOpacity={0.85}>
-          <Text style={styles.continueButtonText}>{isEditing ? 'Save Changes' : 'Continue'}</Text>
+        {!isEditing && (
+          <Text style={styles.selectionRequirement}>
+            {selectedSkills.length >= 3
+              ? `${selectedSkills.length} skills selected — ready to continue`
+              : `Select ${3 - selectedSkills.length} more ${3 - selectedSkills.length === 1 ? 'skill' : 'skills'}`}
+          </Text>
+        )}
+
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+        <TouchableOpacity
+          style={[styles.continueButton, (isLoading || isSaving) && styles.continueButtonDisabled]}
+          onPress={handleContinue}
+          activeOpacity={0.85}
+          disabled={isLoading || isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color={colors.onPrimary} />
+          ) : (
+            <Text style={styles.continueButtonText}>{isEditing ? 'Save Changes' : 'Continue'}</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -348,11 +415,51 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingTop: 12,
     backgroundColor: colors.background,
   },
+  stateContainer: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    gap: 12,
+  },
+  stateText: {
+    color: colors.subtitle,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: colors.card,
+    borderColor: colors.accent,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  retryButtonText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  selectionRequirement: {
+    color: colors.subtitle,
+    fontSize: 13,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   continueButton: {
     backgroundColor: colors.accent,
     borderRadius: 30,
     paddingVertical: 16,
     alignItems: 'center',
+  },
+  continueButtonDisabled: {
+    opacity: 0.6,
   },
   continueButtonText: {
     color: colors.onPrimary,
