@@ -26,7 +26,6 @@ const slides = [
 ];
 
 export default function WelcomeOnboardingScreen({ navigation }: any) {
-  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   

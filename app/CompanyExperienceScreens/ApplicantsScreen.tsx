@@ -146,7 +146,7 @@ const ApplicantsScreen: React.FC<Props> = ({ navigation }) => {
               key={applicant.id}
               style={styles.applicantCard}
               activeOpacity={0.8}
-              onPress={() => navigation.navigate('ApplicantDetail')}
+              onPress={() => navigation.navigate('ApplicantProfile', { applicationId: applicant.id })}
             >
               <View style={styles.cardTop}>
                 {/* Avatar */}

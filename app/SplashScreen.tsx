@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WelcomeOnboardingScreen from './WelcomeOnboardingScreen';
+import { useAppStore } from '../src/store/useAppStore';
 
 const { height } = Dimensions.get('window');
 
@@ -12,6 +13,8 @@ export default function SplashScreen({ navigation }: any) {
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const splashFade = useRef(new Animated.Value(1)).current;
   const [assetsReady, setAssetsReady] = useState(false);
+  const hasHydrated = useAppStore((state) => state.hasHydrated);
+  const sessionInitialized = useAppStore((state) => state.sessionInitialized);
 
   useEffect(() => {
     Animated.parallel([
@@ -46,7 +49,7 @@ export default function SplashScreen({ navigation }: any) {
   }, []);
 
   useEffect(() => {
-    if (!assetsReady) return;
+    if (!assetsReady || !hasHydrated || !sessionInitialized) return;
 
     const exitTimer = setTimeout(() => {
       Animated.timing(splashFade, {
@@ -59,7 +62,7 @@ export default function SplashScreen({ navigation }: any) {
     }, 2000);
 
     return () => clearTimeout(exitTimer);
-  }, [assetsReady]);
+  }, [assetsReady, hasHydrated, navigation, sessionInitialized, splashFade]);
 
   return (
     <View style={styles.root}>
@@ -69,7 +72,8 @@ export default function SplashScreen({ navigation }: any) {
 
       <Animated.View
         style={[styles.splashOverlay, { opacity: splashFade }]}
-        pointerEvents="none"
+        pointerEvents="auto"
+        onStartShouldSetResponder={() => true}
       >
         <LinearGradient
           colors={['#3BBFBA', '#E1F6F4', '#3BBFBA'] as const}

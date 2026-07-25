@@ -99,6 +99,10 @@ export default function CompanyEngagementScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  const handleMenuPress = () => {
+    console.log('Menu pressed');
+  };
+
 
   // Now that this is a regular stack screen (not a tab), the back
   // arrow has a real, working destination: the Dashboard screen this
@@ -145,18 +149,6 @@ export default function CompanyEngagementScreen({ navigation }: any) {
             <Text style={styles.headerTitle}>Partners</Text>
             <Text style={styles.headerSubtitle}>238 companies engaged</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.menuBtn}
-            onPress={handleMenuPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="ellipsis-horizontal"
-              size={18}
-              color={colors.menuBtnIcon}
-            />
-          </TouchableOpacity>
 
         </View>
 

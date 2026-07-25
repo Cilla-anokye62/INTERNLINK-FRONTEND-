@@ -15,7 +15,12 @@ import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
 import SettingsScreen from './SettingsScreen';
+import { useAppTheme } from "../../src/hooks/useAppTheme";
 
+// ─── TAB ICON DATA ────────────────────────────────────────────────
+// Maps each route name to the Ionicons name shown above its label.
+// Centralising this here means the icon-per-tab logic lives in ONE
+// place instead of being copy-pasted into every screen file like before.
 const TAB_ICONS: Record<string, string> = {
   Overview: 'home-outline',
   Students: 'school-outline',

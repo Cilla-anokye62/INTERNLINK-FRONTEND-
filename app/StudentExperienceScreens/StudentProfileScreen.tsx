@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -38,12 +37,24 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const isPremium = useAppStore((state) => state.isPremium);
+  const storedUserName = useAppStore((state) => state.userName);
+  const storedProfile = useAppStore((state) => state.profile);
+  const setUserName = useAppStore((state) => state.setUserName);
+  const updateProfile = useAppStore((state) => state.updateProfile);
+  const university = useAppStore((state) => state.university);
+  const programme = useAppStore((state) => state.programme);
+  const academicLevel = useAppStore((state) => state.academicLevel);
+  const graduationYear = useAppStore((state) => state.graduationYear);
 
-  const [username, setUsername] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [aboutText, setAboutText] = useState(initialBio);
-  const [skills, setSkills] = useState(initialSkills);
-  const [experience, setExperience] = useState<{ id: string; ionicon: IoniconName; title: string; subtitle: string }[]>(EXPERIENCE);
+  const [username, setUsername] = useState(storedUserName);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(storedProfile.photoUri);
+  const [aboutText, setAboutText] = useState(storedProfile.about || storedProfile.bio || initialBio);
+  const [skills, setSkills] = useState<string[]>(storedProfile.skills.length ? storedProfile.skills : initialSkills);
+  const [experience, setExperience] = useState<{ id: string; ionicon: IoniconName; title: string; subtitle: string }[]>(
+    storedProfile.experience.length
+      ? storedProfile.experience.map((item) => ({ ...item, ionicon: item.ionicon as IoniconName }))
+      : EXPERIENCE
+  );
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showExperienceModal, setShowExperienceModal] = useState(false);
   const [newExperienceTitle, setNewExperienceTitle] = useState('');
@@ -52,47 +63,17 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   useEffect(() => {
-    loadSavedData();
-  }, []);
+    setSkills(storedProfile.skills);
+  }, [storedProfile.skills]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadSavedData();
+  const saveData = (nextExperience = experience) => {
+    setUserName(username.trim());
+    updateProfile({
+      photoUri: profilePhoto,
+      about: aboutText,
+      skills,
+      experience: nextExperience,
     });
-    return unsubscribe;
-  }, [navigation]);
-
-  const loadSavedData = async () => {
-    try {
-      const savedUsername = await AsyncStorage.getItem('username');
-      const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
-      const savedAbout = await AsyncStorage.getItem('userAbout');
-      const savedBio = await AsyncStorage.getItem('userBio');
-      const savedSkills = await AsyncStorage.getItem('userSkills');
-      const savedExperience = await AsyncStorage.getItem('userExperience');
-
-
-      if (savedUsername) setUsername(savedUsername);
-      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
-      if (savedAbout) setAboutText(savedAbout);
-      else if (savedBio) setAboutText(savedBio);
-      if (savedSkills) setSkills(JSON.parse(savedSkills));
-      if (savedExperience) setExperience(JSON.parse(savedExperience));
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-  };
-
-  const saveData = async () => {
-    try {
-      await AsyncStorage.setItem('username', username);
-      await AsyncStorage.setItem('userProfilePhoto', profilePhoto || '');
-      await AsyncStorage.setItem('userAbout', aboutText);
-      await AsyncStorage.setItem('userSkills', JSON.stringify(skills));
-      await AsyncStorage.setItem('userExperience', JSON.stringify(experience));
-    } catch (error) {
-      console.error('Error saving data:', error);
-    }
   };
 
   const handleAboutSave = () => {
@@ -109,8 +90,7 @@ export default function StudentProfileScreen({ navigation, route }: any) {
   };
 
   const handleExperienceEdit = () => {
-    setShowExperienceModal(true);
-    navigation.navigate('StudentOnboarding', { screen: 'Skills', params: { isEditing: true, initialSkills: skills, fromProfile: true } });
+    navigation.navigate('Skills', { isEditing: true, initialSkills: skills, fromProfile: true });
   };
 
   const handleAddExperience = () => {
@@ -121,11 +101,12 @@ export default function StudentProfileScreen({ navigation, route }: any) {
         title: newExperienceTitle,
         subtitle: newExperienceSubtitle,
       };
-      setExperience([...experience, newExp]);
+      const nextExperience = [...experience, newExp];
+      setExperience(nextExperience);
       setNewExperienceTitle('');
       setNewExperienceSubtitle('');
       setShowExperienceModal(false);
-      saveData();
+      saveData(nextExperience);
     }
   };
 
@@ -158,14 +139,14 @@ export default function StudentProfileScreen({ navigation, route }: any) {
     });
     if (!result.canceled && result.assets && result.assets[0]) {
       setProfilePhoto(result.assets[0].uri);
-      await AsyncStorage.setItem('userProfilePhoto', result.assets[0].uri);
+      updateProfile({ photoUri: result.assets[0].uri });
     }
     setShowPhotoOptions(false);
   };
 
-  const handleRemovePhoto = async () => {
+  const handleRemovePhoto = () => {
     setProfilePhoto(null);
-    await AsyncStorage.removeItem('userProfilePhoto');
+    updateProfile({ photoUri: null });
     setShowPhotoOptions(false);
   };
 
@@ -271,6 +252,29 @@ export default function StudentProfileScreen({ navigation, route }: any) {
         <View style={styles.card}>
           <Text style={styles.aboutText}>{aboutText}</Text>
         </View>
+
+        {/* Education section */}
+        {(university || programme) && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Education</Text>
+            </View>
+            <View style={styles.card}>
+              <View style={styles.educationItem}>
+                <Ionicons name="school-outline" size={20} color={colors.accent} style={{ marginRight: 12 }} />
+                <View style={styles.educationInfo}>
+                  <Text style={styles.educationTitle}>{programme || 'Programme not set'}</Text>
+                  <Text style={styles.educationSubtitle}>{university || 'University not set'}</Text>
+                  {(academicLevel || graduationYear) && (
+                    <Text style={styles.educationDetail}>
+                      {academicLevel}{academicLevel && graduationYear ? ' · ' : ''}{graduationYear ? `Graduating ${graduationYear}` : ''}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Skills section */}
         <View style={styles.sectionHeader}>
@@ -589,6 +593,28 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
     color: colors.subtitle,
     lineHeight: 22,
+  },
+  educationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  educationInfo: {
+    flex: 1,
+  },
+  educationTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.cardTitle,
+    marginBottom: 2,
+  },
+  educationSubtitle: {
+    fontSize: 13,
+    color: colors.subtitle,
+    marginBottom: 2,
+  },
+  educationDetail: {
+    fontSize: 12,
+    color: colors.placeholder,
   },
   skillsRow: {
     flexDirection: 'row',

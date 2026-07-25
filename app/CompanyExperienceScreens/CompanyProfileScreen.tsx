@@ -55,21 +55,29 @@ const CompanyProfileScreen: React.FC<Props> = ({ navigation }) => {
     { icon: 'location-outline', label: 'HQ', value: 'SF, CA' },
   ];
 
+  const handleBackPress = () => {
+    const navigationType = (navigation.getState() as { type?: string }).type;
+    if (navigationType === 'tab') {
+      navigation.navigate('Dashboard');
+      return;
+    }
+
+    navigation.goBack();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
           activeOpacity={0.7}
           style={styles.backButton}
         >
           <Text style={styles.backIcon}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Company profile</Text>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.editLink}>Edit</Text>
-        </TouchableOpacity>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -185,10 +193,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '700',
     color: colors.title,
   },
-  editLink: {
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: '600',
+  headerSpacer: {
+    width: 26,
   },
   scrollContent: {
     paddingBottom: TAB_BAR_BOTTOM_PADDING,

@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
+import { signOut } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 
@@ -53,19 +55,29 @@ export default function AcademicInfoScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const [university, setUniversity] = useState('');
-  const [programme, setProgramme] = useState('');
-  const [level, setLevel] = useState('');
-  const [graduationYear, setGraduationYear] = useState('');
+  const { university: storeUniversity, programme: storeProgramme, academicLevel: storeLevel, graduationYear: storeYear, setAcademicInfo } = useAppStore();
+
+  const [university, setUniversity] = useState(storeUniversity);
+  const [programme, setProgramme] = useState(storeProgramme);
+  const [level, setLevel] = useState(storeLevel);
+  const [graduationYear, setGraduationYear] = useState(storeYear);
   const [openDropdown, setOpenDropdown] = useState<'university' | 'level' | 'year' | null>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    await signOut();
+  };
 
   const handleNext = () => {
     if (!university || !programme || !level || !graduationYear) {
       alert('Please fill in all fields before continuing.');
       return;
     }
-    navigation.navigate('Skills');
+    setAcademicInfo(university, programme, level, graduationYear);
+    navigation.navigate('Skills', { isEditing: false });
   };
 
   const renderDropdownModal = (
@@ -115,8 +127,21 @@ export default function AcademicInfoScreen({ navigation }: any) {
       >
         {/* Progress Bar */}
         <View style={styles.progressRow}>
-          <Text style={styles.stepLabel}>STEP 1 OF 4</Text>
-          <Text style={styles.profileLabel}>Profile Setup</Text>
+          <Text style={styles.stepLabel}>STEP 1 OF 5</Text>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={() => void handleSignOut()}
+            disabled={isSigningOut}
+          >
+            {isSigningOut ? (
+              <ActivityIndicator size="small" color={colors.accent} />
+            ) : (
+              <Ionicons name="log-out-outline" size={16} color={colors.accent} />
+            )}
+            <Text style={styles.signOutText}>
+              {isSigningOut ? 'Signing out...' : 'Sign out'}
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.progressBarBg}>
           <View style={styles.progressBarFill} />
@@ -236,6 +261,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   stepLabel: {
@@ -244,9 +270,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
   },
-  profileLabel: {
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 4,
+    paddingLeft: 8,
+  },
+  signOutText: {
     fontSize: 12,
-    color: colors.subtitle,
+    color: colors.accent,
+    fontWeight: '600',
   },
   progressBarBg: {
     width: '100%',

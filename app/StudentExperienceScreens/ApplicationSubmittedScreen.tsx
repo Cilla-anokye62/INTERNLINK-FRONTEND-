@@ -27,22 +27,29 @@ export default function ApplicationSubmittedScreen({ navigation, route }: any) {
     ]).start();
   }, []);
 
+  const resetToStudentTab = (screen: 'Home' | 'Discover' | 'Applications') => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'StudentApp', params: { screen } }],
+    });
+  };
+
   const handleTrack = () => {
-    navigation.navigate('MyApplications');
+    resetToStudentTab('Applications');
   };
 
   const handleBrowse = () => {
-    navigation.navigate('HomeDashboard');
+    resetToStudentTab('Discover');
   };
 
   const handleHome = () => {
-    navigation.navigate('HomeDashboard');
+    resetToStudentTab('Home');
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       {/* Back */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+      <TouchableOpacity style={styles.backBtn} onPress={handleTrack}>
         <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
       </TouchableOpacity>
 

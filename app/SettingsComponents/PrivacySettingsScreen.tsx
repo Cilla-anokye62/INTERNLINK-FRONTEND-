@@ -81,11 +81,6 @@ export default function PrivacySettingsScreen({ navigation }: any) {
     // TODO: sync with backend
   };
 
-  const handleBlockedUsersPress = () => {
-    console.log('Navigate to blocked users screen');
-    // TODO: navigation.navigate('BlockedUsers');
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -201,11 +196,7 @@ export default function PrivacySettingsScreen({ navigation }: any) {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionHeader}>BLOCK LIST</Text>
 
-          <TouchableOpacity
-            style={styles.blockedRow}
-            onPress={handleBlockedUsersPress}
-            activeOpacity={0.7}
-          >
+          <View style={styles.blockedRow}>
             <View style={styles.blockedIconCircle}>
               <Ionicons
                 name="person-remove-outline"
@@ -214,12 +205,7 @@ export default function PrivacySettingsScreen({ navigation }: any) {
               />
             </View>
             <Text style={styles.blockedText}>Blocked Users ({blockedCount})</Text>
-            <Ionicons
-              name="chevron-forward-outline"
-              size={18}
-              color={colors.chevron}
-            />
-          </TouchableOpacity>
+          </View>
         </View>
         {/* ── END BLOCK LIST SECTION ──────────────────────────────── */}
 

@@ -1,37 +1,40 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { StackScreenProps } from '@react-navigation/stack';
+import { authApi, getAuthErrorMessage, verifyEmail } from '../../src/api';
+import type { RootStackParamList } from '../../types/navigation';
 
 const { height } = Dimensions.get('window');
 
-export default function VerificationScreen({ navigation,route }: any) { 
+type Props = StackScreenProps<RootStackParamList, 'Verification'>;
+
+export default function VerificationScreen({ navigation, route }: Props) {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const inputs = useRef<(TextInput | null)[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [requestError, setRequestError] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const isCodeComplete = code.every(Boolean);
 
   useEffect(() => {
-    const countdown = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 0) {
-          clearInterval(countdown);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(countdown);
-  }, []);
+    if (timer <= 0) return;
+    const countdown = setTimeout(() => setTimer((previous) => previous - 1), 1000);
+    return () => clearTimeout(countdown);
+  }, [timer]);
 
   const handleChange = (text: string, index: number) => {
     const newCode = [...code];
-    newCode[index] = text;
+    newCode[index] = text.replace(/\D/g, '').slice(-1);
     setCode(newCode);
-    if (text && index < 5) {
+    if (newCode[index] && index < 5) {
       inputs.current[index + 1]?.focus();
     }
   };
@@ -39,6 +42,45 @@ export default function VerificationScreen({ navigation,route }: any) {
   const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
       inputs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!isCodeComplete || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setRequestError('');
+    setFeedback('');
+    try {
+      await verifyEmail({
+        role: route.params.role,
+        email: route.params.email,
+        code: code.join(''),
+      });
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (timer > 0 || isResending) return;
+
+    setIsResending(true);
+    setRequestError('');
+    setFeedback('');
+    try {
+      const response = await authApi.resendVerification({
+        role: route.params.role,
+        email: route.params.email,
+      });
+      setFeedback(response.message);
+      setTimer(60);
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -68,25 +110,38 @@ export default function VerificationScreen({ navigation,route }: any) {
             keyboardType="number-pad"
             maxLength={1}
             textAlign="center"
+            editable={!isSubmitting}
           />
         ))}
       </View>
 
       {/* Verify button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Onboarding', { role: route.params?.role })}>
-        <Text style={styles.buttonText}>Verify →</Text>
+      <TouchableOpacity
+        style={[styles.button, (!isCodeComplete || isSubmitting) && { opacity: 0.5 }]}
+        onPress={() => void handleVerify()}
+        disabled={!isCodeComplete || isSubmitting}
+      >
+        {isSubmitting
+          ? <ActivityIndicator color={colors.card} />
+          : <Text style={styles.buttonText}>Verify →</Text>}
       </TouchableOpacity>
+
+      {requestError ? <Text style={styles.requestErrorText}>{requestError}</Text> : null}
+      {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
 
       {/* Resend */}
       <Text style={styles.resendText}>
         Didn't receive the code?{' '}
-        <Text style={styles.resendLink}>
-          Resend Code ({timer > 0 ? `${Math.floor(timer / 60)}:${timer % 60 < 10 ? `0${timer % 60}` : timer % 60}` : 'Resend'})
+        <Text
+          style={[styles.resendLink, (timer > 0 || isResending) && styles.resendDisabled]}
+          onPress={() => void handleResend()}
+        >
+          Resend Code ({isResending ? 'Sending...' : timer > 0 ? `${Math.floor(timer / 60)}:${timer % 60 < 10 ? `0${timer % 60}` : timer % 60}` : 'Resend'})
         </Text>
       </Text>
 
       {/* Back to login */}
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity onPress={() => navigation.replace('Login')}>
         <Text style={styles.backToLogin}>← Back to login</Text>
       </TouchableOpacity>
     </SafeAreaView>
@@ -162,6 +217,20 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  requestErrorText: {
+    color: colors.error,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  feedbackText: {
+    color: colors.accent,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   resendText: {
     fontSize: 13,
     color: colors.profileEmail,
@@ -170,6 +239,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   resendLink: {
     color: colors.buttonActive,
     fontWeight: '600',
+  },
+  resendDisabled: {
+    opacity: 0.6,
   },
   backToLogin: {
     fontSize: 14,

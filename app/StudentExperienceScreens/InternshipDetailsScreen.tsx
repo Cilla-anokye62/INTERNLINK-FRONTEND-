@@ -98,9 +98,11 @@ export default function InternshipDetailsScreen({ navigation, route }: any) {
 
         {/* Tags */}
         <View style={styles.tagsRow}>
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchText}>{internship.matchScore}% match</Text>
-          </View>
+          {internship.matchScore > 0 ? (
+            <View style={styles.matchBadge}>
+              <Text style={styles.matchText}>{internship.matchScore}% match</Text>
+            </View>
+          ) : null}
           <View style={styles.tag}>
             <Text style={styles.tagText}>{internship.workMode}</Text>
           </View>
@@ -114,11 +116,15 @@ export default function InternshipDetailsScreen({ navigation, route }: any) {
 
         {/* Stats row */}
         <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{internship.applicants}</Text>
-            <Text style={styles.statLabel}>Applicants</Text>
-          </View>
-          <View style={styles.statDivider} />
+          {internship.applicants > 0 ? (
+            <>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{internship.applicants}</Text>
+                <Text style={styles.statLabel}>Applicants</Text>
+              </View>
+              <View style={styles.statDivider} />
+            </>
+          ) : null}
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{new Date(internship.postedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
             <Text style={styles.statLabel}>Posted</Text>

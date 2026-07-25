@@ -8,8 +8,9 @@ import SavedScreen from './SavedScreen';
 import MyApplicationsScreen from './MyApplicationsScreen';
 import StudentProfileScreen from './StudentProfileScreen';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import type { StudentTabParamList } from '../../types/navigation';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<StudentTabParamList>();
 
 const ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
   Home:         { active: 'home',      inactive: 'home-outline' },

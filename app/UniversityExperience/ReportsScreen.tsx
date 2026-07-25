@@ -54,6 +54,15 @@ export default function ReportsScreen() {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  const handleGenerateReport = () => {
+    console.log('Generate report pressed');
+  };
+
+  const handleDownloadPress = (reportId: string) => {
+    console.log('Download report:', reportId);
+  };
+
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -78,7 +87,9 @@ export default function ReportsScreen() {
               <Text style={styles.reportTitle}>{report.title}</Text>
               <Text style={styles.reportDetail}>{report.detail}</Text>
             </View>
+
             {report.isNew && <View style={styles.newDot} />}
+
           </View>
         ))}
       </ScrollView>
@@ -115,6 +126,21 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 13,
     color: colors.headerSubtitle,
   },
+  addBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.addBtnBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.addBtnBg,
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+
+  // ── Report rows ───────────────────────────────────────────────
   reportRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,6 +177,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
     color: colors.reportDetail,
   },
+
+  downloadColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── "New" dot indicator ────────────────────────────────────────
   newDot: {
     width: 6,
     height: 6,

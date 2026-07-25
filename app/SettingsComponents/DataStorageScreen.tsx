@@ -53,7 +53,9 @@ const [offlineMode, setOfflineMode] = useState(false);
           text: 'Clear',
           onPress: async () => {
             try {
-              await AsyncStorage.clear();
+              const keys = await AsyncStorage.getAllKeys();
+              const cacheKeys = keys.filter(k => k !== 'internlink-storage');
+              await AsyncStorage.multiRemove(cacheKeys);
               setStorageUsed('0 MB');
               Alert.alert('Success', 'Cache cleared successfully');
             } catch (error) {

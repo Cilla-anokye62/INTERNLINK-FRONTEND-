@@ -16,8 +16,8 @@ function formatNum(n: number): string {
 export default function InsightsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { getAnalytics, userId } = useAppStore();
-  const analytics = useMemo(() => getAnalytics(userId), [userId]);
+  const { getAnalytics, userId, applications, listings } = useAppStore();
+  const analytics = useMemo(() => getAnalytics(userId), [applications, getAnalytics, listings, userId]);
 
   const maxDay = useMemo(() => Math.max(...analytics.applicationsByDay.map((d) => d.count), 1), [analytics]);
   const maxSkill = useMemo(() => Math.max(...analytics.skillsDistribution.map((s) => s.count), 1), [analytics]);

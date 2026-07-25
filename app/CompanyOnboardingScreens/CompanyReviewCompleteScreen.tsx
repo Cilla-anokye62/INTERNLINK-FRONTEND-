@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 
 // ---------- Types ----------
 interface SummaryRow {
@@ -60,9 +61,11 @@ const SummaryRowItem: React.FC<SummaryRowItemProps> = ({ row, onEdit, colors }) 
 };
 
 // ---------- Main Screen ----------
-const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const CompanyReviewCompleteScreen: React.FC = () => {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const completeOnboarding = useAppStore((state) => state.completeOnboarding);
+  const cancelOnboarding = useAppStore((state) => state.cancelOnboarding);
 
   const summaryRows: SummaryRow[] = [
     {
@@ -93,15 +96,11 @@ const CompanyReviewCompleteScreen: React.FC<{ navigation: any }> = ({ navigation
   };
 
   const handleCompleteSetup = (): void => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'CompanyTabs' }],
-    });
+    completeOnboarding();
   };
 
   const handleSaveAndFinishLater = (): void => {
-    console.log('Save & finish later pressed');
-    // TODO: save draft and exit flow
+    cancelOnboarding();
   };
 
   return (

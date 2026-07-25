@@ -19,6 +19,7 @@ export type Duration = '4 weeks' | '8 weeks' | '12 weeks' | '16 weeks' | '6 mont
 
 export interface InternshipData {
   id: string;
+  backendListingId?: number;
   title: string;
   company: string;
   companyId: string;

@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type { StackScreenProps } from '@react-navigation/stack';
+import type { RootStackParamList } from '../../types/navigation';
 
 type Role = 'student' | 'employer' | 'university';
 
@@ -43,7 +45,9 @@ const ROLES: RoleOption[] = [
 
 const { width, height } = Dimensions.get('window');
 
-export default function RoleSelectionScreen({ navigation }: any) {
+type Props = StackScreenProps<RootStackParamList, 'RoleSelection'>;
+
+export default function RoleSelectionScreen({ navigation }: Props) {
   const { colors, theme } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 

@@ -44,7 +44,7 @@ import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
-export default function ActionSuccessfulScreen({ navigation }: any) {
+export default function ActionSuccessfulScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
@@ -52,11 +52,12 @@ export default function ActionSuccessfulScreen({ navigation }: any) {
   // Called when "Done" is tapped — should close this confirmation
   // and return the user to wherever makes sense after success.
   const handleDone = () => {
-    console.log('Done tapped');
-    // TODO: navigate away from this confirmation screen, e.g.:
-    // navigation.goBack();
-    // or, if this was shown after completing a flow:
-    // navigation.navigate('Home');
+    if (typeof route.params?.onDone === 'function') {
+      route.params.onDone();
+      return;
+    }
+
+    navigation.goBack();
   };
 
   return (

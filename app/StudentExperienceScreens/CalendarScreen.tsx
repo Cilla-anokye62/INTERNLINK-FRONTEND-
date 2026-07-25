@@ -8,11 +8,13 @@ import { useAppStore } from '../../src/store/useAppStore';
 export default function CalendarScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { applications } = useAppStore();
+  const { applications, userId } = useAppStore();
 
   const events = useMemo(() => {
     const items: { id: string; title: string; company: string; date: string; time: string; type: string; color: string }[] = [];
-    applications.forEach((app) => {
+    applications
+      .filter((app) => app.studentId === userId)
+      .forEach((app) => {
       if (app.interview && app.interview.status === 'scheduled') {
         items.push({
           id: app.id + '-interview',
@@ -37,7 +39,7 @@ export default function CalendarScreen({ navigation }: any) {
       }
     });
     return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [applications]);
+  }, [applications, userId]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

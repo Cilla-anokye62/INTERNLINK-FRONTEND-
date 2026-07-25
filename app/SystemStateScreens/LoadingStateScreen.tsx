@@ -96,8 +96,7 @@ export default function LoadingStateScreen({ navigation }: any) {
   });
 
   const handleBackPress = () => {
-    console.log('Back tapped');
-    // TODO: navigation.goBack();
+    navigation.goBack();
   };
 
   // SKETCH of how you'd actually use this screen in a real flow:

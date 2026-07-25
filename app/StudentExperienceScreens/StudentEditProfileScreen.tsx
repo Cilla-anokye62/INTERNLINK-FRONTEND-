@@ -78,7 +78,7 @@ export default function StudentEditProfileScreen({ navigation }: any) {
           <TouchableOpacity
             style={styles.editButton}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('StudentEditProfile')}
+            onPress={() => navigation.goBack()}
           >
             <Text style={styles.editButtonText}>Edit profile</Text>
           </TouchableOpacity>

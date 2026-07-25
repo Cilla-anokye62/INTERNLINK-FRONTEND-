@@ -9,8 +9,9 @@ import LoginScreen from '../../app/AuthScreens/LoginScreen';
 import SignUpScreen from '../../app/AuthScreens/SignUpScreen';
 import VerificationScreen from '../../app/AuthScreens/VerificationScreen';
 import ForgotPasswordScreen from '../../app/AuthScreens/ForgotPasswordScreen';
+import type { RootStackParamList } from '../../types/navigation';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AuthNavigator() {
   return (

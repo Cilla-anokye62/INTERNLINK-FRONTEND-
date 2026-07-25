@@ -20,7 +20,10 @@ export default function UniversityOnboardingNavigator() {
       <Stack.Screen name="UniversityInfo" component={UniversityInfoScreen} />
       <Stack.Screen name="InstitutionDetails" component={InstitutionDetailsScreen} />
       <Stack.Screen name="CareerServicesSetup" component={CareerServicesSetupScreen} />
-      <Stack.Screen name="ReviewComplete" component={ReviewCompleteScreen} />
+      <Stack.Screen
+        name="ReviewComplete"
+        component={ReviewCompleteScreen as React.ComponentType<any>}
+      />
     </Stack.Navigator>
   );
 }

@@ -17,7 +17,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -31,59 +31,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { useAppStore } from '../../src/store/useAppStore';
 
 // ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PersonalInfoScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const storedName = useAppStore((state) => state.userName);
+  const storedProfile = useAppStore((state) => state.profile);
+  const setUserName = useAppStore((state) => state.setUserName);
+  const updateProfile = useAppStore((state) => state.updateProfile);
 
 
   // Form state
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState(''); // read-only
-  const [phone, setPhone] = useState('');
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [fullName, setFullName] = useState(storedName);
+  const [email] = useState(storedProfile.email);
+  const [phone, setPhone] = useState(storedProfile.phone);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(storedProfile.photoUri);
 
   // Track which input is focused
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
-
-  // Load data from AsyncStorage on mount
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const savedUsername = await AsyncStorage.getItem('username');
-      const savedProfilePhoto = await AsyncStorage.getItem('userProfilePhoto');
-      const savedPhone = await AsyncStorage.getItem('userPhone');
-      const savedEmail = await AsyncStorage.getItem('userEmail');
-
-      if (savedUsername) setFullName(savedUsername);
-      if (savedProfilePhoto) setProfilePhoto(savedProfilePhoto);
-      if (savedPhone) setPhone(savedPhone);
-      if (savedEmail) setEmail(savedEmail);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleSave = async () => {
-    try {
-      await AsyncStorage.setItem('username', fullName);
-      await AsyncStorage.setItem('userPhone', phone);
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error saving personal info:', error);
-      alert('Failed to save changes');
-    }
+  const handleSave = () => {
+    setUserName(fullName.trim());
+    updateProfile({ phone, photoUri: profilePhoto });
+    navigation.goBack();
   };
 
   const handleChangePhoto = async () => {
@@ -101,7 +79,7 @@ export default function PersonalInfoScreen({ navigation }: any) {
     if (!result.canceled && result.assets && result.assets[0]) {
       const uri = result.assets[0].uri;
       setProfilePhoto(uri);
-      await AsyncStorage.setItem('userProfilePhoto', uri);
+      updateProfile({ photoUri: uri });
     }
   };
 
