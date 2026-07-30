@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
@@ -6,8 +6,9 @@ import * as Linking from 'expo-linking';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from './src/context/ThemeContext';
+import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import { useAppStore } from './src/store/useAppStore';
-import { restoreSession } from './src/api';
+import { registerForPushNotifications, restoreSession } from './src/api';
 import type { RootStackParamList } from './types/navigation';
 
 import SplashScreen from './app/SplashScreen';
@@ -30,20 +31,18 @@ import PreferredLocationScreen from './app/StudentOnboardingScreens/PreferredLoc
 import ProfileCompletionScreen from './app/StudentOnboardingScreens/ProfileCompletionScreen';
 import CompanyInformation from './app/CompanyOnboardingScreens/CompanyInformation';
 import RecruitmentPreferencesScreen from './app/CompanyOnboardingScreens/RecruitmentPreferencesScreen';
-import CompanyReviewCompleteScreen from './app/CompanyOnboardingScreens/CompanyReviewCompleteScreen';
 import CompanyDetailsScreen from './app/CompanyOnboardingScreens/CompanyDetailsScreen';
 import CompanyProfileCompletion from './app/CompanyOnboardingScreens/CompanyProfileCompletion';
 
 import CompanyTabs from './app/CompanyExperienceScreens/CompanyTabs';
 import CompanyProfileScreen from './app/CompanyExperienceScreens/CompanyProfileScreen';
-import NewInternshipDetailsScreen from './app/CompanyExperienceScreens/NewInternshipDetailsScreen';
 import ApplicantProfileScreen from './app/CompanyExperienceScreens/ApplicantProfileScreen';
-import InterviewScheduleScreen from './app/CompanyExperienceScreens/InterviewScheduleScreen';
 import OfferSendScreen from './app/CompanyExperienceScreens/OfferSendScreen';
 import PostInternshipWizard from './app/CompanyExperienceScreens/PostInternshipWizard';
 import MessagesScreen from './app/CompanyExperienceScreens/MessagesScreen';
 import ChatScreen from './app/CompanyExperienceScreens/ChatScreen';
 import InsightsScreen from './app/CompanyExperienceScreens/InsightsScreen';
+import PipelineSetupScreen from './app/CompanyExperienceScreens/PipelineSetupScreen';
 import UniversityTabs from './app/UniversityExperience/UniversityTabs';
 import PlacementOverviewScreen from './app/UniversityExperience/PlacementOverviewScreen';
 import CompanyEngagementScreen from './app/UniversityExperience/CompanyEngagementScreen';
@@ -89,12 +88,11 @@ import AccessibilityScreen from './app/SettingsComponents/AccessibilityScreen';
 import CalendarSyncScreen from './app/SettingsComponents/CalendarSyncScreen';
 import ReportProblemScreen from './app/SettingsComponents/ReportProblemScreen';
 import AboutScreen from './app/SettingsComponents/AboutScreen';
-import PremiumPaywallScreen from './app/PremiumScreens/PremiumPaywallScreen';
-import PaymentScreen from './app/PremiumScreens/PaymentScreen';
-import PremiumConfirmationScreen from './app/PremiumScreens/PremiumConfirmationScreen';
-import PremiumManageScreen from './app/PremiumScreens/PremiumManageScreen';
+import PremiumPlansScreen from './app/PremiumScreens/PremiumPlansScreen';
+import SubscriptionScreen from './app/PremiumScreens/SubscriptionScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
+const MINIMUM_SPLASH_DURATION_MS = 2000;
 
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/'), 'internlink://'],
@@ -111,6 +109,7 @@ const linking: LinkingOptions<RootStackParamList> = {
 };
 
 export default function App() {
+  const [minimumSplashElapsed, setMinimumSplashElapsed] = useState(false);
   const hasHydrated = useAppStore((state) => state.hasHydrated);
   const sessionInitialized = useAppStore((state) => state.sessionInitialized);
   const setSessionInitialized = useAppStore((state) => state.setSessionInitialized);
@@ -118,6 +117,15 @@ export default function App() {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const onboardingComplete = useAppStore((state) => state.onboardingComplete);
   const userRole = useAppStore((state) => state.userRole);
+  const userId = useAppStore((state) => state.userId);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinimumSplashElapsed(true);
+    }, MINIMUM_SPLASH_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!hasHydrated || sessionInitialized) return;
@@ -132,7 +140,16 @@ export default function App() {
     };
   }, [hasHydrated, sessionInitialized, setSessionInitialized]);
 
-  const navigatorKey = !hasHydrated || !sessionInitialized
+  useEffect(() => {
+    if (!sessionInitialized || !isAuthenticated || !userId) return;
+    void registerForPushNotifications().catch(() => {
+      // Push setup must never prevent the authenticated app from loading.
+    });
+  }, [isAuthenticated, sessionInitialized, userId]);
+
+  const bootComplete = hasHydrated && sessionInitialized && minimumSplashElapsed;
+
+  const navigatorKey = !bootComplete
     ? 'boot'
     : !isAuthenticated || !userRole
       ? `auth-${authEntryRoute}`
@@ -140,10 +157,10 @@ export default function App() {
         ? `onboarding-${userRole}`
         : `app-${userRole}`;
 
-  const initialRouteName: keyof RootStackParamList = !hasHydrated || !sessionInitialized
+  const initialRouteName: keyof RootStackParamList = !bootComplete
     ? 'Splash'
     : !isAuthenticated || !userRole
-      ? authEntryRoute === 'login' ? 'Login' : 'Splash'
+      ? authEntryRoute === 'login' ? 'Login' : 'WelcomeOnboarding'
       : !onboardingComplete
         ? userRole === 'student'
           ? 'AcademicInfo'
@@ -160,17 +177,18 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <NavigationContainer key={navigatorKey} linking={linking}>
-            <StatusBar style="auto" />
-            <Stack.Navigator
-              key={navigatorKey}
-              initialRouteName={initialRouteName}
-              screenOptions={{
-                headerShown: false,
-                cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
-              }}
-            >
-              {!hasHydrated || !sessionInitialized ? (
+          <SubscriptionProvider>
+            <NavigationContainer key={navigatorKey} linking={linking}>
+              <StatusBar style="auto" />
+              <Stack.Navigator
+                key={navigatorKey}
+                initialRouteName={initialRouteName}
+                screenOptions={{
+                  headerShown: false,
+                  cardStyleInterpolator: CardStyleInterpolators.forFadeFromCenter,
+                }}
+              >
+              {!bootComplete ? (
                 <Stack.Screen name="Splash" component={SplashScreen} />
               ) : !isAuthenticated || !userRole ? (
                 <>
@@ -201,7 +219,6 @@ export default function App() {
                       <Stack.Screen name="CompanyDetails" component={CompanyDetailsScreen} />
                       <Stack.Screen name="RecruitmentPreferences" component={RecruitmentPreferencesScreen} />
                       <Stack.Screen name="CompanyProfileCompletion" component={CompanyProfileCompletion} />
-                      <Stack.Screen name="CompanyReviewComplete" component={CompanyReviewCompleteScreen} />
                     </>
                   )}
                   {userRole === 'university' && (
@@ -246,14 +263,13 @@ export default function App() {
                   {userRole === 'employer' && (
                     <>
                       <Stack.Screen name="CompanyProfile" component={CompanyProfileScreen} />
-                      <Stack.Screen name="NewInternshipDetails" component={NewInternshipDetailsScreen} />
                       <Stack.Screen name="ApplicantProfile" component={ApplicantProfileScreen} />
-                      <Stack.Screen name="InterviewSchedule" component={InterviewScheduleScreen} />
                       <Stack.Screen name="OfferSend" component={OfferSendScreen} />
                       <Stack.Screen name="PostInternshipWizard" component={PostInternshipWizard} />
                       <Stack.Screen name="Messages" component={MessagesScreen} />
                       <Stack.Screen name="ChatScreen" component={ChatScreen} />
                       <Stack.Screen name="Insights" component={InsightsScreen} />
+                      <Stack.Screen name="PipelineSetup" component={PipelineSetupScreen} />
                     </>
                   )}
 
@@ -293,15 +309,14 @@ export default function App() {
                   <Stack.Screen name="CalendarSync" component={CalendarSyncScreen} />
                   <Stack.Screen name="ReportProblem" component={ReportProblemScreen} />
                   <Stack.Screen name="About" component={AboutScreen} />
-                  <Stack.Screen name="PremiumPaywall" component={PremiumPaywallScreen} />
-                  <Stack.Screen name="Payment" component={PaymentScreen} />
-                  <Stack.Screen name="PremiumConfirmation" component={PremiumConfirmationScreen} />
-                  <Stack.Screen name="PremiumManage" component={PremiumManageScreen} />
+                  <Stack.Screen name="PremiumPlans" component={PremiumPlansScreen} />
+                  <Stack.Screen name="Subscription" component={SubscriptionScreen} />
                 </>
               )}
               <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-            </Stack.Navigator>
-          </NavigationContainer>
+              </Stack.Navigator>
+            </NavigationContainer>
+          </SubscriptionProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

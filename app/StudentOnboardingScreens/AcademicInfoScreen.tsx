@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Modal, FlatList, Dimensions } from 'react-native';
-import { useState } from 'react';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -55,7 +55,11 @@ export default function AcademicInfoScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const { university: storeUniversity, programme: storeProgramme, academicLevel: storeLevel, graduationYear: storeYear, setAcademicInfo } = useAppStore();
+  const storeUniversity = useAppStore((state) => state.university);
+  const storeProgramme = useAppStore((state) => state.programme);
+  const storeLevel = useAppStore((state) => state.academicLevel);
+  const storeYear = useAppStore((state) => state.graduationYear);
+  const setAcademicInfo = useAppStore((state) => state.setAcademicInfo);
 
   const [university, setUniversity] = useState(storeUniversity);
   const [programme, setProgramme] = useState(storeProgramme);

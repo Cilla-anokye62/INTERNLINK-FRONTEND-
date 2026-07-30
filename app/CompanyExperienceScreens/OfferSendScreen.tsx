@@ -1,35 +1,61 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Dimensions } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
+import { getAuthErrorMessage, offerApi } from '../../src/api';
 
 const { height } = Dimensions.get('window');
 
 export default function OfferSendScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { applications, updateApplicationStatus } = useAppStore();
-  const applicationId: string = route.params?.applicationId;
-
-  const application = applications.find((a) => a.id === applicationId);
+  const applicationId = Number(route.params?.applicationId);
 
   const [salary, setSalary] = useState('');
   const [benefits, setBenefits] = useState('');
   const [startDate, setStartDate] = useState('');
   const [expiration, setExpiration] = useState('');
   const [offerLetter, setOfferLetter] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const handleSend = () => {
+  const parseDate = (value: string) => {
+    const trimmed = value.trim();
+    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+    return match
+      ? `${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`
+      : trimmed;
+  };
+
+  const handleSend = async () => {
     if (!salary || !startDate) {
       Alert.alert('Missing Info', 'Please fill in salary and start date.');
       return;
     }
-    updateApplicationStatus(applicationId, 'offer_received');
-    Alert.alert('Offer Sent!', 'The applicant has been notified of the offer.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    if (!Number.isFinite(applicationId)) {
+      Alert.alert('Missing application', 'Open this screen from an applicant profile.');
+      return;
+    }
+    setSending(true);
+    try {
+      const draft = await offerApi.createDraft({
+        applicationId,
+        title: 'Internship offer',
+        message: [offerLetter.trim(), benefits.trim() ? `Benefits: ${benefits.trim()}` : '']
+          .filter(Boolean).join('\n\n'),
+        compensation: salary.trim(),
+        startDate: parseDate(startDate),
+        expiresAt: expiration.trim() ? `${parseDate(expiration)}T23:59:59` : undefined,
+      });
+      await offerApi.send(draft.id);
+      Alert.alert('Offer sent', 'The applicant has been notified.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (error) {
+      Alert.alert('Could not send offer', getAuthErrorMessage(error));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -111,9 +137,12 @@ export default function OfferSendScreen({ navigation, route }: any) {
         <TouchableOpacity
           style={[styles.sendBtn, { backgroundColor: colors.accent }]}
           onPress={handleSend}
+          disabled={sending}
           activeOpacity={0.85}
         >
-          <Text style={[styles.sendBtnText, { color: colors.onPrimary }]}>Send Offer</Text>
+          {sending
+            ? <ActivityIndicator color={colors.onPrimary} />
+            : <Text style={[styles.sendBtnText, { color: colors.onPrimary }]}>Send Offer</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

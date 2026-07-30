@@ -31,7 +31,7 @@ export type RootStackParamList = {
   Login: undefined;
   SignUp: { role: UserRole };
   Verification: { role: UserRole; email: string };
-  ForgotPassword: { role?: UserRole } | undefined;
+  ForgotPassword: undefined;
   ResetPassword: { token?: string } | undefined;
   Onboarding: undefined;
 
@@ -50,7 +50,7 @@ export type RootStackParamList = {
   Availability: FlexibleParams;
   ReviewApplication: FlexibleParams;
   ApplicationSubmitted: FlexibleParams;
-  ApplicationDetails: { applicationId: string };
+  ApplicationDetails: FlexibleParams;
   Notifications: undefined;
   StudentChatScreen: FlexibleParams;
 
@@ -68,19 +68,17 @@ export type RootStackParamList = {
 
   CompanyInformation: undefined;
   RecruitmentPreferences: undefined;
-  CompanyReviewComplete: undefined;
   CompanyDetails: undefined;
   CompanyProfileCompletion: undefined;
   CompanyTabs: undefined;
   CompanyProfile: undefined;
-  NewInternshipDetails: FlexibleParams;
-  ApplicantProfile: { applicationId: string };
-  InterviewSchedule: { applicationId: string };
+  ApplicantProfile: FlexibleParams;
   OfferSend: { applicationId: string };
   PostInternshipWizard: undefined;
   Messages: undefined;
   ChatScreen: FlexibleParams;
   Insights: undefined;
+  PipelineSetup: FlexibleParams;
 
   DiscoverEmpty: undefined;
   NoConnection: FlexibleParams;
@@ -107,9 +105,7 @@ export type RootStackParamList = {
   CalendarSync: undefined;
   ReportProblem: undefined;
   About: undefined;
+  PremiumPlans: { source?: string } | undefined;
+  Subscription: undefined;
 
-  PremiumPaywall: undefined;
-  Payment: { plan?: 'monthly' | 'annual' } | undefined;
-  PremiumConfirmation: undefined;
-  PremiumManage: undefined;
 };

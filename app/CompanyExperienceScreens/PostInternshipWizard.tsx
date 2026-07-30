@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, Switch, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { WorkMode } from '../../src/types/application';
+import { ApiError, getAuthErrorMessage, listingApi, mediaApi, type UploadableImage } from '../../src/api';
 import { useAppStore } from '../../src/store/useAppStore';
-import { InternshipListing, WorkMode } from '../../src/types/application';
-import { getAuthErrorMessage, listingApi } from '../../src/api';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
 const { height } = Dimensions.get('window');
 const STEPS = ['Basics', 'Details', 'Requirements', 'Compensation', 'Settings', 'Preview'];
@@ -39,11 +41,13 @@ const normalizeDeadline = (value: string): string | null => {
 };
 
 export default function PostInternshipWizard({ navigation }: any) {
+  const { refresh: refreshSubscription } = useSubscription();
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { addListing, userId, userName } = useAppStore();
+  const userName = useAppStore((state) => state.userName);
   const [step, setStep] = useState(0);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [listingImage, setListingImage] = useState<UploadableImage | null>(null);
 
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('');
@@ -98,6 +102,28 @@ export default function PostInternshipWizard({ navigation }: any) {
     else setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   };
 
+  const pickListingImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission required', 'Allow photo access to add an internship image.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets?.[0]) {
+      const asset = result.assets[0];
+      setListingImage({
+        uri: asset.uri,
+        name: asset.fileName || `listing-${Date.now()}.jpg`,
+        mimeType: asset.mimeType,
+      });
+    }
+  };
+
   const handlePublish = async () => {
     if (isPublishing) return;
     if (!title.trim()) { Alert.alert('Missing', 'Please enter an internship title.'); return; }
@@ -129,41 +155,62 @@ export default function PostInternshipWizard({ navigation }: any) {
         deadline: normalizedDeadline,
         allowance: isPaid ? monthlyStipend.trim() || 'Paid' : 'Unpaid',
         requiredSkills,
-      });
-
-      const newListing: InternshipListing = {
-        id: String(created.id),
-        employerId: userId || String(created.companyId), title: created.title, department, employmentType,
-        category: created.industry ?? category, branch, openPositions: pos,
-        description: created.description ?? description.trim(),
-        responsibilities: responsibilities.split('\n').filter(Boolean),
-        dailyTasks: dailyTasks.split('\n').filter(Boolean),
-        learningOutcomes: learningOutcomes.split('\n').filter(Boolean),
-        teamInfo: teamInfo.trim(), requiredSkills: created.requiredSkills, preferredSkills, studentLevel,
-        degreeProgramme: degreeProgramme.trim(), minGpa: minGpa.trim(),
-        requiredDocuments: ['Resume'], isPaid, monthlyStipend: created.allowance ?? '',
+        department: department || undefined,
+        employmentType,
+        category: category || undefined,
+        branch: branch.trim() || undefined,
+        openPositions: pos,
+        responsibilities: responsibilities.trim() || undefined,
+        dailyTasks: dailyTasks.trim() || undefined,
+        learningOutcomes: learningOutcomes.trim() || undefined,
+        teamInfo: teamInfo.trim() || undefined,
+        preferredSkills,
+        studentLevel,
+        degreeProgramme: degreeProgramme.trim() || undefined,
+        minimumGpa: minGpa.trim() ? Number(minGpa) : undefined,
+        paid: isPaid,
         benefits: benefits.split(',').map((benefit) => benefit.trim()).filter(Boolean),
-        workMode, location: created.location ?? '', duration: created.duration ?? duration, workingHours,
-        deadline: created.deadline ?? normalizedDeadline, autoClose: true, maxApplicants: maxApp,
-        allowCoverLetter, resumeRequired, portfolioRequired, autoScreening, aiMatching,
-        status: 'active', views: 0, applicantCount: 0,
-        createdAt: created.createdAt, publishedAt: created.createdAt,
-      };
-      addListing(newListing);
+        workMode: workMode.toUpperCase() as 'REMOTE' | 'HYBRID' | 'ONSITE',
+        workingHours,
+        maxApplicants: maxApp,
+        allowCoverLetter,
+        resumeRequired,
+        portfolioRequired,
+        autoScreening,
+        aiMatching,
+        requiredDocuments: [
+          ...(resumeRequired ? ['RESUME'] : []),
+          ...(allowCoverLetter ? ['COVER_LETTER'] : []),
+          ...(portfolioRequired ? ['PORTFOLIO'] : []),
+        ],
+      });
+      if (listingImage) {
+        await mediaApi.uploadListingImage(created.id, listingImage);
+      }
+      await refreshSubscription();
+
       Alert.alert('Published!', 'Your internship is now live.', [
         { text: 'View Listings', onPress: () => navigation.navigate('CompanyTabs', { screen: 'Listings' }) },
       ]);
     } catch (error) {
-      Alert.alert('Could not publish internship', getAuthErrorMessage(error));
+      if (error instanceof ApiError && error.status === 402) {
+        Alert.alert(
+          'Active listing limit reached',
+          'The free Company plan includes one active listing. Close the current listing or upgrade to Premium.',
+          [
+            { text: 'Not now', style: 'cancel' },
+            {
+              text: 'View Premium',
+              onPress: () => navigation.navigate('PremiumPlans', { source: 'listing-limit' }),
+            },
+          ],
+        );
+      } else {
+        Alert.alert('Could not publish internship', getAuthErrorMessage(error));
+      }
     } finally {
       setIsPublishing(false);
     }
-  };
-
-  const handleSaveDraft = () => {
-    Alert.alert('Draft Saved', 'Your listing has been saved as a draft.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
   };
 
   const SectionLabel = ({ label }: { label: string }) => (
@@ -241,6 +288,22 @@ export default function PostInternshipWizard({ navigation }: any) {
           <Input value={branch} onChangeText={setBranch} placeholder="e.g., San Francisco HQ" />
           <SectionLabel label="Open Positions" />
           <Input value={openPositions} onChangeText={(v: string) => setOpenPositions(v.replace(/[^0-9]/g, ''))} placeholder="1" keyboardType="numeric" />
+          <SectionLabel label="Internship Image (optional)" />
+          <TouchableOpacity
+            style={[styles.imagePicker, { borderColor: colors.inputBorder, backgroundColor: colors.inputBg }]}
+            onPress={() => void pickListingImage()}
+          >
+            {listingImage ? (
+              <Image source={{ uri: listingImage.uri }} style={styles.listingImagePreview} />
+            ) : (
+              <>
+                <Ionicons name="image-outline" size={24} color={colors.accent} />
+                <Text style={[styles.imagePickerText, { color: colors.subtitle }]}>
+                  Choose a PNG, JPEG or WebP image
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       );
       case 1: return (
@@ -349,9 +412,7 @@ export default function PostInternshipWizard({ navigation }: any) {
           <Text style={[styles.headerTitle, { color: colors.title }]}>Post Internship</Text>
           <Text style={[styles.stepLabel, { color: colors.subtitle }]}>Step {step + 1} of {STEPS.length} · {STEPS[step]}</Text>
         </View>
-        <TouchableOpacity onPress={handleSaveDraft}>
-          <Text style={[styles.draftBtn, { color: colors.accent }]}>Draft</Text>
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.progressContainer}>
@@ -415,6 +476,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   fieldLabel: { fontSize: 15, fontWeight: '700', marginBottom: 10, marginTop: 18 },
   inputWrapper: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 4 },
   input: { fontSize: 14, lineHeight: 22, padding: 0 },
+  imagePicker: { minHeight: 120, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', gap: 8 },
+  imagePickerText: { fontSize: 13, fontWeight: '600' },
+  listingImagePreview: { width: '100%', height: 180 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1 },
   chipText: { fontSize: 13, fontWeight: '500' },

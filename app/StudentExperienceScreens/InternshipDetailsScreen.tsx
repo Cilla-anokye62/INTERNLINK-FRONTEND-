@@ -1,71 +1,141 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
 import { InternshipData } from '../../src/types/application';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  applicationApi,
+  bookmarkApi,
+  getAuthErrorMessage,
+  type BackendApplicationResponse,
+} from '../../src/api';
+import { ApplicationLimitIndicator } from '../../src/components/PremiumComponents';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
 const { height } = Dimensions.get('window');
-
-const MOCK_INTERNSHIP: InternshipData = {
-  id: 'int-1',
-  title: 'Software Engineering Intern',
-  company: 'Airbnb',
-  companyId: 'employer-1',
-  companyLogo: 'A',
-  companyColor: '#EF4444',
-  location: 'San Francisco, CA',
-  workMode: 'hybrid',
-  salary: 'GHS 48/hr',
-  duration: '12 weeks',
-  description: 'Join the Trust & Safety team to build experiences used by 150M+ travelers worldwide. You\'ll work alongside senior engineers, ship production code, and own a meaningful feature by the end of the summer.',
-  responsibilities: ['Ship customer-facing features end-to-end', 'Pair with senior engineers in weekly reviews', 'Contribute to design system + tooling'],
-  requirements: ['React', 'TypeScript', 'GraphQL', 'Testing'],
-  benefits: ['Housing stipend', 'Mentorship program', 'Free meals'],
-  skills: ['React', 'TypeScript', 'GraphQL', 'Testing'],
-  matchScore: 94,
-  applicants: 128,
-  postedDate: new Date(Date.now() - 2 * 86400000).toISOString(),
-  closingDate: new Date(Date.now() + 30 * 86400000).toISOString(),
-};
 
 export default function InternshipDetailsScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { isPremium, applicationsUsed, applicationLimit, savedInternships, toggleSavedInternship } = useAppStore();
+  const { entitlement, refresh } = useSubscription();
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [existingApplication, setExistingApplication] =
+    useState<BackendApplicationResponse | null>(null);
+  const [checkingApplication, setCheckingApplication] = useState(true);
+  const applicationEntitlement = entitlement('STUDENT_APPLICATIONS');
+  const limitReached = Boolean(
+    applicationEntitlement?.limit != null
+    && applicationEntitlement.remaining != null
+    && applicationEntitlement.remaining <= 0,
+  );
 
   const raw = route.params?.internship;
 
-  const internship: InternshipData = raw
+  const internship: InternshipData | null = raw
     ? {
         id: raw.id || 'int-0',
+        backendListingId: raw.backendListingId,
         title: raw.title || 'Internship',
         company: raw.company || 'Company',
         companyId: raw.companyId || 'employer-0',
         companyLogo: raw.companyLogo || raw.company?.[0] || 'C',
         companyColor: raw.companyColor || raw.color || '#2CACAD',
+        imageUrl: raw.imageUrl || null,
         location: raw.location || '',
         workMode: raw.workMode || (raw.location?.includes('Remote') ? 'remote' : raw.location?.includes('Hybrid') ? 'hybrid' : 'onsite'),
         salary: raw.salary || raw.pay || '',
         duration: raw.duration || '',
-        description: raw.description || 'Join this exciting internship opportunity and gain hands-on experience in a dynamic environment.',
-        responsibilities: raw.responsibilities || ['Contribute to real projects', 'Collaborate with the team', 'Learn from industry experts'],
+        description: raw.description || 'No description provided.',
+        responsibilities: raw.responsibilities || [],
         requirements: raw.requirements || raw.skills || [],
-        benefits: raw.benefits || ['Mentorship', 'Networking opportunities'],
-        skills: raw.skills || ['React', 'TypeScript', 'Communication'],
+        benefits: raw.benefits || [],
+        skills: raw.skills || [],
         matchScore: raw.matchScore || raw.match || 0,
-        applicants: raw.applicants || Math.floor(Math.random() * 200) + 50,
+        applicants: raw.applicants || 0,
         postedDate: raw.postedDate || new Date(Date.now() - 7 * 86400000).toISOString(),
         closingDate: raw.closingDate || new Date(Date.now() + 30 * 86400000).toISOString(),
+        requiredDocuments: raw.requiredDocuments || [],
+        allowCoverLetter: raw.allowCoverLetter ?? false,
+        resumeRequired: raw.resumeRequired ?? false,
+        portfolioRequired: raw.portfolioRequired ?? false,
       }
-    : MOCK_INTERNSHIP;
+    : null;
 
-  const isSaved = savedInternships.includes(internship.id);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadState = async () => {
+        setCheckingApplication(true);
+        setExistingApplication(null);
+        void refresh();
+        const [bookmarksResult, applicationResult] = await Promise.allSettled([
+          bookmarkApi.list(),
+          internship?.backendListingId
+            ? applicationApi.findOwnByListing(internship.backendListingId)
+            : Promise.resolve(null),
+        ]);
+        if (!active) return;
+        if (bookmarksResult.status === 'fulfilled') {
+          const bookmarks = bookmarksResult.value;
+          setIsSaved(Boolean(
+            internship?.backendListingId
+            && bookmarks.some((bookmark) => bookmark.listingId === internship.backendListingId),
+          ));
+        }
+        if (applicationResult.status === 'fulfilled') {
+          setExistingApplication(applicationResult.value);
+        }
+        setCheckingApplication(false);
+      };
+      void loadState();
+      return () => {
+        active = false;
+      };
+    }, [internship?.backendListingId, refresh]),
+  );
+
+  if (!internship) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ color: colors.title, fontSize: 18, fontWeight: '700' }}>Internship details unavailable</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={{ color: colors.accent, marginTop: 12, fontWeight: '600' }}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const toggleBookmark = async () => {
+    if (!internship.backendListingId || saving) {
+      if (!internship.backendListingId) {
+        Alert.alert('Internship unavailable', 'This internship is no longer available to save.');
+      }
+      return;
+    }
+    setSaving(true);
+    try {
+      const shouldSave = !isSaved;
+      await bookmarkApi.setSaved(internship.backendListingId, shouldSave);
+      setIsSaved(shouldSave);
+    } catch (error) {
+      Alert.alert('Could not update saved internships', getAuthErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleApply = () => {
-    if (!isPremium && applicationsUsed >= applicationLimit) {
-      navigation.navigate('PremiumPaywall');
+    if (existingApplication) {
+      navigation.navigate('ApplicationDetails', { application: existingApplication });
+      return;
+    }
+    if (limitReached) {
+      navigation.navigate('PremiumPlans', { source: 'application-limit' });
       return;
     }
     navigation.navigate('ApplicationReview', { internship });
@@ -78,8 +148,10 @@ export default function InternshipDetailsScreen({ navigation, route }: any) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back-outline" size={20} color={colors.title} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.saveButton} onPress={() => toggleSavedInternship(internship.id)}>
-          <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={18} color={isSaved ? colors.accent : colors.title} />
+        <TouchableOpacity style={styles.saveButton} onPress={() => void toggleBookmark()} disabled={saving}>
+          {saving
+            ? <ActivityIndicator size="small" color={colors.accent} />
+            : <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={18} color={isSaved ? colors.accent : colors.title} />}
         </TouchableOpacity>
       </View>
 
@@ -88,9 +160,13 @@ export default function InternshipDetailsScreen({ navigation, route }: any) {
         showsVerticalScrollIndicator={false}
       >
         {/* Company avatar */}
-        <View style={[styles.companyAvatar, { backgroundColor: internship.companyColor }]}>
-          <Text style={styles.companyAvatarText}>{internship.companyLogo}</Text>
-        </View>
+        {internship.imageUrl ? (
+          <Image source={{ uri: internship.imageUrl }} style={styles.listingImage} />
+        ) : (
+          <View style={[styles.companyAvatar, { backgroundColor: internship.companyColor }]}>
+            <Text style={styles.companyAvatarText}>{internship.companyLogo}</Text>
+          </View>
+        )}
 
         {/* Title */}
         <Text style={styles.title}>{internship.title}</Text>
@@ -164,32 +240,38 @@ export default function InternshipDetailsScreen({ navigation, route }: any) {
 
       {/* Bottom action buttons */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => toggleSavedInternship(internship.id)}>
+        <TouchableOpacity style={styles.saveBtn} onPress={() => void toggleBookmark()} disabled={saving}>
           <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={16} color={colors.accent} style={{marginRight: 6}} />
           <Text style={styles.saveBtnText}>{isSaved ? 'Saved' : 'Save'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.applyBtn, !isPremium && applicationsUsed >= applicationLimit && styles.applyBtnLocked]}
+          style={[
+            styles.applyBtn,
+            limitReached && !existingApplication && styles.applyBtnLocked,
+          ]}
           onPress={handleApply}
+          disabled={checkingApplication}
           activeOpacity={0.85}
         >
           <Text style={styles.applyBtnText}>
-            {!isPremium && applicationsUsed >= applicationLimit
-              ? 'Upgrade to Apply'
+            {checkingApplication
+              ? 'Checking...'
+              : existingApplication
+                ? 'View Application'
+                : limitReached
+              ? 'View Premium'
               : 'Apply Now'}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Application limit indicator for free users */}
-      {!isPremium && (
-        <View style={styles.limitIndicator}>
-          <Text style={styles.limitText}>
-            {applicationsUsed} / {applicationLimit} free applications used
-          </Text>
-        </View>
-      )}
+      <View style={styles.limitIndicator}>
+        <ApplicationLimitIndicator
+          entitlement={applicationEntitlement}
+          onUpgrade={() => navigation.navigate('PremiumPlans', { source: 'application-limit' })}
+        />
+      </View>
 
     </SafeAreaView>
   );
@@ -235,6 +317,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 24,
     paddingBottom: 24,
+  },
+  listingImage: {
+    width: '100%',
+    height: 190,
+    borderRadius: 16,
+    marginBottom: 16,
   },
   companyAvatar: {
     width: 64,
@@ -409,13 +497,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   limitIndicator: {
-    alignItems: 'center',
-    paddingBottom: 8,
+    paddingHorizontal: 24,
+    paddingBottom: 10,
     backgroundColor: colors.background,
-  },
-  limitText: {
-    fontSize: 12,
-    color: colors.placeholder,
-    fontWeight: '500',
   },
 });

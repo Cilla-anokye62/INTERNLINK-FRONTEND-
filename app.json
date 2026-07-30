@@ -8,9 +8,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.internlink.app",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.internlink.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,7 +30,9 @@
       "expo-router",
       "expo-web-browser",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "@react-native-google-signin/google-signin",
+      "expo-notifications"
     ]
   }
 }

@@ -1,418 +1,211 @@
-/**
- * PlacementOverviewScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Placement Overview (Analytics-related detail screen,
- * reached from somewhere in the university flow — e.g. a "View
- * details" link on the Analytics tab, or the Dashboard)
- *
- * UPDATED: the bottom tab bar has been REMOVED from this file.
- * This screen is NOT one of the 5 bottom tabs — it's a regular
- * full-screen page you navigate INTO, so it now just shows a back
- * arrow instead of a tab bar.
- *
- * HOW TO USE:
- *  This screen is registered directly in App.tsx's main Stack
- *  Navigator (NOT inside UniversityTabs.tsx):
- *     import PlacementOverviewScreen from './app/PlacementOverviewScreen';
- *     <Stack.Screen name="PlacementOverview" component={PlacementOverviewScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
 import { Ionicons } from '@expo/vector-icons';
-import FilterModal from './FilterModal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  getAuthErrorMessage,
+  universityApi,
+  type CompanyEngagementResponse,
+  type PlacementStatisticsResponse,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-const COLORS = {
-  background:        '#F5FBFA', // mint — full screen background
-  backBtnBg:         '#FFFFFF',
-  backArrow:         '#0D3B47',
-  headerTitle:       '#0D3B47', // "Placements"
-  headerSubtitle:    '#4A7C75', // "Spring 2026 cohort"
-
-  statCardBg:        '#FFFFFF',
-  statLabel:         '#9BB8B4',
-  statValue:         '#0D3B47',
-  statChangePositive:'#2EC4B6',
-
-  sectionCardBg:     '#FFFFFF',
-  sectionTitle:      '#0D3B47',
-  filterText:        '#2EC4B6',
-  deptName:          '#0D3B47',
-  deptPercent:       '#0D3B47',
-  barTrack:          '#E5F2F0',
-  barFill:           '#2EC4B6',
-
-  trendCardBg:       '#FFFFFF',
-  trendTitle:        '#0D3B47',
-  chartAreaBg:        '#FFFFFF',
-  chartAreaBorder:   '#F0F6F5',
-  monthLabel:        '#9BB8B4',
-};
-import { useAppTheme } from "../../src/hooks/useAppTheme";
-
-
-// ─── DATA ─────────────────────────────────────────────────────────
-const STAT_CARDS = [
-  {
-    id: 'placementRate',
-    label: 'Placement rate',
-    value: '87%',
-    change: '+4% YoY',
-  },
-  {
-    id: 'avgOffer',
-    label: 'Avg offer',
-    value: '$52/hr',
-    change: '+8%',
-  },
-  {
-    id: 'avgTimeToOffer',
-    label: 'Avg time-to-offer',
-    value: '18d',
-    change: null,
-  },
-  {
-    id: 'returnOffers',
-    label: 'Return offers',
-    value: '64%',
-    change: null,
-  },
-];
-
-const DEPARTMENTS = [
-  { id: 'cs', name: 'Computer Science', percent: 94 },
-  { id: 'ee', name: 'Electrical Eng', percent: 88 },
-  { id: 'me', name: 'Mechanical Eng', percent: 81 },
-  { id: 'business', name: 'Business', percent: 76 },
-  { id: 'design', name: 'Design', percent: 72 },
-];
-
-const MONTH_LABELS = ['S', 'O', 'N', 'D', 'J', 'F', 'M'];
-
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PlacementOverviewScreen({ navigation }: any) {
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [statistics, setStatistics] = useState<PlacementStatisticsResponse | null>(null);
+  const [companies, setCompanies] = useState<CompanyEngagementResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
+  const load = useCallback(async (refresh = false) => {
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
+    setError('');
+    try {
+      const [nextStatistics, nextCompanies] = await Promise.all([
+        universityApi.getStatistics(),
+        universityApi.listCompanies(),
+      ]);
+      setStatistics(nextStatistics);
+      setCompanies(nextCompanies);
+    } catch (loadError) {
+      setError(getAuthErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  const handleFilterPress = () => {
-    setFilterVisible(true);
-  };
+  const placementRate = statistics && statistics.totalStudents > 0
+    ? Math.round((statistics.placedCount / statistics.totalStudents) * 100)
+    : 0;
 
-  const handleFilterApply = (filters: string[]) => {
-    setActiveFilters(filters);
-  };
+  const cards = statistics ? [
+    { label: 'Placement rate', value: `${placementRate}%` },
+    { label: 'Total students', value: statistics.totalStudents },
+    { label: 'Students placed', value: statistics.placedCount },
+    { label: 'Applications', value: statistics.totalApplications },
+  ] : [];
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={22} color={colors.title} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Placement Overview</Text>
+      </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* ── HEADER ROW: back arrow + title/subtitle ─────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.backArrow}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={(
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void load(true)}
+              tintColor={colors.accent}
             />
-          </TouchableOpacity>
+          )}
+        >
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <View style={styles.headerTextBlock}>
-            <Text style={styles.headerTitle}>Placements</Text>
-            <Text style={styles.headerSubtitle}>Spring 2026 cohort</Text>
-          </View>
-        </View>
-
-
-        {/* ── STAT CARDS GRID (2x2) ───────────────────────────────── */}
-        <View style={styles.statsGrid}>
-          {STAT_CARDS.map((stat) => (
-            <View key={stat.id} style={styles.statCard}>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              {stat.change ? (
-                <Text style={styles.statChange}>{stat.change}</Text>
-              ) : null}
-            </View>
-          ))}
-        </View>
-
-
-        {/* ── "BY DEPARTMENT" CARD ────────────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>By department</Text>
-            <TouchableOpacity onPress={handleFilterPress}>
-              <Text style={styles.filterText}>Filter</Text>
-            </TouchableOpacity>
-          </View>
-
-          {DEPARTMENTS.map((dept, index) => (
-            <View
-              key={dept.id}
-              style={[
-                styles.deptRow,
-                index === DEPARTMENTS.length - 1 && styles.deptRowLast,
-              ]}
-            >
-              <View style={styles.deptLabelRow}>
-                <Text style={styles.deptName}>{dept.name}</Text>
-                <Text style={styles.deptPercent}>{dept.percent}%</Text>
+          <View style={styles.grid}>
+            {cards.map((card) => (
+              <View key={card.label} style={styles.statCard}>
+                <Text style={styles.statLabel}>{card.label}</Text>
+                <Text style={styles.statValue}>{card.value}</Text>
               </View>
-
-              <View style={styles.barTrack}>
-                <View
-                  style={[
-                    styles.barFill,
-                    { width: `${dept.percent}%` },
-                  ]}
-                />
-              </View>
-            </View>
-          ))}
-        </View>
-
-
-        {/* ── "MONTHLY TREND" CARD ────────────────────────────────── */}
-        <View style={styles.trendCard}>
-          <Text style={styles.trendTitle}>Monthly trend</Text>
-
-          <View style={styles.chartArea} />
-
-          <View style={styles.monthLabelsRow}>
-            {MONTH_LABELS.map((month, index) => (
-              <Text key={`${month}-${index}`} style={styles.monthLabel}>
-                {month}
-              </Text>
             ))}
           </View>
-        </View>
 
-      </ScrollView>
+          {statistics ? (
+            <>
+              <Text style={styles.sectionTitle}>Student progress</Text>
+              {[
+                { label: 'Placed', value: statistics.placedCount, color: '#10B981' },
+                { label: 'Searching', value: statistics.searchingCount, color: colors.accent },
+                { label: 'Not started', value: statistics.notStartedCount, color: colors.subtitle },
+              ].map((item) => {
+                const width = statistics.totalStudents > 0
+                  ? `${Math.round((item.value / statistics.totalStudents) * 100)}%`
+                  : '0%';
+                return (
+                  <View key={item.label} style={styles.progressItem}>
+                    <View style={styles.progressHeader}>
+                      <Text style={styles.progressLabel}>{item.label}</Text>
+                      <Text style={styles.progressValue}>{item.value}</Text>
+                    </View>
+                    <View style={styles.track}>
+                      <View style={[styles.fill, { width: width as any, backgroundColor: item.color }]} />
+                    </View>
+                  </View>
+                );
+              })}
+            </>
+          ) : null}
 
-      {/* ── FILTER MODAL ───────────────────────────────────────── */}
-      <FilterModal
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-        onApply={handleFilterApply}
-        activeFilters={activeFilters}
-      />
+          <Text style={styles.sectionTitle}>Company engagement</Text>
+          {companies.length === 0 ? (
+            <Text style={styles.empty}>No company engagement data yet.</Text>
+          ) : (
+            companies.slice(0, 10).map((company) => (
+              <View key={company.companyId} style={styles.companyRow}>
+                <View style={styles.flex}>
+                  <Text style={styles.companyName}>{company.companyName}</Text>
+                  <Text style={styles.companyMeta}>
+                    {company.applicationCount} applications
+                  </Text>
+                </View>
+                <Text style={styles.accepted}>{company.acceptedCount} placed</Text>
+              </View>
+            ))
+          )}
+
+          <View style={styles.notice}>
+            <Ionicons name="information-circle-outline" size={20} color={colors.accent} />
+            <Text style={styles.noticeText}>
+              Department, salary, and historical trend data are not currently exposed by the backend.
+            </Text>
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // paddingBottom is back to a normal value (no tab bar to clear
-  // space for anymore on this screen)
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  // Now includes the back button, since this screen is reached BY
-  // navigating into it (not a tab-root screen)
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.backBtnBg,
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingBottom: 8 },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.card,
     marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
-  headerTextBlock: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.headerTitle,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: colors.headerSubtitle,
-  },
-
-  // ── Stat cards grid ───────────────────────────────────────────
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
+  title: { color: colors.title, fontSize: 22, fontWeight: '800' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 20, paddingTop: 12, paddingBottom: 40 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 },
   statCard: {
     width: '48%',
-    backgroundColor: colors.statCardBg,
-    borderRadius: 16,
+    backgroundColor: colors.card,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
     padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
   },
-  statLabel: {
-    fontSize: 12,
-    color: colors.statLabel,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.statValue,
-    marginBottom: 4,
-  },
-  statChange: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.statChangePositive,
-  },
-
-  // ── Shared "card" container style ──────────────────────────────
-  sectionCard: {
-    backgroundColor: colors.sectionCardBg,
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  sectionHeaderRow: {
+  statLabel: { color: colors.subtitle, fontSize: 12 },
+  statValue: { color: colors.title, fontSize: 25, fontWeight: '800', marginTop: 5 },
+  sectionTitle: { color: colors.title, fontSize: 17, fontWeight: '800', marginTop: 25, marginBottom: 12 },
+  progressItem: { backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 9 },
+  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 9 },
+  progressLabel: { color: colors.text, fontWeight: '600' },
+  progressValue: { color: colors.title, fontWeight: '800' },
+  track: { height: 7, backgroundColor: colors.inputBorder, borderRadius: 4, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 4 },
+  companyRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.sectionTitle,
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.filterText,
-  },
-
-  deptRow: {
-    marginBottom: 16,
-  },
-  deptRowLast: {
-    marginBottom: 0,
-  },
-  deptLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 14,
     marginBottom: 8,
   },
-  deptName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.deptName,
-  },
-  deptPercent: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.deptPercent,
-  },
-  barTrack: {
-    width: '100%',
-    height: 7,
-    backgroundColor: colors.barTrack,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: colors.barFill,
-    borderRadius: 4,
-  },
-
-  trendCard: {
-    backgroundColor: colors.trendCardBg,
-    borderRadius: 18,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  trendTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.trendTitle,
-    marginBottom: 14,
-  },
-  chartArea: {
-    width: '100%',
-    height: 130,
-    backgroundColor: colors.chartAreaBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.chartAreaBorder,
-    marginBottom: 10,
-  },
-  monthLabelsRow: {
+  flex: { flex: 1 },
+  companyName: { color: colors.title, fontWeight: '700' },
+  companyMeta: { color: colors.subtitle, fontSize: 12, marginTop: 3 },
+  accepted: { color: colors.accent, fontSize: 12, fontWeight: '700' },
+  empty: { color: colors.subtitle, backgroundColor: colors.card, borderRadius: 12, padding: 18 },
+  notice: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 9,
+    backgroundColor: colors.iconCircle,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 18,
   },
-  monthLabel: {
-    fontSize: 11,
-    color: colors.monthLabel,
-  },
-
+  noticeText: { color: colors.text, fontSize: 12, lineHeight: 18, flex: 1 },
+  error: { color: colors.danger, marginBottom: 12 },
 });

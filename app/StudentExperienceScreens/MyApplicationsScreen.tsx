@@ -1,149 +1,201 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  applicationApi,
+  getAuthErrorMessage,
+  type BackendApplicationResponse,
+  type BackendApplicationStatus,
+} from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
-import { useAppStore } from '../../src/store/useAppStore';
-import { Application, ApplicationStatus, STATUS_CONFIG, TIMELINE_STEPS } from '../../src/types/application';
-import StatusBadge from '../../src/components/StatusBadge';
+import { ApplicationLimitIndicator } from '../../src/components/PremiumComponents';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
-const FILTERS: { label: string; value: ApplicationStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Submitted', value: 'submitted' },
-  { label: 'Review', value: 'under_review' },
-  { label: 'Interview', value: 'interview_scheduled' },
-  { label: 'Offer', value: 'offer_received' },
-  { label: 'Rejected', value: 'rejected' },
+type Filter = BackendApplicationStatus | 'ALL';
+
+const FILTERS: { label: string; value: Filter }[] = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Applied', value: 'APPLIED' },
+  { label: 'Review', value: 'UNDER_REVIEW' },
+  { label: 'Accepted', value: 'ACCEPTED' },
+  { label: 'Rejected', value: 'REJECTED' },
 ];
+
+const STATUS_LABELS: Record<BackendApplicationStatus, string> = {
+  APPLIED: 'Applied',
+  UNDER_REVIEW: 'Under review',
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+};
 
 export default function MyApplicationsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { applications, userId } = useAppStore();
-  const [activeFilter, setActiveFilter] = useState<ApplicationStatus | 'all'>('all');
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { entitlement, hasFeature, refresh: refreshSubscription } = useSubscription();
+  const applicationEntitlement = entitlement('STUDENT_APPLICATIONS');
+  const canTrack = hasFeature('STUDENT_APPLICATION_TRACKING');
+  const [applications, setApplications] = useState<BackendApplicationResponse[]>([]);
+  const [activeFilter, setActiveFilter] = useState<Filter>('ALL');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const myApplications = applications.filter((a) => a.studentId === userId);
-  const filtered = activeFilter === 'all'
-    ? myApplications
-    : myApplications.filter((a) => a.status === activeFilter);
+  const loadApplications = useCallback(async () => {
+    setError('');
+    try {
+      const [nextApplications] = await Promise.all([
+        applicationApi.listOwn(),
+        refreshSubscription(),
+      ]);
+      setApplications(nextApplications);
+    } catch (loadError) {
+      setError(getAuthErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshSubscription]);
 
-  const activeCount = myApplications.filter((a) => !['rejected', 'withdrawn'].includes(a.status)).length;
-  const offerCount = myApplications.filter((a) => a.status === 'offer_received' || a.status === 'accepted').length;
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      void loadApplications();
+    }, [loadApplications]),
+  );
 
-  const getProgress = (app: Application): number => {
-    const idx = TIMELINE_STEPS.indexOf(app.status);
-    if (idx === -1) return 0;
-    return (idx + 1) / TIMELINE_STEPS.length;
-  };
+  const filtered = useMemo(
+    () => applications
+      .filter((application) => activeFilter === 'ALL' || application.status === activeFilter)
+      .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime()),
+    [activeFilter, applications],
+  );
 
-  const renderItem = useCallback(({ item }: { item: Application }) => {
-    const progress = getProgress(item);
-    const config = STATUS_CONFIG[item.status];
-
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate('ApplicationDetails', { applicationId: item.id })}
-        activeOpacity={0.85}
-      >
-        <View style={styles.cardTopRow}>
-          <View style={[styles.avatar, { backgroundColor: item.internship.companyColor }]}>
-            <Text style={styles.avatarText}>{item.internship.companyLogo}</Text>
-          </View>
-          <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle}>{item.internship.title}</Text>
-            <Text style={styles.cardCompany}>{item.internship.company} · {item.internship.duration}</Text>
-          </View>
-          <StatusBadge status={item.status} size="small" />
-        </View>
-
-        {/* Progress bar */}
-        <View style={[styles.progressTrack, { backgroundColor: colors.appProgressBg }]}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: config.color }]} />
-        </View>
-
-        {/* Stage dots */}
-        <View style={styles.stagesRow}>
-          {TIMELINE_STEPS.slice(0, 5).map((step) => {
-            const stepIdx = TIMELINE_STEPS.indexOf(step);
-            const isCompleted = stepIdx <= TIMELINE_STEPS.indexOf(item.status) && item.status !== 'rejected';
-            return (
-              <View key={step} style={styles.stageItem}>
-                <View style={[styles.stageDot, { backgroundColor: isCompleted ? config.color : colors.inputBorder }]} />
-                <Text style={[styles.stageLabel, { color: isCompleted ? colors.title : colors.placeholder }]}>
-                  {STATUS_CONFIG[step].label.split(' ')[0]}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Date */}
-        <Text style={[styles.dateText, { color: colors.placeholder }]}>
-          Applied {new Date(item.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-        </Text>
-      </TouchableOpacity>
-    );
-  }, [navigation, styles, colors]);
+  const activeCount = applications.filter(
+    (application) => application.status === 'APPLIED' || application.status === 'UNDER_REVIEW',
+  ).length;
+  const acceptedCount = applications.filter((application) => application.status === 'ACCEPTED').length;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>My Applications</Text>
-          <Text style={styles.headerSub}>{activeCount} active · {offerCount} offer{offerCount !== 1 ? 's' : ''}</Text>
-        </View>
+        <Text style={styles.headerTitle}>My Applications</Text>
+        <Text style={styles.headerSub}>
+          {canTrack
+            ? `${activeCount} active · ${acceptedCount} accepted`
+            : `${applications.length} submitted application${applications.length === 1 ? '' : 's'}`}
+        </Text>
       </View>
 
-      {/* Filters */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filtersScroll}
-        contentContainerStyle={styles.filtersRow}
-      >
-        {FILTERS.map((filter) => (
-          <TouchableOpacity
-            key={filter.value}
-            style={[styles.filterChip, activeFilter === filter.value && styles.filterChipActive]}
-            onPress={() => setActiveFilter(filter.value)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[styles.filterText, activeFilter === filter.value && styles.filterTextActive]}
-              numberOfLines={1}
-            >
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.limitWrap}>
+        <ApplicationLimitIndicator
+          entitlement={applicationEntitlement}
+          onUpgrade={() => navigation.navigate('PremiumPlans', { source: 'applications' })}
+        />
+      </View>
 
-      {/* List */}
+      {canTrack ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filtersScroll}
+          contentContainerStyle={styles.filtersRow}
+        >
+          {FILTERS.map((filter) => (
+            <TouchableOpacity
+              key={filter.value}
+              style={[styles.filterChip, activeFilter === filter.value && styles.filterChipActive]}
+              onPress={() => setActiveFilter(filter.value)}
+            >
+              <Text style={[styles.filterText, activeFilter === filter.value && styles.filterTextActive]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : null}
+
       <FlatList
-        style={styles.list}
         data={filtered}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(application) => String(application.id)}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        renderItem={renderItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => void loadApplications()}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ApplicationDetails', { application: item })}
+          >
+            <View style={styles.cardTop}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{item.companyName.charAt(0).toUpperCase()}</Text>
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle}>{item.listingTitle}</Text>
+                <Text style={styles.companyName}>{item.companyName}</Text>
+              </View>
+              <View style={[
+                styles.statusPill,
+                item.status === 'ACCEPTED' && styles.acceptedPill,
+                item.status === 'REJECTED' && styles.rejectedPill,
+              ]}>
+                <Text style={[
+                  styles.statusText,
+                  item.status === 'ACCEPTED' && styles.acceptedText,
+                  item.status === 'REJECTED' && styles.rejectedText,
+                ]}>
+                  {item.trackingLocked ? 'Premium tracking' : STATUS_LABELS[item.status]}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.cardFooter}>
+              <Text style={styles.dateText}>
+                Applied {new Date(item.appliedAt).toLocaleDateString()}
+              </Text>
+              <Ionicons name="chevron-forward" size={17} color={colors.subtitle} />
+            </View>
+          </TouchableOpacity>
+        )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.iconCircle }]}>
-              <Ionicons name="document-text-outline" size={32} color={colors.placeholder} />
-            </View>
-            <Text style={[styles.emptyTitle, { color: colors.title }]}>No applications yet</Text>
-            <Text style={[styles.emptyDesc, { color: colors.subtitle }]}>
-              Start applying to internships to track your progress here.
-            </Text>
-            <TouchableOpacity
-              style={[styles.browseBtn, { backgroundColor: colors.accent }]}
-              onPress={() => navigation.navigate('Discover')}
-            >
-              <Text style={[styles.browseBtnText, { color: colors.onPrimary }]}>Browse Internships</Text>
-            </TouchableOpacity>
+            {loading ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : error ? (
+              <>
+                <Ionicons name="cloud-offline-outline" size={44} color={colors.subtitle} />
+                <Text style={styles.emptyTitle}>Could not load applications</Text>
+                <Text style={styles.emptyDesc}>{error}</Text>
+                <TouchableOpacity style={styles.primaryButton} onPress={() => void loadApplications()}>
+                  <Text style={styles.primaryButtonText}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="document-text-outline" size={44} color={colors.subtitle} />
+                <Text style={styles.emptyTitle}>No applications yet</Text>
+                <Text style={styles.emptyDesc}>Apply from Discover and your progress will appear here.</Text>
+                <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Discover')}>
+                  <Text style={styles.primaryButtonText}>Browse internships</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         }
       />
@@ -153,66 +205,69 @@ export default function MyApplicationsScreen({ navigation }: any) {
 
 const createStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingTop: 16, marginBottom: 16,
-  },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: colors.title },
-  headerSub: { fontSize: 13, color: colors.subtitle, marginTop: 2 },
-
-  // Filters — sized to match DiscoverScreen chips
-  filtersScroll: {
-    flexGrow: 0,
-    marginBottom: 14,
-  },
-  filtersRow: {
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    gap: 8,
-  },
+  header: { paddingHorizontal: 24, paddingTop: 16, marginBottom: 16 },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: colors.title },
+  headerSub: { fontSize: 13, color: colors.subtitle, marginTop: 3 },
+  limitWrap: { paddingHorizontal: 24, marginBottom: 14 },
+  filtersScroll: { flexGrow: 0, marginBottom: 14 },
+  filtersRow: { paddingHorizontal: 24, gap: 8 },
   filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 30,
+    paddingHorizontal: 17,
+    paddingVertical: 9,
+    borderRadius: 24,
     backgroundColor: colors.card,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.inputBorder,
-    flexShrink: 0,
   },
   filterChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  filterText: { fontSize: 13, color: colors.subtitle, fontWeight: '600' },
-  filterTextActive: { color: '#FFF', fontWeight: '700' },
-
-  list: { flex: 1 },
-  listContent: { paddingHorizontal: 24, paddingBottom: TAB_BAR_BOTTOM_PADDING, gap: 12 },
+  filterText: { color: colors.subtitle, fontSize: 13, fontWeight: '600' },
+  filterTextActive: { color: colors.onPrimary },
+  listContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingBottom: TAB_BAR_BOTTOM_PADDING,
+    gap: 12,
+  },
   card: {
-    backgroundColor: colors.card, borderRadius: 16, padding: 16,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    padding: 15,
   },
-  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  cardTop: { flexDirection: 'row', alignItems: 'center' },
   avatar: {
-    width: 40, height: 40, borderRadius: 20, alignItems: 'center',
-    justifyContent: 'center', marginRight: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    marginRight: 11,
   },
-  avatarText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-  cardInfo: { flex: 1 },
-  cardTitle: { fontSize: 14, fontWeight: 'bold', color: colors.cardTitle, marginBottom: 2 },
-  cardCompany: { fontSize: 12, color: colors.subtitle },
-  progressTrack: { height: 4, borderRadius: 2, marginBottom: 12 },
-  progressFill: { height: 4, borderRadius: 2 },
-  stagesRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  stageItem: { alignItems: 'center', flex: 1 },
-  stageDot: { width: 6, height: 6, borderRadius: 3, marginBottom: 4 },
-  stageLabel: { fontSize: 9, fontWeight: '600', textAlign: 'center' },
-  dateText: { fontSize: 11 },
-  emptyContainer: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
-  emptyIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
-  emptyDesc: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
-  browseBtn: { borderRadius: 30, paddingVertical: 14, paddingHorizontal: 32 },
-  browseBtnText: { fontSize: 15, fontWeight: '700' },
+  avatarText: { color: colors.onPrimary, fontWeight: '700', fontSize: 16 },
+  cardInfo: { flex: 1, marginRight: 8 },
+  cardTitle: { color: colors.title, fontSize: 14, fontWeight: '700' },
+  companyName: { color: colors.subtitle, fontSize: 12, marginTop: 2 },
+  statusPill: { backgroundColor: colors.iconCircle, borderRadius: 16, paddingHorizontal: 9, paddingVertical: 5 },
+  statusText: { color: colors.accent, fontSize: 10, fontWeight: '700' },
+  acceptedPill: { backgroundColor: '#DCFCE7' },
+  acceptedText: { color: '#166534' },
+  rejectedPill: { backgroundColor: colors.withdrawBg },
+  rejectedText: { color: colors.withdrawText },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 13,
+    paddingTop: 11,
+    borderTopWidth: 1,
+    borderTopColor: colors.inputBorder,
+  },
+  dateText: { color: colors.subtitle, fontSize: 11 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, paddingTop: 70, gap: 10 },
+  emptyTitle: { color: colors.title, fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  emptyDesc: { color: colors.subtitle, fontSize: 14, textAlign: 'center', lineHeight: 20 },
+  primaryButton: { marginTop: 6, backgroundColor: colors.accent, borderRadius: 24, paddingHorizontal: 22, paddingVertical: 12 },
+  primaryButtonText: { color: colors.onPrimary, fontSize: 14, fontWeight: '700' },
 });

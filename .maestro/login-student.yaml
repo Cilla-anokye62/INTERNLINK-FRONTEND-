@@ -1,0 +1,19 @@
+appId: com.internlink.app
+name: Student login smoke test
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: I Already Have an Account
+    timeout: 15000
+- tapOn: I Already Have an Account
+- tapOn: student@university.edu
+- inputText: ${STUDENT_EMAIL}
+- tapOn:
+    text: "••••••••"
+- inputText: ${STUDENT_PASSWORD}
+- tapOn: "Login.*"
+- extendedWaitUntil:
+    visible: Discover
+    timeout: 20000
+- assertVisible: Applications

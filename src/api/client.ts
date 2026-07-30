@@ -16,11 +16,25 @@ export class ApiError extends Error {
   }
 }
 
+export class ApiConnectionError extends Error {
+  readonly code: 'API_TIMEOUT' | 'API_UNREACHABLE';
+  readonly retryable = true;
+
+  constructor(code: 'API_TIMEOUT' | 'API_UNREACHABLE', message: string) {
+    super(message);
+    this.name = 'ApiConnectionError';
+    this.code = code;
+  }
+}
+
 export interface ApiClientConfig {
   baseUrl: string;
   getAccessToken?: () => string | null | Promise<string | null>;
   refreshAccessToken?: () => Promise<string | null>;
   defaultTimeoutMs?: number;
+  initialTimeoutMs?: number;
+  initialRetryCount?: number;
+  initialRetryDelayMs?: number;
 }
 
 export type ApiRequestOptions = Omit<RequestInit, 'body'> & {
@@ -46,22 +60,31 @@ export const createApiClient = ({
   getAccessToken,
   refreshAccessToken,
   defaultTimeoutMs = 15_000,
+  initialTimeoutMs = defaultTimeoutMs,
+  initialRetryCount = 0,
+  initialRetryDelayMs = 750,
 }: ApiClientConfig): ApiClient => {
   const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
+  let hasReceivedResponse = false;
 
   return {
     async request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+      const coldStartRequest = !hasReceivedResponse;
       const {
         body,
         headers: requestHeaders,
         requiresAuth = true,
-        timeoutMs = defaultTimeoutMs,
+        timeoutMs = coldStartRequest ? initialTimeoutMs : defaultTimeoutMs,
         signal: callerSignal,
         ...requestInit
       } = options;
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, timeoutMs);
       const abortFromCaller = () => controller.abort();
       callerSignal?.addEventListener('abort', abortFromCaller);
 
@@ -77,12 +100,34 @@ export const createApiClient = ({
             if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
           }
 
-          return fetch(`${normalizedBaseUrl}/${path.replace(/^\//, '')}`, {
+          const url = `${normalizedBaseUrl}/${path.replace(/^\//, '')}`;
+          const fetchRequest = () => fetch(url, {
             ...requestInit,
             headers,
             body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
             signal: controller.signal,
           });
+          let response: Response;
+          try {
+            response = await fetchRequest();
+          } catch (error) {
+            const method = (requestInit.method ?? 'GET').toUpperCase();
+            const idempotent = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+            if (
+              coldStartRequest
+              && initialRetryCount > 0
+              && idempotent
+              && error instanceof TypeError
+              && !controller.signal.aborted
+            ) {
+              await new Promise((resolve) => setTimeout(resolve, initialRetryDelayMs));
+              response = await fetchRequest();
+            } else {
+              throw error;
+            }
+          }
+          hasReceivedResponse = true;
+          return response;
         };
 
         let response = await executeRequest();
@@ -100,6 +145,24 @@ export const createApiClient = ({
         }
 
         return responseBody as T;
+      } catch (error) {
+        if (error instanceof ApiError || error instanceof ApiConnectionError) throw error;
+        if (
+          timedOut
+          || (error instanceof Error && error.name === 'AbortError' && !callerSignal?.aborted)
+        ) {
+          throw new ApiConnectionError(
+            'API_TIMEOUT',
+            'InternLink is taking longer than expected to respond. The exhibition server may still be waking up. Please try again.',
+          );
+        }
+        if (error instanceof TypeError) {
+          throw new ApiConnectionError(
+            'API_UNREACHABLE',
+            'InternLink could not reach the server. Check your internet connection and try again.',
+          );
+        }
+        throw error;
       } finally {
         clearTimeout(timeout);
         callerSignal?.removeEventListener('abort', abortFromCaller);

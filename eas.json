@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "environment": "preview",
+      "distribution": "internal",
+      "env": {
+        "INTERNLINK_RELEASE_BUILD": "true",
+        "EXPO_PUBLIC_API_COLD_START_TIMEOUT_MS": "75000"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "environment": "production",
+      "env": {
+        "INTERNLINK_RELEASE_BUILD": "true"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "autoIncrement": true
+    }
+  }
+}

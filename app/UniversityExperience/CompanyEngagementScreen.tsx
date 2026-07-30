@@ -1,353 +1,195 @@
-/**
- * CompanyEngagementScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Company Engagement / Partners (reached from the
- * "Companies" quick-access card on the University Dashboard)
- *
- * UPDATED: the bottom tab bar has been REMOVED from this file.
- * This screen is NOT one of the 5 bottom tabs (Overview, Students,
- * Analytics, Reports, Settings) — it's a regular full-screen page
- * you navigate INTO from the Dashboard, so it shouldn't show a tab
- * bar at all. Just a back arrow now, like a normal stack screen.
- *
- * HOW TO USE:
- *  This screen is registered directly in App.tsx's main Stack
- *  Navigator (NOT inside UniversityTabs.tsx), since it sits on top
- *  of the tab bar rather than being one of the tabs itself:
- *     import CompanyEngagementScreen from './app/CompanyEngagementScreen';
- *     <Stack.Screen name="CompanyEngagement" component={CompanyEngagementScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  getAuthErrorMessage,
+  universityApi,
+  type CompanyEngagementResponse,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { LockedFeatureOverlay } from '../../src/components/PremiumComponents';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
-
-// ─── DATA ─────────────────────────────────────────────────────────
-const STAT_CARDS = [
-  {
-    id: 'activePartners',
-    label: 'Active partners',
-    value: '238',
-    change: '+12 this month',
-  },
-  {
-    id: 'newRoles',
-    label: 'New roles',
-    value: '412',
-    change: 'this quarter',
-  },
-];
-
-const PARTNER_COMPANIES = [
-  {
-    id: 'google',
-    logoLetter: 'G',
-    logoColor: '#4285F4',
-    name: 'Google',
-    detail: '24 open roles · +8 this month',
-    status: 'Engaged',
-  },
-  {
-    id: 'meta',
-    logoLetter: 'M',
-    logoColor: '#1877F2',
-    name: 'Meta',
-    detail: '18 open roles · +5 this month',
-    status: 'Engaged',
-  },
-  {
-    id: 'stripe',
-    logoLetter: 'S',
-    logoColor: '#7C5CFC',
-    name: 'Stripe',
-    detail: '12 open roles · +3 this month',
-    status: 'Engaged',
-  },
-  {
-    id: 'openai',
-    logoLetter: 'O',
-    logoColor: '#1E8E5A',
-    name: 'OpenAI',
-    detail: '8 open roles · +4 this month',
-    status: 'Engaged',
-  },
-  {
-    id: 'airbnb',
-    logoLetter: 'A',
-    logoColor: '#E94B6B',
-    name: 'Airbnb',
-    detail: '6 open roles · +1 this month',
-    status: 'Engaged',
-  },
-];
-
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function CompanyEngagementScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const {
+    hasFeature,
+    loading: subscriptionLoading,
+  } = useSubscription();
+  const insightsEnabled = hasFeature('UNIVERSITY_EMPLOYER_INSIGHTS');
+  const [companies, setCompanies] = useState<CompanyEngagementResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleMenuPress = () => {
-    console.log('Menu pressed');
-  };
+  const loadCompanies = useCallback(async () => {
+    if (!insightsEnabled) {
+      setLoading(false);
+      return;
+    }
+    setError('');
+    try {
+      setCompanies((await universityApi.listCompanyInsights())
+        .sort((a, b) => b.applicationCount - a.applicationCount));
+    } catch (loadError) {
+      setError(getAuthErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }, [insightsEnabled]);
 
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      void loadCompanies();
+    }, [loadCompanies]),
+  );
 
-  // Now that this is a regular stack screen (not a tab), the back
-  // arrow has a real, working destination: the Dashboard screen this
-  // was navigated FROM. navigation.goBack() returns to whichever
-  // screen called navigation.navigate('CompanyEngagement').
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
+  const totalApplications = companies.reduce((sum, company) => sum + company.applicationCount, 0);
+  const totalAccepted = companies.reduce((sum, company) => sum + company.acceptedCount, 0);
 
-  const handleMenuPress = () => {
-    console.log('Menu (···) tapped');
-    // TODO: open an options menu/sheet
-  };
+  if (subscriptionLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.center}><ActivityIndicator color={colors.accent} /></View>
+      </SafeAreaView>
+    );
+  }
 
-  const handleCompanyPress = (companyId: string) => {
-    navigation.navigate('CompanyDetail', { companyId });
-  };
+  if (!insightsEnabled) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={21} color={colors.title} />
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Company engagement</Text>
+            <Text style={styles.subtitle}>Employer partnership insights</Text>
+          </View>
+        </View>
+        <View style={styles.lockedWrap}>
+          <LockedFeatureOverlay
+            title="Employer insights are Premium"
+            message="Upgrade to compare employer engagement, applications, and placement outcomes across partners."
+            onUpgrade={() => navigation.navigate('PremiumPlans', { source: 'university-employers' })}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* ── HEADER ROW: back arrow + title/subtitle + menu button ── */}
-        <View style={styles.header}>
-
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.backArrow}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.headerTextBlock}>
-            <Text style={styles.headerTitle}>Partners</Text>
-            <Text style={styles.headerSubtitle}>238 companies engaged</Text>
-          </View>
-
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={21} color={colors.title} />
+        </TouchableOpacity>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>Company engagement</Text>
+          <Text style={styles.subtitle}>{companies.length} active partner{companies.length === 1 ? '' : 's'}</Text>
         </View>
+      </View>
 
-
-        {/* ── STAT CARDS (side by side) ───────────────────────────── */}
-        <View style={styles.statsRow}>
-          {STAT_CARDS.map((stat) => (
-            <View key={stat.id} style={styles.statCard}>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statChange}>{stat.change}</Text>
-            </View>
-          ))}
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{totalApplications}</Text>
+          <Text style={styles.statLabel}>Applications</Text>
         </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{totalAccepted}</Text>
+          <Text style={styles.statLabel}>Accepted</Text>
+        </View>
+      </View>
 
-
-        {/* ── PARTNER COMPANY LIST ─────────────────────────────────── */}
-        {PARTNER_COMPANIES.map((company) => (
+      <FlatList
+        data={companies}
+        keyExtractor={(company) => String(company.companyId)}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => void loadCompanies()}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        renderItem={({ item }) => (
           <TouchableOpacity
-            key={company.id}
             style={styles.companyRow}
-            onPress={() => handleCompanyPress(company.id)}
-            activeOpacity={0.85}
+            onPress={() => navigation.navigate('CompanyDetail', { company: item })}
           >
-            <View style={[
-              styles.companyLogo,
-              { backgroundColor: company.logoColor },
-            ]}>
-              <Text style={styles.logoText}>{company.logoLetter}</Text>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{item.companyName.charAt(0).toUpperCase()}</Text>
             </View>
-
-            <View style={styles.companyTextBlock}>
-              <Text style={styles.companyName}>{company.name}</Text>
-              <Text style={styles.companyDetail}>{company.detail}</Text>
+            <View style={styles.companyInfo}>
+              <Text style={styles.companyName}>{item.companyName}</Text>
+              <Text style={styles.companyMeta}>
+                {item.applicationCount} application{item.applicationCount === 1 ? '' : 's'} · {item.acceptedCount} accepted
+              </Text>
             </View>
-
-            <View style={styles.engagedPill}>
-              <Text style={styles.engagedPillText}>{company.status}</Text>
-            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.subtitle} />
           </TouchableOpacity>
-        ))}
-
-      </ScrollView>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            {loading ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : error ? (
+              <>
+                <Text style={styles.emptyTitle}>Could not load companies</Text>
+                <Text style={styles.emptyText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={() => void loadCompanies()}>
+                  <Text style={styles.retryText}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="business-outline" size={44} color={colors.subtitle} />
+                <Text style={styles.emptyTitle}>No company engagement yet</Text>
+                <Text style={styles.emptyText}>Companies appear after engaging with your students’ applications.</Text>
+              </>
+            )}
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // paddingBottom is back to a normal value (no tab bar to clear
-  // space for anymore on this screen)
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  // Now includes the back button, since this screen is reached BY
-  // navigating into it (not a tab-root screen like the Dashboard)
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.backBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  headerTextBlock: {
-    flex: 1, // fills space between back button and menu button
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.headerTitle,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: colors.headerSubtitle,
-  },
-  menuBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.menuBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-
-  // ── Stat cards (side by side) ─────────────────────────────────
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  statCard: {
-    width: '48%',
-    backgroundColor: colors.statCardBg,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.statLabel,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.statValue,
-    marginBottom: 4,
-  },
-  statChange: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.statChange,
-  },
-
-  // ── Partner company rows ──────────────────────────────────────
-  companyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.rowBg,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  companyLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  logoText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.logoText,
-  },
-  companyTextBlock: {
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.companyName,
-    marginBottom: 2,
-  },
-  companyDetail: {
-    fontSize: 12,
-    color: colors.companyDetail,
-  },
-
-  engagedPill: {
-    backgroundColor: colors.engagedPillBg,
-    borderRadius: 50,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginLeft: 8,
-  },
-  engagedPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.engagedPillText,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  lockedWrap: { flex: 1, justifyContent: 'center', padding: 24 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 12, marginBottom: 14 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
+  headerText: { flex: 1 },
+  title: { color: colors.title, fontSize: 20, fontWeight: '700' },
+  subtitle: { color: colors.subtitle, fontSize: 12, marginTop: 2 },
+  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 14 },
+  statCard: { flex: 1, padding: 15, borderRadius: 15, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  statValue: { color: colors.title, fontSize: 22, fontWeight: '800' },
+  statLabel: { color: colors.subtitle, fontSize: 11, marginTop: 3 },
+  listContent: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 30, gap: 10 },
+  companyRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 15, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  avatar: { width: 45, height: 45, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
+  avatarText: { color: colors.onPrimary, fontSize: 17, fontWeight: '800' },
+  companyInfo: { flex: 1 },
+  companyName: { color: colors.title, fontSize: 14, fontWeight: '700' },
+  companyMeta: { color: colors.subtitle, fontSize: 11, marginTop: 4 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 70, paddingHorizontal: 28, gap: 10 },
+  emptyTitle: { color: colors.title, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  emptyText: { color: colors.subtitle, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  retryButton: { marginTop: 5, paddingHorizontal: 19, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.accent },
+  retryText: { color: colors.onPrimary, fontSize: 13, fontWeight: '700' },
 });

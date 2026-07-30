@@ -12,9 +12,16 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAuthErrorMessage, signOut, universityApi } from '../../src/api';
+import {
+  getAuthErrorMessage,
+  mediaApi,
+  signOut,
+  universityApi,
+  type UploadableImage,
+} from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import type { RootStackParamList } from '../../types/navigation';
 
@@ -76,6 +83,8 @@ export default function UniversityInfoScreen({ navigation }: Props) {
   const [requestError, setRequestError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [logoFile, setLogoFile] = useState<UploadableImage | null>(null);
+  const [logoName, setLogoName] = useState('');
 
   const loadProfile = useCallback(async () => {
     setIsLoading(true);
@@ -89,6 +98,7 @@ export default function UniversityInfoScreen({ navigation }: Props) {
         phone: profile.phoneNumber ?? '',
         website: profile.website ?? '',
       });
+      if (profile.logoUrl) setLogoName('Current university logo');
       setHasLoadedProfile(true);
     } catch (error) {
       setLoadError(getAuthErrorMessage(error));
@@ -129,11 +139,35 @@ export default function UniversityInfoScreen({ navigation }: Props) {
         phone: updatedProfile.phoneNumber ?? '',
         website: updatedProfile.website ?? '',
       });
+      if (logoFile) {
+        await mediaApi.uploadAccountImage(logoFile);
+      }
       navigation?.navigate('InstitutionDetails');
     } catch (error) {
       setRequestError(getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePickLogo = async () => {
+    setRequestError('');
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/png', 'image/jpeg', 'image/webp'],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets?.[0]) {
+        const asset = result.assets[0];
+        setLogoName(asset.name);
+        setLogoFile({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType,
+        });
+      }
+    } catch (error) {
+      setRequestError(getAuthErrorMessage(error));
     }
   };
 
@@ -313,10 +347,18 @@ export default function UniversityInfoScreen({ navigation }: Props) {
                   {validationErrors.website ? <Text style={styles.fieldError}>{validationErrors.website}</Text> : null}
                 </View>
 
-                <View style={styles.logoNotice}>
-                  <Ionicons name="information-circle-outline" size={18} color={colors.inputIcon} />
-                  <Text style={styles.logoNoticeText}>University logo upload will be available when secure file storage is connected.</Text>
-                </View>
+                <TouchableOpacity
+                  style={styles.logoNotice}
+                  onPress={() => void handlePickLogo()}
+                  disabled={disabled}
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose university logo"
+                >
+                  <Ionicons name="cloud-upload-outline" size={18} color={colors.inputIcon} />
+                  <Text style={styles.logoNoticeText}>
+                    {logoName || 'Choose a university logo'}{'\n'}PNG, JPEG or WebP · max 5MB
+                  </Text>
+                </TouchableOpacity>
 
                 {requestError ? <Text style={styles.errorText}>{requestError}</Text> : null}
 

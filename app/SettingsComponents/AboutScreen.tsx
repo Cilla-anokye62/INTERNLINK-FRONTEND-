@@ -21,6 +21,8 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,9 +34,12 @@ const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleLinkPress = (url: string) => {
-    // TODO: Open URL in browser
-    console.log('Opening URL:', url);
+  const handleLinkPress = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Unable to open link', 'This link could not be opened on your device.');
+    }
   };
 
   return (
@@ -83,7 +88,7 @@ const handleBackPress = () => {
           <Text style={styles.sectionHeader}>LINKS</Text>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => handleLinkPress('https://internlink.app')}
+            onPress={() => void handleLinkPress('https://internlink.app')}
             activeOpacity={0.7}
           >
             <Ionicons name="globe-outline" size={20} color={colors.primary} />
@@ -92,7 +97,7 @@ const handleBackPress = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => handleLinkPress('https://twitter.com/internlink')}
+            onPress={() => void handleLinkPress('https://twitter.com/internlink')}
             activeOpacity={0.7}
           >
             <Ionicons name="logo-twitter" size={20} color={colors.primary} />
@@ -101,7 +106,7 @@ const handleBackPress = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => handleLinkPress('https://linkedin.com/company/internlink')}
+            onPress={() => void handleLinkPress('https://linkedin.com/company/internlink')}
             activeOpacity={0.7}
           >
             <Ionicons name="logo-linkedin" size={20} color={colors.primary} />
@@ -110,7 +115,7 @@ const handleBackPress = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.linkRow, styles.linkRowLast]}
-            onPress={() => handleLinkPress('https://github.com/internlink')}
+            onPress={() => void handleLinkPress('https://github.com/internlink')}
             activeOpacity={0.7}
           >
             <Ionicons name="logo-github" size={20} color={colors.primary} />

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,7 +15,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import { companyApi, getAuthErrorMessage, signOut } from '../../src/api';
+import {
+  companyApi,
+  getAuthErrorMessage,
+  mediaApi,
+  resolveMediaUrl,
+  signOut,
+  type UploadableImage,
+} from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import type { RootStackParamList } from '../../types/navigation';
@@ -26,7 +34,7 @@ type FieldErrors = Partial<Record<EditableField, string>>;
 interface FormField {
   id: EditableField | 'companyEmail';
   label: string;
-  value: string;
+  defaultValue: string;
   placeholder: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
   keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url';
@@ -48,7 +56,11 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   const [companyEmail, setCompanyEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [website, setWebsite] = useState('');
+  const companyNameDraft = useRef('');
+  const contactPhoneDraft = useRef('');
+  const websiteDraft = useRef('');
   const [logoName, setLogoName] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<UploadableImage | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [requestError, setRequestError] = useState('');
   const [loadFailed, setLoadFailed] = useState(false);
@@ -70,11 +82,16 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
       setCompanyEmail(profile.email ?? '');
       setContactPhone(profile.phoneNumber ?? '');
       setWebsite(profile.website ?? '');
+      companyNameDraft.current = profile.companyName ?? '';
+      contactPhoneDraft.current = profile.phoneNumber ?? '';
+      websiteDraft.current = profile.website ?? '';
       setUserName(profile.companyName);
       updateProfile({
         email: profile.email,
         phone: profile.phoneNumber ?? '',
+        photoUri: resolveMediaUrl(profile.logoUrl),
       });
+      if (profile.logoUrl) setLogoName('Current company logo');
     } catch (error) {
       if (requestId !== profileRequestId.current) return;
       setLoadFailed(true);
@@ -96,31 +113,32 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   const handleUploadLogo = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/png', 'image/svg+xml'],
+        type: ['image/png', 'image/jpeg', 'image/webp'],
         copyToCacheDirectory: true,
       });
       if (!result.canceled && result.assets?.[0]) {
-        setLogoName(result.assets[0].name);
+        const asset = result.assets[0];
+        setLogoName(asset.name);
+        setLogoFile({
+          uri: asset.uri,
+          name: asset.name,
+          mimeType: asset.mimeType,
+        });
       }
     } catch {
       Alert.alert('Selection failed', 'Could not pick the file. Please try again.');
     }
   };
 
-  const updateField = (
-    field: EditableField,
-    setter: React.Dispatch<React.SetStateAction<string>>,
-  ) => (value: string) => {
-    setter(value);
-    setFieldErrors((current) => ({ ...current, [field]: undefined }));
-    setRequestError('');
+  const updateField = (draft: React.MutableRefObject<string>) => (value: string) => {
+    draft.current = value;
   };
 
   const validate = (): FieldErrors => {
     const errors: FieldErrors = {};
-    const normalizedName = companyName.trim();
-    const normalizedPhone = contactPhone.trim();
-    const normalizedWebsite = website.trim();
+    const normalizedName = companyNameDraft.current.trim();
+    const normalizedPhone = contactPhoneDraft.current.trim();
+    const normalizedWebsite = websiteDraft.current.trim();
 
     if (!normalizedName) {
       errors.companyName = 'Company name is required.';
@@ -153,17 +171,17 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
     {
       id: 'companyName',
       label: 'COMPANY NAME *',
-      value: companyName,
+      defaultValue: companyName,
       placeholder: 'Your company name',
       icon: 'business-outline',
       maxLength: 255,
       error: fieldErrors.companyName,
-      onChangeText: updateField('companyName', setCompanyName),
+      onChangeText: updateField(companyNameDraft),
     },
     {
       id: 'companyEmail',
       label: 'COMPANY EMAIL',
-      value: companyEmail,
+      defaultValue: companyEmail,
       placeholder: 'Your account email',
       icon: 'mail-outline',
       keyboardType: 'email-address',
@@ -173,24 +191,24 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
     {
       id: 'contactPhone',
       label: 'CONTACT PHONE *',
-      value: contactPhone,
+      defaultValue: contactPhone,
       placeholder: '+233 XX XXX XXXX',
       icon: 'call-outline',
       keyboardType: 'phone-pad',
       maxLength: 50,
       error: fieldErrors.contactPhone,
-      onChangeText: updateField('contactPhone', setContactPhone),
+      onChangeText: updateField(contactPhoneDraft),
     },
     {
       id: 'website',
       label: 'WEBSITE *',
-      value: website,
+      defaultValue: website,
       placeholder: 'https://yourcompany.com',
       icon: 'globe-outline',
       keyboardType: 'url',
       maxLength: 255,
       error: fieldErrors.website,
-      onChangeText: updateField('website', setWebsite),
+      onChangeText: updateField(websiteDraft),
     },
   ];
 
@@ -210,20 +228,27 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const profile = await companyApi.updateMe({
-        companyName: companyName.trim(),
-        phoneNumber: contactPhone.trim(),
-        website: website.trim(),
+        companyName: companyNameDraft.current.trim(),
+        phoneNumber: contactPhoneDraft.current.trim(),
+        website: websiteDraft.current.trim(),
       });
 
       setCompanyName(profile.companyName);
       setCompanyEmail(profile.email);
       setContactPhone(profile.phoneNumber ?? '');
       setWebsite(profile.website ?? '');
+      companyNameDraft.current = profile.companyName;
+      contactPhoneDraft.current = profile.phoneNumber ?? '';
+      websiteDraft.current = profile.website ?? '';
       setUserName(profile.companyName);
       updateProfile({
         email: profile.email,
         phone: profile.phoneNumber ?? '',
       });
+      if (logoFile) {
+        const uploaded = await mediaApi.uploadAccountImage(logoFile);
+        updateProfile({ photoUri: resolveMediaUrl(uploaded.url) });
+      }
       navigation.navigate('CompanyDetails');
     } catch (error) {
       setRequestError(getAuthErrorMessage(error));
@@ -252,11 +277,17 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoider}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.topActions}>
           <TouchableOpacity
             style={styles.signOutButton}
@@ -315,7 +346,7 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
               <Ionicons name="cloud-upload-outline" size={18} color={colors.subtitle} style={{ marginRight: 10 }} />
               <View style={styles.logoTextBlock}>
                 <Text style={styles.logoMainText}>{logoName || 'Choose a company logo'}</Text>
-                <Text style={styles.logoSubText}>Device preview only · logo upload is not connected yet</Text>
+                <Text style={styles.logoSubText}>PNG, JPEG or WebP · max 5MB</Text>
               </View>
               <View style={styles.uploadBadge}>
                 <Text style={styles.uploadBadgeText}>Choose</Text>
@@ -333,7 +364,7 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
                   <Ionicons name={field.icon} size={16} color={colors.subtitle} style={{ marginRight: 8 }} />
                   <TextInput
                     style={[styles.textInput, field.editable === false && styles.textInputReadOnly]}
-                    value={field.value}
+                    defaultValue={field.defaultValue}
                     onChangeText={field.onChangeText}
                     placeholder={field.placeholder}
                     placeholderTextColor={colors.placeholder}
@@ -369,13 +400,15 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           </>
         )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const createStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
+  keyboardAvoider: { flex: 1 },
   scrollContent: { flexGrow: 1, padding: 24 },
   topActions: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 8 },
   signOutButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10 },

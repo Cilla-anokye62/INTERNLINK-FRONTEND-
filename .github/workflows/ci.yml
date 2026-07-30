@@ -1,0 +1,33 @@
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_PUBLIC_API_BASE_URL: https://api.example.com
+      EXPO_PUBLIC_RELEASE_BUILD: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Lint, type-check, and test
+        run: npm run check
+
+      - name: Validate the Android JavaScript bundle
+        run: npm run bundle:android

@@ -1,6 +1,6 @@
-import React from 'react';
-import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,26 +13,31 @@ const { height, width } = Dimensions.get('window');
 export default function CareerInterestsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { careerInterests, setCareerInterests } = useAppStore();
+  const careerInterests = useAppStore((state) => state.careerInterests);
+  const setCareerInterests = useAppStore((state) => state.setCareerInterests);
   const { options, isLoading, error: optionsError, retry } = useStudentOnboardingOptions();
 
   const [selected, setSelected] = useState<string[]>(careerInterests);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!options) return;
 
-    const normalized = Array.from(new Set(selected.map((value) => {
-      const matchingOption = options.careerInterests.find(
-        (option) => option.name === value || option.code === value,
-      );
-      return matchingOption?.name ?? value;
-    })));
+    setSelected((current) => {
+      const normalized = Array.from(new Set(current.map((value) => {
+        const matchingOption = options.careerInterests.find(
+          (option) => option.name === value || option.code === value,
+        );
+        return matchingOption?.name ?? value;
+      })));
+      const changed = normalized.length !== current.length
+        || normalized.some((value, index) => value !== current[index]);
 
-    if (normalized.length !== selected.length || normalized.some((value, index) => value !== selected[index])) {
-      setSelected(normalized);
+      if (!changed) return current;
       setCareerInterests(normalized);
-    }
-  }, [options]);
+      return normalized;
+    });
+  }, [options, setCareerInterests]);
 
   const toggleInterest = (name: string) => {
     setSelected(prev => {
@@ -51,6 +56,9 @@ export default function CareerInterestsScreen({ navigation }: any) {
   };
 
   const CARD_SIZE = (width - 24 * 2 - 12) / 2;
+  const filteredInterests = (options?.careerInterests ?? []).filter((interest) =>
+    interest.name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -75,6 +83,19 @@ export default function CareerInterestsScreen({ navigation }: any) {
         <View style={styles.hintRow}>
           <Ionicons name="sparkles-outline" size={16} color={colors.accent} style={{ marginRight: 8 }} />
           <Text style={styles.hintText}>AI uses your interests to calculate match scores</Text>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <Ionicons name="search-outline" size={17} color={colors.placeholder} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search career areas..."
+            placeholderTextColor={colors.placeholder}
+            value={search}
+            onChangeText={setSearch}
+            autoCorrect={false}
+            editable={!isLoading}
+          />
         </View>
       </View>
 
@@ -107,7 +128,7 @@ export default function CareerInterestsScreen({ navigation }: any) {
         ) : null}
 
         <View style={styles.grid}>
-          {(options?.careerInterests ?? []).map(item => {
+          {filteredInterests.map(item => {
             const isSelected = selected.includes(item.name);
             return (
               <TouchableOpacity
@@ -141,6 +162,10 @@ export default function CareerInterestsScreen({ navigation }: any) {
             );
           })}
         </View>
+
+        {options && options.careerInterests.length > 0 && filteredInterests.length === 0 ? (
+          <Text style={styles.noResultsText}>No career areas match “{search.trim()}”.</Text>
+        ) : null}
 
         <View style={{ height: height * 0.12 }} />
       </ScrollView>
@@ -226,7 +251,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: colors.inputBorder,
-    marginBottom: 4,
+    marginBottom: 12,
   },
   hintIcon: {
     fontSize: 14,
@@ -234,8 +259,26 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginRight: 8,
   },
   hintText: {
+    flex: 1,
     fontSize: 13,
     color: colors.subtitle,
+  },
+  searchContainer: {
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 23,
+    paddingHorizontal: 15,
+  },
+  searchInput: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 14,
+    paddingVertical: 11,
   },
   scrollArea: {
     flex: 1,
@@ -278,6 +321,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  noResultsText: {
+    color: colors.subtitle,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    paddingVertical: 28,
   },
   card: {
     borderRadius: 16,

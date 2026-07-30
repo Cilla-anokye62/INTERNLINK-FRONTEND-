@@ -5,20 +5,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { InternshipData, Resume } from '../../src/types/application';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
+import { useAppStore } from '../../src/store/useAppStore';
+import {
+  getValidatedResumeFile,
+  isResumeAvailable,
+} from '../../src/utils/resumeFiles';
 
 const { height } = Dimensions.get('window');
-
-const MOCK_RESUMES: Resume[] = [
-  { id: 'r1', name: 'Alex_Morgan_Resume.pdf', type: 'pdf', uri: 'file:///resume1.pdf', uploadDate: '2026-06-01', size: '245 KB' },
-  { id: 'r2', name: 'Alex_Morgan_CV.docx', type: 'docx', uri: 'file:///resume2.docx', uploadDate: '2026-05-15', size: '312 KB' },
-];
 
 export default function ResumeSelectionScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const internship: InternshipData = route.params?.internship;
-  const [resumes, setResumes] = useState<Resume[]>(MOCK_RESUMES);
-  const [selectedResume, setSelectedResume] = useState<string | null>('r1');
+  const resumeRequired = internship?.resumeRequired ?? true;
+  const savedResume = useAppStore((state) => state.profile);
+  const initialResume: (Resume & { mimeType?: string | null }) | null =
+    savedResume.resumeUri
+      && savedResume.resumeName
+      && isResumeAvailable({ uri: savedResume.resumeUri, name: savedResume.resumeName })
+      ? {
+        id: 'saved-profile-resume',
+        name: savedResume.resumeName,
+        type: savedResume.resumeName.toLowerCase().endsWith('.pdf') ? 'pdf' : 'docx',
+        uri: savedResume.resumeUri,
+        uploadDate: new Date().toISOString(),
+        size: 'Saved resume',
+      }
+      : null;
+  const [resumes, setResumes] = useState<(Resume & { mimeType?: string | null })[]>(
+    initialResume ? [initialResume] : [],
+  );
+  const [selectedResume, setSelectedResume] = useState<string | null>(initialResume?.id ?? null);
 
   const handleUploadNew = async () => {
     try {
@@ -28,27 +46,41 @@ export default function ResumeSelectionScreen({ navigation, route }: any) {
       });
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
-        const newResume: Resume = {
+        getValidatedResumeFile({ uri: file.uri, name: file.name, size: file.size });
+        const newResume: Resume & { mimeType?: string | null } = {
           id: 'r-' + Date.now().toString(36),
           name: file.name,
           type: file.name.endsWith('.pdf') ? 'pdf' : 'docx',
           uri: file.uri,
           uploadDate: new Date().toISOString(),
           size: `${Math.round((file.size ?? 0) / 1024)} KB`,
+          mimeType: file.mimeType,
         };
         setResumes(prev => [...prev, newResume]);
         setSelectedResume(newResume.id);
       }
     } catch (error) {
-      console.error('Document pick error:', error);
+      Alert.alert(
+        'Upload failed',
+        error instanceof Error ? error.message : 'The selected resume could not be opened.',
+      );
     }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (!selectedResume) return;
     const resume = resumes.find(r => r.id === selectedResume);
-    if (resume && resume.uri) {
-      Alert.alert('Preview Resume', `Opening ${resume.name}...`);
+    if (resume?.uri) {
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('Preview unavailable', 'This device cannot open the selected resume.');
+        return;
+      }
+      await Sharing.shareAsync(resume.uri, {
+        dialogTitle: resume.name,
+        mimeType: resume.mimeType || (resume.type === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+      });
     }
   };
 
@@ -81,9 +113,13 @@ export default function ResumeSelectionScreen({ navigation, route }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionTitle, { color: colors.title }]}>Select your resume</Text>
+        <Text style={[styles.sectionTitle, { color: colors.title }]}>
+          {resumeRequired ? 'Select your resume' : 'Attach a resume'}
+        </Text>
         <Text style={[styles.sectionSubtitle, { color: colors.subtitle }]}>
-          Choose a resume to attach to this application. Only one can be submitted.
+          {resumeRequired
+            ? 'A resume is required for this application. Only one can be submitted.'
+            : 'A resume is optional for this application. You can skip this step.'}
         </Text>
 
         {/* Resume cards */}
@@ -135,14 +171,14 @@ export default function ResumeSelectionScreen({ navigation, route }: any) {
           </View>
           <View>
             <Text style={[styles.uploadTitle, { color: colors.title }]}>Upload new resume</Text>
-            <Text style={[styles.uploadSubtitle, { color: colors.placeholder }]}>PDF or DOCX, max 5MB</Text>
+            <Text style={[styles.uploadSubtitle, { color: colors.placeholder }]}>PDF or DOCX, max 10MB</Text>
           </View>
         </TouchableOpacity>
 
         {/* Preview / Remove */}
         {selectedResume && (
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={[styles.previewBtn, { borderColor: colors.inputBorder }]} onPress={handlePreview}>
+            <TouchableOpacity style={[styles.previewBtn, { borderColor: colors.inputBorder }]} onPress={() => void handlePreview()}>
               <Text style={[styles.previewText, { color: colors.accent }]}>Preview</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.removeBtn, { borderColor: colors.withdrawBg }]} onPress={handleRemove}>
@@ -155,13 +191,20 @@ export default function ResumeSelectionScreen({ navigation, route }: any) {
       {/* Bottom */}
       <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.rowBorder }]}>
         <TouchableOpacity
-          style={[styles.continueBtn, { backgroundColor: selectedResume ? colors.accent : colors.buttonInactive }]}
-          onPress={() => selectedResume && navigation.navigate('AdditionalInfo', { internship, resumeId: selectedResume })}
-          disabled={!selectedResume}
+          style={[styles.continueBtn, {
+            backgroundColor: selectedResume || !resumeRequired ? colors.accent : colors.buttonInactive,
+          }]}
+          onPress={() => {
+            const resume = resumes.find((value) => value.id === selectedResume);
+            if (resume || !resumeRequired) navigation.navigate('AdditionalInfo', { internship, resume });
+          }}
+          disabled={resumeRequired && !selectedResume}
           activeOpacity={0.85}
         >
-          <Text style={[styles.continueText, { color: selectedResume ? colors.onPrimary : colors.placeholder }]}>
-            Continue
+          <Text style={[styles.continueText, {
+            color: selectedResume || !resumeRequired ? colors.onPrimary : colors.placeholder,
+          }]}>
+            {selectedResume || resumeRequired ? 'Continue' : 'Skip resume'}
           </Text>
         </TouchableOpacity>
       </View>

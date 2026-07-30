@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, ImageBackground, Animated, Image, Platform, PanResponder, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, StatusBar, ImageBackground, Animated, Image, Platform, PanResponder } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -44,7 +44,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
   useEffect(() => {
     // Initialize first slide to visible
     slideAnims[0].setValue(1);
-  }, []);
+  }, [slideAnims]);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -66,7 +66,7 @@ export default function WelcomeOnboardingScreen({ navigation }: any) {
         setCurrentIndex(nextIndex);
       });
     } else {
-      navigation.navigate('RoleSelection');
+      navigation.navigate('Login');
     }
   };
 

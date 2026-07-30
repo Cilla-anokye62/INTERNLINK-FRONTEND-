@@ -1,362 +1,48 @@
-/**
- * PrivacySettingsScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Privacy Settings (PREFERENCES section in SettingsScreen)
- *
- * Content:
- *  - Toggle switches for: Profile visibility (Public/University only),
- *    Show email to employers, Show phone to employers
- *  - Block list management row (navigates to sub-screen, rendered as
- *    "Blocked Users (0)" row with chevron)
- *
- * HOW TO USE:
- *  1. Drop inside your screens/ or app/ folder
- *  2. Add to App.tsx:
- *     import PrivacySettingsScreen from './app/PrivacySettingsScreen';
- *     <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />
- * 
- * NOTE: Uses React Native's built-in Switch component (no extra install needed)
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  Switch,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { accountApi, getAuthErrorMessage, type AccountPreferenceResponse } from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
-
-// ─── DATA ─────────────────────────────────────────────────────────
-// Privacy toggle settings
-const PRIVACY_SETTINGS = [
-  {
-    id: 'showEmail',
-    label: 'Show email to employers',
-    icon: 'mail-outline',
-  },
-  {
-    id: 'showPhone',
-    label: 'Show phone to employers',
-    icon: 'call-outline',
-  },
-];
-
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function PrivacySettingsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [value, setValue] = useState<AccountPreferenceResponse | null>(null);
+  useEffect(() => { accountApi.preferences().then(setValue).catch((error) => Alert.alert('Could not load privacy settings', getAuthErrorMessage(error))); }, []);
 
-  // Profile visibility: 'public' or 'university'
-  const [visibility, setVisibility] = useState<'public' | 'university'>('university');
-
-  // Toggle states
-  const [privacySettings, setPrivacySettings] = useState<Record<string, boolean>>({
-    showEmail: true,
-    showPhone: false,
-  });
-
-  // Blocked users count (placeholder)
-  const [blockedCount] = useState(0);
-
-  const handleBackPress = () => {
-    navigation.goBack();
+  const toggle = async (key: 'profileVisible' | 'analyticsConsent' | 'personalizedRecommendations', enabled: boolean) => {
+    if (!value) return;
+    const previous = value;
+    setValue({ ...value, [key]: enabled });
+    try { setValue(await accountApi.updatePreferences({ [key]: enabled })); }
+    catch (error) { setValue(previous); Alert.alert('Could not save privacy setting', getAuthErrorMessage(error)); }
   };
 
-  const togglePrivacySetting = (settingId: string) => {
-    setPrivacySettings((prev) => ({
-      ...prev,
-      [settingId]: !prev[settingId],
-    }));
-    console.log('Toggled privacy setting:', settingId);
-    // TODO: sync with backend
-  };
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.title}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Privacy</Text>
-        </View>
-        {/* ── END HEADER ──────────────────────────────────────────── */}
-
-
-        {/* ── PROFILE VISIBILITY SECTION ─────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>PROFILE VISIBILITY</Text>
-
-          <View style={styles.visibilityRow}>
-            <Text style={styles.visibilityLabel}>Who can see your profile?</Text>
-          </View>
-
-          {/* Two selectable pills */}
-          <View style={styles.pillsRow}>
-            <TouchableOpacity
-              style={[
-                styles.visibilityPill,
-                visibility === 'public' && styles.visibilityPillActive,
-              ]}
-              onPress={() => setVisibility('public')}
-              activeOpacity={0.7}
-            >
-              <Text style={[
-                styles.visibilityPillText,
-                visibility === 'public' && styles.visibilityPillTextActive,
-              ]}>
-                Public
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.visibilityPill,
-                visibility === 'university' && styles.visibilityPillActive,
-              ]}
-              onPress={() => setVisibility('university')}
-              activeOpacity={0.7}
-            >
-              <Text style={[
-                styles.visibilityPillText,
-                visibility === 'university' && styles.visibilityPillTextActive,
-              ]}>
-                University only
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* ── END PROFILE VISIBILITY SECTION ───────────────────── */}
-
-
-        {/* ── CONTACT INFO SECTION ─────────────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>CONTACT INFO</Text>
-
-          {PRIVACY_SETTINGS.map((item) => (
-            <View
-              key={item.id}
-              style={[
-                styles.settingRow,
-                PRIVACY_SETTINGS.indexOf(item) < PRIVACY_SETTINGS.length - 1 && styles.settingRowNotLast,
-              ]}
-            >
-              {/* Icon Circle */}
-              <View style={styles.iconCircle}>
-                <Ionicons
-                  name={item.icon as any}
-                  size={18}
-                  color={colors.icon}
-                />
-              </View>
-
-              {/* Label */}
-              <Text style={styles.rowText}>{item.label}</Text>
-
-              {/* Switch */}
-              <Switch
-                value={privacySettings[item.id]}
-                onValueChange={() => togglePrivacySetting(item.id)}
-                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
-                thumbColor={colors.switchThumb}
-                ios_backgroundColor={colors.switchTrack}
-              />
-            </View>
-          ))}
-        </View>
-        {/* ── END CONTACT INFO SECTION ──────────────────────────── */}
-
-
-        {/* ── BLOCK LIST SECTION ───────────────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>BLOCK LIST</Text>
-
-          <View style={styles.blockedRow}>
-            <View style={styles.blockedIconCircle}>
-              <Ionicons
-                name="person-remove-outline"
-                size={20}
-                color={colors.icon}
-              />
-            </View>
-            <Text style={styles.blockedText}>Blocked Users ({blockedCount})</Text>
-          </View>
-        </View>
-        {/* ── END BLOCK LIST SECTION ──────────────────────────────── */}
-
-      </ScrollView>
-    </SafeAreaView>
-  );
+  return <SafeAreaView style={styles.safeArea}>
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}><Ionicons name="chevron-back" size={22} color={colors.title} /></TouchableOpacity>
+      <Text style={styles.title}>Privacy</Text>
+    </View>
+    {!value ? <View style={styles.center}><ActivityIndicator color={colors.accent} /></View> : <View style={styles.content}>
+      <Row label="Profile visible to authorized participants" value={value.profileVisible} onChange={(next: boolean) => void toggle('profileVisible', next)} styles={styles} colors={colors} />
+      <Row label="Share anonymous analytics" value={value.analyticsConsent} onChange={(next: boolean) => void toggle('analyticsConsent', next)} styles={styles} colors={colors} />
+      <Row label="Personalized recommendations" value={value.personalizedRecommendations} onChange={(next: boolean) => void toggle('personalizedRecommendations', next)} styles={styles} colors={colors} />
+      <TouchableOpacity style={styles.action} onPress={() => navigation.navigate('DataStorage')}><Text style={styles.actionText}>Export my data</Text><Ionicons name="chevron-forward" size={18} color={colors.subtitle} /></TouchableOpacity>
+      <TouchableOpacity style={styles.action} onPress={() => navigation.navigate('DeleteAccount')}><Text style={[styles.actionText, { color: colors.withdrawText }]}>Delete account</Text><Ionicons name="chevron-forward" size={18} color={colors.withdrawText} /></TouchableOpacity>
+    </View>}
+  </SafeAreaView>;
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
+function Row({ label, value, onChange, styles, colors }: any) {
+  return <View style={styles.row}><Text style={styles.label}>{label}</Text><Switch value={value} onValueChange={onChange} trackColor={{ false: colors.inputBorder, true: colors.accent }} /></View>;
+}
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.title,
-  },
-
-  // ── Section Cards ─────────────────────────────────────────────
-  sectionCard: {
-    backgroundColor: colors.card,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.sectionHeader,
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-
-  // ── Profile Visibility (Segmented Control) ─────────────────────
-  visibilityRow: {
-    marginBottom: 12,
-  },
-  visibilityLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.rowText,
-  },
-  pillsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  visibilityPill: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: colors.pillIdle,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.pillIdle,
-  },
-  visibilityPillActive: {
-    backgroundColor: colors.pillActive,
-    borderColor: colors.pillActive,
-  },
-  visibilityPillText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.pillIdleText,
-  },
-  visibilityPillTextActive: {
-    color: colors.pillActiveText,
-  },
-
-  // ── Setting Row ───────────────────────────────────────────────
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-  },
-  settingRowNotLast: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowBorder,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.iconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  rowText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.rowText,
-  },
-
-  // ── Blocked Users Row ─────────────────────────────────────────
-  blockedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-  },
-  blockedIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.iconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  blockedText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.rowText,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background }, header: { flexDirection: 'row', alignItems: 'center', padding: 20 },
+  back: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  title: { color: colors.title, fontSize: 22, fontWeight: '800' }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, content: { paddingHorizontal: 20 },
+  row: { minHeight: 68, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.inputBorder, paddingHorizontal: 16 },
+  label: { color: colors.title, fontSize: 14, fontWeight: '600', flex: 1, paddingRight: 12 },
+  action: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  actionText: { color: colors.title, fontSize: 14, fontWeight: '600' },
 });

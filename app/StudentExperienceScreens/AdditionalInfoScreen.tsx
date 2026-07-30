@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ export default function AdditionalInfoScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const internship: InternshipData = route.params?.internship;
-  const resumeId: string = route.params?.resumeId;
+  const resume = route.params?.resume;
 
   const [coverLetter, setCoverLetter] = useState('');
   const [motivation, setMotivation] = useState('');
@@ -44,7 +44,7 @@ export default function AdditionalInfoScreen({ navigation, route }: any) {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Cover Letter */}
+          {internship?.allowCoverLetter ? <>
           <Text style={[styles.fieldLabel, { color: colors.title }]}>Cover Letter</Text>
           <Text style={[styles.fieldHint, { color: colors.placeholder }]}>
             Tell the employer why you're the right fit. (Optional)
@@ -62,6 +62,7 @@ export default function AdditionalInfoScreen({ navigation, route }: any) {
               maxLength={MAX_CHARS}
             />
           </View>
+          </> : null}
 
           {/* Motivation Statement */}
           <Text style={[styles.fieldLabel, { color: colors.title }]}>Motivation Statement</Text>
@@ -116,7 +117,7 @@ export default function AdditionalInfoScreen({ navigation, route }: any) {
             <Text style={[styles.counter, { color: colors.placeholder }]}>
               {totalChars.toLocaleString()} / {MAX_CHARS.toLocaleString()} characters
             </Text>
-            <Text style={[styles.autosave, { color: colors.accent }]}>Draft saved</Text>
+            <Text style={[styles.autosave, { color: colors.accent }]}>Included with application</Text>
           </View>
 
           <View style={{ height: 100 }} />
@@ -127,7 +128,7 @@ export default function AdditionalInfoScreen({ navigation, route }: any) {
       <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.rowBorder }]}>
         <TouchableOpacity
           style={[styles.continueBtn, { backgroundColor: colors.accent }]}
-          onPress={() => navigation.navigate('PortfolioLinks', { internship, resumeId, coverLetter, motivation, whyThis, strongCandidate })}
+          onPress={() => navigation.navigate('PortfolioLinks', { internship, resume, coverLetter, motivation, whyThis, strongCandidate })}
           activeOpacity={0.85}
         >
           <Text style={[styles.continueText, { color: colors.onPrimary }]}>Continue</Text>

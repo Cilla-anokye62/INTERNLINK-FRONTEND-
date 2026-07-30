@@ -25,6 +25,7 @@ export interface InternshipData {
   companyId: string;
   companyLogo: string;
   companyColor: string;
+  imageUrl?: string | null;
   location: string;
   workMode: WorkMode;
   salary: string;
@@ -38,6 +39,10 @@ export interface InternshipData {
   applicants: number;
   postedDate: string;
   closingDate: string;
+  requiredDocuments?: string[];
+  allowCoverLetter?: boolean;
+  resumeRequired?: boolean;
+  portfolioRequired?: boolean;
 }
 
 export interface Resume {

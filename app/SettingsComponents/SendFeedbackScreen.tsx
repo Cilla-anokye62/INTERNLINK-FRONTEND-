@@ -28,10 +28,12 @@ import {
   StyleSheet,
   StatusBar,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from "../../src/hooks/useAppTheme";
+import { accountApi, getAuthErrorMessage } from '../../src/api';
 
 // ─── DATA ─────────────────────────────────────────────────────────
 // Feedback type options
@@ -66,15 +68,24 @@ export default function SendFeedbackScreen({ navigation }: any) {
 
   // Confirmation state
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting feedback:', { type: feedbackType, message });
-    // TODO: send to backend
-    setIsSubmitted(true);
+  const handleSubmit = async () => {
+    if (!message.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const label = FEEDBACK_TYPES.find((value) => value.id === feedbackType)?.label ?? 'Feedback';
+      await accountApi.feedback(label, message.trim());
+      setIsSubmitted(true);
+    } catch (error) {
+      Alert.alert('Could not submit feedback', getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -239,13 +250,13 @@ export default function SendFeedbackScreen({ navigation }: any) {
           style={styles.submitBtn}
           onPress={handleSubmit}
           activeOpacity={0.85}
-          disabled={message.trim().length === 0}
+          disabled={message.trim().length === 0 || submitting}
         >
           <Text style={[
             styles.submitBtnText,
             message.trim().length === 0 && styles.submitBtnTextDisabled,
           ]}>
-            Submit Feedback
+            {submitting ? 'Submitting...' : 'Submit Feedback'}
           </Text>
         </TouchableOpacity>
         {/* ── END SUBMIT BUTTON ─────────────────────────────────── */}

@@ -11,6 +11,7 @@ import {
 import { companyApi, getAuthErrorMessage } from '../../src/api';
 import type { CompanyWorkSetup } from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 // ---------- Types ----------
 interface ChipData {
@@ -90,7 +91,6 @@ const Chip: React.FC<ChipProps> = ({ label, selected, onPress, colors }) => {
     </TouchableOpacity>
   );
 };
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type Props = NativeStackScreenProps<any, any>;
 

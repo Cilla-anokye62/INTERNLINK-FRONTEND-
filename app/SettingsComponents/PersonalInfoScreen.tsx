@@ -1,398 +1,141 @@
-/**
- * PersonalInfoScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Personal Info (ACCOUNT section in SettingsScreen)
- *
- * Content:
- *  - Editable fields: Full Name, Email (read-only with support note),
- *    Phone Number, Profile Photo (circular avatar + "Change Photo" button)
- *  - Save button at bottom
- *
- * HOW TO USE:
- *  1. Drop inside your screens/ or app/ folder
- *  2. Add to App.tsx:
- *     import PersonalInfoScreen from './app/PersonalInfoScreen';
- *     <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
-  StatusBar,
-  ScrollView,
-  Image,
-  Alert,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { useAppTheme } from "../../src/hooks/useAppTheme";
+import {
+  companyApi,
+  getAuthErrorMessage,
+  studentApi,
+  universityApi,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
+type ProfileSummary = {
+  name: string;
+  email: string;
+  phone: string;
+  roleLabel: string;
+  about?: string;
+};
+
 export default function PersonalInfoScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const storedName = useAppStore((state) => state.userName);
-  const storedProfile = useAppStore((state) => state.profile);
-  const setUserName = useAppStore((state) => state.setUserName);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const role = useAppStore((state) => state.userRole);
   const updateProfile = useAppStore((state) => state.updateProfile);
+  const [profile, setProfile] = useState<ProfileSummary | null>(null);
+  const [error, setError] = useState('');
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (role === 'student') {
+          const result = await studentApi.getMe();
+          const about = result.background ?? '';
+          updateProfile({ bio: about, about });
+          setProfile({
+            name: result.fullName,
+            email: result.email || 'Not provided',
+            phone: result.phoneNumber || 'Not provided',
+            roleLabel: 'Student',
+            about: about || 'Not provided',
+          });
+        } else if (role === 'employer') {
+          const result = await companyApi.getMe();
+          setProfile({
+            name: result.companyName,
+            email: result.email,
+            phone: result.phoneNumber || 'Not provided',
+            roleLabel: 'Employer',
+          });
+        } else if (role === 'university') {
+          const result = await universityApi.getMe();
+          setProfile({
+            name: result.name,
+            email: result.contactEmail,
+            phone: result.phoneNumber || 'Not provided',
+            roleLabel: 'University',
+          });
+        }
+      } catch (loadError) {
+        setError(getAuthErrorMessage(loadError));
+      }
+    };
+    void load();
+  }, [role, updateProfile]);
 
-  // Form state
-  const [fullName, setFullName] = useState(storedName);
-  const [email] = useState(storedProfile.email);
-  const [phone, setPhone] = useState(storedProfile.phone);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(storedProfile.photoUri);
-
-  // Track which input is focused
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
-
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
-
-  const handleSave = () => {
-    setUserName(fullName.trim());
-    updateProfile({ phone, photoUri: profilePhoto });
-    navigation.goBack();
-  };
-
-  const handleChangePhoto = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'We need camera roll permissions to change your photo.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setProfilePhoto(uri);
-      updateProfile({ photoUri: uri });
-    }
+  const edit = () => {
+    if (role === 'student') navigation.navigate('StudentEditProfile');
+    else if (role === 'employer') navigation.navigate('CompanyProfile');
+    else if (role === 'university') navigation.navigate('UniversityEditProfile');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-
-        {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.title}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Personal Info</Text>
-        </View>
-        {/* ── END HEADER ──────────────────────────────────────────── */}
-
-
-        {/* ── PROFILE PHOTO SECTION ────────────────────────────────── */}
-        <View style={styles.photoSection}>
-          <View style={styles.photoRow}>
-            <TouchableOpacity
-              style={styles.avatarContainer}
-              onPress={handleChangePhoto}
-              activeOpacity={0.85}
-            >
-              {profilePhoto ? (
-                <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{fullName ? fullName.charAt(0).toUpperCase() : 'U'}</Text>
-                </View>
-              )}
-              <View style={styles.cameraBadge}>
-                <Ionicons
-                  name="camera-outline"
-                  size={14}
-                  color={colors.cameraIcon}
-                />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.changePhotoBtn}
-              onPress={handleChangePhoto}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.changePhotoBtnText}>Change Photo</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* ── END PROFILE PHOTO SECTION ───────────────────────────── */}
-
-
-        {/* ── FULL NAME FIELD ───────────────────────────────────────── */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>FULL NAME</Text>
-          <View style={[
-            styles.inputContainer,
-            focusedInput === 'fullName' && styles.inputContainerFocused,
-          ]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your full name"
-              placeholderTextColor={colors.placeholder}
-              value={fullName}
-              onChangeText={setFullName}
-              onFocus={() => setFocusedInput('fullName')}
-              onBlur={() => setFocusedInput(null)}
-            />
-          </View>
-        </View>
-
-
-        {/* ── EMAIL FIELD (read-only) ───────────────────────────────── */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>EMAIL</Text>
-          <View style={[styles.inputContainer, styles.readOnlyContainer]}>
-            <TextInput
-              style={[styles.input, styles.readOnlyInput]}
-              placeholder="your.email@example.com"
-              placeholderTextColor={colors.placeholder}
-              value={email}
-              editable={false}
-            />
-            <Ionicons
-              name="lock-closed-outline"
-              size={16}
-              color={colors.placeholder}
-              style={styles.lockIcon}
-            />
-          </View>
-          <Text style={styles.note}>
-            Contact support to change your email address.
-          </Text>
-        </View>
-
-
-        {/* ── PHONE NUMBER FIELD ────────────────────────────────────── */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>PHONE NUMBER</Text>
-          <View style={[
-            styles.inputContainer,
-            focusedInput === 'phone' && styles.inputContainerFocused,
-          ]}>
-            <TextInput
-              style={styles.input}
-              placeholder="+233 XX XXX XXXX"
-              placeholderTextColor={colors.placeholder}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              onFocus={() => setFocusedInput('phone')}
-              onBlur={() => setFocusedInput(null)}
-            />
-          </View>
-        </View>
-
-
-        {/* ── SAVE BUTTON ───────────────────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={handleSave}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.saveBtnText}>Save Changes</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={21} color={colors.title} />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Personal information</Text>
+        <View style={{ width: 40 }} />
+      </View>
 
-      </ScrollView>
+      {!profile && !error ? (
+        <View style={styles.center}><ActivityIndicator color={colors.accent} /></View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : profile ? (
+        <View style={styles.content}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{profile.name.charAt(0).toUpperCase()}</Text>
+          </View>
+          <Text style={styles.name}>{profile.name}</Text>
+          <Text style={styles.role}>{profile.roleLabel}</Text>
+          {[
+            ['Email', profile.email],
+            ['Phone', profile.phone],
+            ...(profile.about ? [['About', profile.about]] : []),
+          ].map(([label, value]) => (
+            <View key={label} style={styles.row}>
+              <Text style={styles.label}>{label}</Text>
+              <Text style={styles.value}>{value}</Text>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.primaryButton} onPress={edit}>
+            <Text style={styles.primaryButtonText}>Edit profile</Text>
+          </TouchableOpacity>
+          <Text style={styles.note}>Account email changes are not supported by the backend.</Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.title,
-  },
-
-  // ── Profile Photo Section ─────────────────────────────────────
-  photoSection: {
-    marginBottom: 24,
-  },
-  photoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    marginRight: 16,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.avatarBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  avatarText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.avatarText,
-  },
-  cameraBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.cameraBadge,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.background,
-  },
-  changePhotoBtn: {
-    backgroundColor: colors.card,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  changePhotoBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.accent,
-  },
-
-  // ── Input Fields ───────────────────────────────────────────────
-  fieldGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.label,
-    letterSpacing: 1,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.inputBg,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: colors.inputBorder,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  inputContainerFocused: {
-    borderColor: colors.inputFocus,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.title,
-  },
-
-  // ── Read-only Field ─────────────────────────────────────────────
-  readOnlyContainer: {
-    backgroundColor: '#F8FAFA',
-  },
-  readOnlyInput: {
-    color: colors.subtitle,
-  },
-  lockIcon: {
-    marginLeft: 10,
-  },
-  note: {
-    fontSize: 12,
-    color: colors.note,
-    marginTop: 6,
-    marginLeft: 4,
-  },
-
-  // ── Save Button ────────────────────────────────────────────────
-  saveBtn: {
-    backgroundColor: colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 12,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  saveBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.accentText,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: colors.title, fontSize: 16, fontWeight: '700' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
+  content: { marginHorizontal: 20, padding: 20, borderRadius: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder, alignItems: 'center' },
+  avatar: { width: 68, height: 68, borderRadius: 34, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 11 },
+  avatarText: { color: colors.onPrimary, fontSize: 24, fontWeight: '800' },
+  name: { color: colors.title, fontSize: 19, fontWeight: '700', textAlign: 'center' },
+  role: { color: colors.subtitle, fontSize: 12, marginTop: 3, marginBottom: 18 },
+  row: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, borderTopWidth: 1, borderTopColor: colors.inputBorder },
+  label: { color: colors.subtitle, fontSize: 13 },
+  value: { color: colors.title, fontSize: 13, fontWeight: '600', maxWidth: '65%', textAlign: 'right' },
+  primaryButton: { width: '100%', minHeight: 45, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  primaryButtonText: { color: colors.onPrimary, fontSize: 13, fontWeight: '700' },
+  note: { color: colors.placeholder, fontSize: 11, textAlign: 'center', marginTop: 12 },
+  errorText: { color: colors.withdrawText, fontSize: 13, textAlign: 'center' },
 });

@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext } from 'react';
 import { useColorScheme } from 'react-native';
 import { Colors } from '../constants/Colors';
 import { useAppStore } from '../store/useAppStore';

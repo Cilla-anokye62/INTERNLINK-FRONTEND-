@@ -25,6 +25,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '../../src/store/useAppStore';
+import { companyApi, getAuthErrorMessage, signOut, studentApi, universityApi } from '../../src/api';
 
 
 
@@ -32,7 +33,8 @@ export default function DeleteAccountScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [confirmed, setConfirmed] = useState(false);
-  const resetAccount = useAppStore((state) => state.resetAccount);
+  const [deleting, setDeleting] = useState(false);
+  const userRole = useAppStore((state) => state.userRole);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -55,8 +57,19 @@ export default function DeleteAccountScreen({ navigation }: any) {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            resetAccount();
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              if (userRole === 'student') await studentApi.deleteMe();
+              else if (userRole === 'employer') await companyApi.deleteMe();
+              else if (userRole === 'university') await universityApi.deleteMe();
+              else throw new Error('This account role cannot be deleted from the mobile app.');
+              await signOut();
+            } catch (error) {
+              Alert.alert('Could not delete account', getAuthErrorMessage(error));
+            } finally {
+              setDeleting(false);
+            }
           },
         },
       ]
@@ -123,12 +136,12 @@ export default function DeleteAccountScreen({ navigation }: any) {
 
         {/* Delete Button */}
         <TouchableOpacity
-          style={[styles.deleteButton, !confirmed && styles.deleteButtonDisabled]}
+          style={[styles.deleteButton, (!confirmed || deleting) && styles.deleteButtonDisabled]}
           onPress={handleDeleteAccount}
-          disabled={!confirmed}
+          disabled={!confirmed || deleting}
           activeOpacity={0.7}
         >
-          <Text style={styles.deleteButtonText}>Delete Account</Text>
+          <Text style={styles.deleteButtonText}>{deleting ? 'Deleting...' : 'Delete Account'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

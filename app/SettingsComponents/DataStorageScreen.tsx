@@ -1,148 +1,123 @@
-import { useAppTheme } from '../../src/hooks/useAppTheme';
-/**
- * DataStorageScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Data & Storage Screen
- *
- * Content:
- *  - Header: back arrow + "Data & Storage" title
- *  - Storage usage info
- *  - Clear cache button
- *  - Offline mode toggle
- *  - Download quality settings
- * ─────────────────────────────────────────────────────────────────
- */
-
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  Switch,
-  Alert,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
+import * as Clipboard from 'expo-clipboard';
+import {
+  companyApi,
+  getAuthErrorMessage,
+  studentApi,
+  universityApi,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
 
 export default function DataStorageScreen({ navigation }: any) {
-    const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
-const [offlineMode, setOfflineMode] = useState(false);
-  const [storageUsed, setStorageUsed] = useState('12.5 MB');
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const role = useAppStore((state) => state.userRole);
+  const [exporting, setExporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
-  const handleBackPress = () => {
-    navigation.goBack();
+  const exportData = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const data = role === 'student'
+        ? await studentApi.exportData()
+        : role === 'employer'
+          ? await companyApi.exportData()
+          : role === 'university'
+            ? await universityApi.exportData()
+            : null;
+      if (!data) throw new Error('Data export is unavailable for this role.');
+      await Clipboard.setStringAsync(JSON.stringify(data, null, 2));
+      Alert.alert('Data export copied', 'Your backend account export was copied to the clipboard as JSON.');
+    } catch (error) {
+      Alert.alert('Could not export data', getAuthErrorMessage(error));
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const handleClearCache = async () => {
+  const clearCache = () => {
     Alert.alert(
-      'Clear Cache',
-      'This will clear all cached data. You may need to re-download some content.',
+      'Clear cache',
+      'This clears non-session cached data. You will remain signed in.',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Clear',
           onPress: async () => {
+            setClearing(true);
             try {
               const keys = await AsyncStorage.getAllKeys();
-              const cacheKeys = keys.filter(k => k !== 'internlink-storage');
+              const cacheKeys = keys.filter((key) => key !== 'internlink-storage');
               await AsyncStorage.multiRemove(cacheKeys);
-              setStorageUsed('0 MB');
-              Alert.alert('Success', 'Cache cleared successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to clear cache');
+              Alert.alert('Cache cleared');
+            } catch {
+              Alert.alert('Could not clear cache');
+            } finally {
+              setClearing(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.backArrow}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Data & Storage</Text>
-        </View>
-
-        {/* Storage Usage Card */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={21} color={colors.title} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Data & storage</Text>
+        <View style={{ width: 40 }} />
+      </View>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Storage Usage</Text>
-          <View style={styles.storageRow}>
-            <Ionicons name="folder-outline" size={24} color={colors.button} />
-            <View style={styles.storageInfo}>
-              <Text style={styles.storageLabel}>Used Storage</Text>
-              <Text style={styles.storageValue}>{storageUsed}</Text>
-            </View>
+          <View style={styles.iconCircle}>
+            <Ionicons name="download-outline" size={23} color={colors.accent} />
           </View>
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={handleClearCache}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.clearButtonText}>Clear Cache</Text>
+          <Text style={styles.cardTitle}>Export your account data</Text>
+          <Text style={styles.cardText}>
+            Download the data currently stored by InternLink for your account. The export is copied as JSON so you can save it securely.
+          </Text>
+          <TouchableOpacity style={styles.primaryButton} disabled={exporting} onPress={() => void exportData()}>
+            {exporting
+              ? <ActivityIndicator color={colors.onPrimary} />
+              : <Text style={styles.primaryButtonText}>Copy data export</Text>}
           </TouchableOpacity>
         </View>
 
-        {/* Offline Mode */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Offline Mode</Text>
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Enable Offline Mode</Text>
-              <Text style={styles.settingDescription}>
-                Download content for offline access
-              </Text>
-            </View>
-            <Switch
-              value={offlineMode}
-              onValueChange={setOfflineMode}
-              trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
-              thumbColor={colors.switchThumb}
-              ios_backgroundColor={colors.switchTrack}
-            />
+          <View style={styles.iconCircle}>
+            <Ionicons name="folder-open-outline" size={23} color={colors.accent} />
           </View>
+          <Text style={styles.cardTitle}>Clear app cache</Text>
+          <Text style={styles.cardText}>
+            Removes temporary local data while preserving the secure session and backend account.
+          </Text>
+          <TouchableOpacity style={styles.secondaryButton} disabled={clearing} onPress={clearCache}>
+            <Text style={styles.secondaryButtonText}>{clearing ? 'Clearing...' : 'Clear cache'}</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Download Quality */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Download Quality</Text>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <Text style={styles.optionLabel}>High Quality</Text>
-            <Ionicons name="checkmark-circle-outline" size={20} color={colors.button} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <Text style={styles.optionLabel}>Standard Quality</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <Text style={styles.optionLabel}>Data Saver</Text>
-          </TouchableOpacity>
+        <View style={styles.notice}>
+          <Ionicons name="shield-checkmark-outline" size={20} color={colors.accent} />
+          <Text style={styles.noticeText}>
+            Account deletion is available separately under Settings → Delete Account.
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -150,115 +125,19 @@ const [offlineMode, setOfflineMode] = useState(false);
 }
 
 const createStyles = (colors: any) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.backBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.headerTitle,
-  },
-  card: {
-    backgroundColor: colors.cardBg,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.sectionHeader,
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  storageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  storageInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  storageLabel: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 4,
-  },
-  storageValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.title,
-  },
-  clearButton: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  clearButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.button,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  settingInfo: {
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.title,
-    marginBottom: 4,
-  },
-  settingDescription: {
-    fontSize: 12,
-    color: colors.text,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  optionLabel: {
-    fontSize: 14,
-    color: colors.title,
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: colors.title, fontSize: 17, fontWeight: '700' },
+  content: { paddingHorizontal: 20, paddingBottom: 36, gap: 13 },
+  card: { alignItems: 'center', padding: 18, borderRadius: 16, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  iconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.iconCircle, alignItems: 'center', justifyContent: 'center', marginBottom: 11 },
+  cardTitle: { color: colors.title, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  cardText: { color: colors.subtitle, fontSize: 13, lineHeight: 20, textAlign: 'center', marginTop: 7 },
+  primaryButton: { width: '100%', minHeight: 45, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 14 },
+  primaryButtonText: { color: colors.onPrimary, fontSize: 13, fontWeight: '700' },
+  secondaryButton: { width: '100%', minHeight: 45, borderRadius: 23, borderWidth: 1, borderColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 14 },
+  secondaryButtonText: { color: colors.accent, fontSize: 13, fontWeight: '700' },
+  notice: { flexDirection: 'row', gap: 9, padding: 13, borderRadius: 12, backgroundColor: colors.iconCircle },
+  noticeText: { flex: 1, color: colors.subtitle, fontSize: 12, lineHeight: 18 },
 });

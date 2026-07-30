@@ -1,7 +1,7 @@
-import type { UserRole } from '../store/useAppStore';
 import { useAppStore } from '../store/useAppStore';
 import { ApiError } from './client';
 import { authApi } from './authApi';
+import { accountApi } from './accountApi';
 import { refreshStoredSession } from './configuredClient';
 import { clearSessionTokens, getAccessToken, saveSessionTokens } from './tokenStorage';
 import type { LoginRequest, SignUpRequest, VerifyEmailRequest } from './types';
@@ -25,8 +25,13 @@ const establishSession = async (session: Awaited<ReturnType<typeof authApi.login
 
 export const registerAccount = (request: SignUpRequest) => authApi.register(request);
 
-export const signIn = async (role: UserRole, request: LoginRequest) => {
-  const session = await authApi.login(role, request);
+export const signIn = async (request: LoginRequest) => {
+  const session = await authApi.login(request);
+  await establishSession(session);
+};
+
+export const signInWithGoogleToken = async (idToken: string) => {
+  const session = await authApi.google({ idToken });
   await establishSession(session);
 };
 
@@ -47,7 +52,10 @@ export const restoreSession = async () => {
 
 export const signOut = async () => {
   try {
-    if (getAccessToken()) await authApi.logout();
+    if (getAccessToken()) {
+      await accountApi.clearDeviceToken().catch(() => undefined);
+      await authApi.logout();
+    }
   } catch {
     // Local sign-out must still succeed if the server or network is unavailable.
   } finally {

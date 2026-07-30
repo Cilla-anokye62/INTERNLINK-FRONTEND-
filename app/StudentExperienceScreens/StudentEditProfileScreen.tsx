@@ -1,359 +1,188 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  getAuthErrorMessage,
+  mediaApi,
+  resolveMediaUrl,
+  studentApi,
+  type UploadableImage,
+} from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { useAppStore } from '../../src/store/useAppStore';
+import ProfilePhotoSelector from '../../src/components/ProfilePhotoSelector';
 
-const SKILLS = ['React', 'TypeScript', 'Python', 'Figma', 'Tailwind', 'GraphQL', 'Node.js'];
-
-const EXPERIENCE = [
-  {
-    id: '1',
-    icon: 'V',
-    iconColor: '#0F172A',
-    title: 'Eng Intern',
-    subtitle: 'Vercel · Summer 2025',
-  },
-  {
-    id: '2',
-    icon: 'M',
-    iconColor: '#3B82F6',
-    title: 'Research Assistant',
-    subtitle: 'MIT Media Lab · 2024 - Present',
-  },
-];
+const parseList = (value: string) => value
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
 
 export default function StudentEditProfileScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const setUserName = useAppStore((state) => state.setUserName);
+  const updateProfile = useAppStore((state) => state.updateProfile);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [background, setBackground] = useState('');
+  const [program, setProgram] = useState('');
+  const [level, setLevel] = useState('');
+  const [skills, setSkills] = useState('');
+  const [interests, setInterests] = useState('');
+  const [targetCompanies, setTargetCompanies] = useState('');
+  const [location, setLocation] = useState('');
+  const [relocate, setRelocate] = useState(false);
+  const [essay, setEssay] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<UploadableImage | null>(null);
+
+  useEffect(() => {
+    studentApi.getMe()
+      .then((profile) => {
+        setFullName(profile.fullName);
+        setBackground(profile.background || '');
+        setProgram(profile.program || '');
+        setLevel(profile.level || '');
+        setSkills(profile.skills.join(', '));
+        setInterests(profile.careerInterests.join(', '));
+        setTargetCompanies(profile.targetCompanies.join(', '));
+        setLocation(profile.preferredLocation || '');
+        setRelocate(profile.willingToRelocate);
+        setEssay(profile.personalEssay || '');
+        const resolvedPhoto = resolveMediaUrl(profile.profileImageUrl);
+        setPhotoUri(resolvedPhoto);
+        updateProfile({ photoUri: resolvedPhoto });
+      })
+      .catch((error) => Alert.alert('Could not load profile', getAuthErrorMessage(error)))
+      .finally(() => setLoading(false));
+  }, [updateProfile]);
+
+  const save = async () => {
+    if (!fullName.trim() || saving) return;
+    setSaving(true);
+    try {
+      const updated = await studentApi.updateMe({
+        fullName: fullName.trim(),
+        background: background.trim(),
+        program: program.trim(),
+        level: level.trim(),
+        skills: parseList(skills),
+        careerInterests: parseList(interests),
+        targetCompanies: parseList(targetCompanies),
+        preferredLocation: location.trim(),
+        willingToRelocate: relocate,
+        personalEssay: essay.trim(),
+      });
+      setUserName(updated.fullName);
+      const savedBio = updated.background ?? '';
+      let savedPhotoUri = resolveMediaUrl(updated.profileImageUrl);
+      if (photoFile) {
+        const uploaded = await mediaApi.uploadAccountImage(photoFile);
+        savedPhotoUri = resolveMediaUrl(uploaded.url);
+        setPhotoUri(savedPhotoUri);
+        setPhotoFile(null);
+      }
+      updateProfile({
+        bio: savedBio,
+        about: savedBio,
+        skills: updated.skills,
+        photoUri: savedPhotoUri,
+      });
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Could not save profile', getAuthErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Text style={styles.settingsIcon}>⚙</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Profile card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>AM</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={21} color={colors.title} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit profile</Text>
+        <View style={{ width: 40 }} />
+      </View>
+      {loading ? (
+        <View style={styles.center}><ActivityIndicator color={colors.accent} /></View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ProfilePhotoSelector
+            imageUri={photoUri}
+            fallbackText={fullName}
+            disabled={saving}
+            onSelect={(file, previewUri) => {
+              setPhotoFile(file);
+              setPhotoUri(previewUri);
+            }}
+          />
+          <Field label="Full name" value={fullName} onChangeText={setFullName} styles={styles} />
+          <Field label="About / bio" value={background} onChangeText={setBackground} styles={styles} multiline />
+          <Field label="Program" value={program} onChangeText={setProgram} styles={styles} />
+          <Field label="Academic level" value={level} onChangeText={setLevel} styles={styles} />
+          <Field label="Skills (comma separated)" value={skills} onChangeText={setSkills} styles={styles} multiline />
+          <Field label="Career interests (comma separated)" value={interests} onChangeText={setInterests} styles={styles} multiline />
+          <Field label="Target companies (comma separated)" value={targetCompanies} onChangeText={setTargetCompanies} styles={styles} multiline />
+          <Field label="Preferred location" value={location} onChangeText={setLocation} styles={styles} />
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>Willing to relocate</Text>
+            <Switch value={relocate} onValueChange={setRelocate} trackColor={{ true: colors.accent }} />
           </View>
-          <Text style={styles.name}>Alex Morgan</Text>
-          <Text style={styles.subtitle}>CS Junior · MIT · Class of 2026</Text>
-
-          <View style={styles.badgesRow}>
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>✓ Verified</Text>
-            </View>
-            <View style={styles.locationBadge}>
-              <Text style={styles.locationText}>San Francisco</Text>
-            </View>
-          </View>
-
-          {/* Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>12</Text>
-              <Text style={styles.statLabel}>Applied</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>4</Text>
-              <Text style={styles.statLabel}>Interviews</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>2</Text>
-              <Text style={styles.statLabel}>Offers</Text>
-            </View>
-          </View>
-
+          <Field label="Personal essay" value={essay} onChangeText={setEssay} styles={styles} multiline />
           <TouchableOpacity
-            style={styles.editButton}
-            activeOpacity={0.85}
-            onPress={() => navigation.goBack()}
+            style={[styles.primaryButton, (!fullName.trim() || saving) && styles.disabled]}
+            disabled={!fullName.trim() || saving}
+            onPress={() => void save()}
           >
-            <Text style={styles.editButtonText}>Edit profile</Text>
+            {saving
+              ? <ActivityIndicator color={colors.onPrimary} />
+              : <Text style={styles.primaryButtonText}>Save changes</Text>}
           </TouchableOpacity>
-        </View>
-
-        {/* About section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <TouchableOpacity>
-            <Text style={styles.editLink}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.aboutText}>
-            CS student passionate about human-centered software, design systems, and AI-assisted tooling. Currently building open-source dev tools.
-          </Text>
-        </View>
-
-        {/* Skills section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Skills</Text>
-          <TouchableOpacity>
-            <Text style={styles.editLink}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.card}>
-          <View style={styles.skillsRow}>
-            {SKILLS.map(skill => (
-              <View key={skill} style={styles.skillChip}>
-                <Text style={styles.skillText}>{skill}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Experience section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Experience</Text>
-          <TouchableOpacity>
-            <Text style={styles.editLink}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.card}>
-          {EXPERIENCE.map((item, index) => (
-            <View
-              key={item.id}
-              style={[
-                styles.experienceItem,
-                index < EXPERIENCE.length - 1 && styles.experienceItemBorder,
-              ]}
-            >
-              <View style={[styles.experienceIcon, { backgroundColor: item.iconColor }]}>
-                <Text style={styles.experienceIconText}>{item.icon}</Text>
-              </View>
-              <View style={styles.experienceInfo}>
-                <Text style={styles.experienceTitle}>{item.title}</Text>
-                <Text style={styles.experienceSubtitle}>{item.subtitle}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-      </ScrollView>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
+const Field = ({ label, styles, multiline, ...props }: any) => (
+  <View style={styles.field}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      {...props}
+      style={[styles.input, multiline && styles.textArea]}
+      multiline={multiline}
+      textAlignVertical={multiline ? 'top' : 'center'}
+    />
+  </View>
+);
+
 const createStyles = (colors: any) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.title,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsIcon: {
-    fontSize: 18,
-  },
-  profileCard: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  avatarText: {
-    color: colors.onPrimary,
-    fontWeight: 'bold',
-    fontSize: 26,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.title,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.subtitle,
-    marginBottom: 12,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
-  },
-  verifiedBadge: {
-    backgroundColor: colors.iconCircle,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  verifiedText: {
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  locationBadge: {
-    backgroundColor: colors.ratePillBg,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  locationText: {
-    fontSize: 12,
-    color: colors.ratePillText,
-    fontWeight: '500',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.title,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.placeholder,
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: colors.rowBorder,
-  },
-  editButton: {
-    width: '100%',
-    borderRadius: 30,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.card,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.title,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.title,
-  },
-  editLink: {
-    fontSize: 13,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-  },
-  aboutText: {
-    fontSize: 14,
-    color: colors.subtitle,
-    lineHeight: 22,
-  },
-  skillsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  skillChip: {
-    backgroundColor: colors.iconCircle,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-  },
-  skillText: {
-    fontSize: 13,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  experienceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  experienceItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowBorder,
-  },
-  experienceIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  experienceIconText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  experienceInfo: {
-    flex: 1,
-  },
-  experienceTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.cardTitle,
-    marginBottom: 2,
-  },
-  experienceSubtitle: {
-    fontSize: 12,
-    color: colors.subtitle,
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: colors.title, fontSize: 17, fontWeight: '700' },
+  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 13 },
+  field: { gap: 6 },
+  label: { color: colors.title, fontSize: 12, fontWeight: '600' },
+  input: { minHeight: 46, paddingHorizontal: 12, borderRadius: 11, backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, color: colors.text, fontSize: 14 },
+  textArea: { minHeight: 90, paddingTop: 11 },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  primaryButton: { minHeight: 48, borderRadius: 24, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
+  primaryButtonText: { color: colors.onPrimary, fontSize: 14, fontWeight: '700' },
+  disabled: { opacity: 0.5 },
 });

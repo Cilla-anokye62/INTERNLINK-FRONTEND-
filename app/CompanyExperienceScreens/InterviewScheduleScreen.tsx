@@ -18,10 +18,8 @@ const DURATIONS = ['15 min', '30 min', '45 min', '60 min'];
 export default function InterviewScheduleScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { applications, updateApplicationStatus } = useAppStore();
+  const updateApplicationStatus = useAppStore((state) => state.updateApplicationStatus);
   const applicationId: string = route.params?.applicationId;
-
-  const application = applications.find((a) => a.id === applicationId);
 
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');

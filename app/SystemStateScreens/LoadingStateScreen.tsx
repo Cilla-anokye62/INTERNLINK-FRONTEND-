@@ -99,17 +99,6 @@ export default function LoadingStateScreen({ navigation }: any) {
     navigation.goBack();
   };
 
-  // SKETCH of how you'd actually use this screen in a real flow:
-  // navigate here right before starting an API call, then navigate
-  // away once the response comes back. Not called automatically —
-  // shown here just as a reference for wiring this screen up later.
-  const handleApiCallExample = async () => {
-    // navigation.navigate('LoadingMatches');
-    // const response = await fetch('https://your-api.com/match-internships');
-    // const data = await response.json();
-    // navigation.replace('SearchResults', { results: data });
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />

@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
+import { accountApi, getAuthErrorMessage } from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-
-const REFERRAL_CODE = 'ALEX2026';
+import { useAppStore } from '../../src/store/useAppStore';
 
 export default function ReferFriendScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const userId = useAppStore((state) => state.userId);
+  const REFERRAL_CODE = `IL-S-${userId || 'MEMBER'}`;
 
   const handleShare = async () => {
     try {
@@ -19,10 +23,19 @@ export default function ReferFriendScreen({ navigation }: any) {
     } catch {}
   };
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (!email.trim()) { Alert.alert('Enter an email', 'Please provide an email address.'); return; }
-    Alert.alert('Invite Sent!', `An invitation has been sent to ${email}`, [{ text: 'OK' }]);
-    setEmail('');
+    if (sending) return;
+    setSending(true);
+    try {
+      await accountApi.sendReferral(email.trim());
+      Alert.alert('Invite sent', `An invitation has been sent to ${email.trim()}.`);
+      setEmail('');
+    } catch (error) {
+      Alert.alert('Could not send invite', getAuthErrorMessage(error));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -38,15 +51,18 @@ export default function ReferFriendScreen({ navigation }: any) {
       <View style={styles.content}>
         <View style={[styles.heroCard, { backgroundColor: colors.accent }]}>
           <Ionicons name="gift-outline" size={40} color={colors.accent} />
-          <Text style={styles.heroTitle}>Invite friends, earn rewards</Text>
-          <Text style={styles.heroSubtitle}>Get 3 days of premium free for every friend you refer</Text>
+          <Text style={styles.heroTitle}>Invite friends to InternLink</Text>
+          <Text style={styles.heroSubtitle}>Help your peers discover internship opportunities</Text>
         </View>
 
         <View style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.inputBorder }]}>
           <Text style={[styles.codeLabel, { color: colors.subtitle }]}>Your referral code</Text>
           <Text style={[styles.codeValue, { color: colors.accent }]}>{REFERRAL_CODE}</Text>
           <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.iconCircle }]}
-            onPress={() => { Alert.alert('Copied!', 'Referral code copied to clipboard'); }}>
+            onPress={async () => {
+              await Clipboard.setStringAsync(REFERRAL_CODE);
+              Alert.alert('Copied', 'Referral code copied to clipboard.');
+            }}>
             <Text style={[styles.copyBtnText, { color: colors.accent }]}>Copy Code</Text>
           </TouchableOpacity>
         </View>
@@ -61,8 +77,14 @@ export default function ReferFriendScreen({ navigation }: any) {
           <TextInput style={[styles.input, { color: colors.text }]} placeholder="friend@email.com"
             placeholderTextColor={colors.placeholder} value={email} onChangeText={setEmail}
             keyboardType="email-address" autoCapitalize="none" />
-          <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.accent }]} onPress={handleInvite}>
-            <Text style={[styles.inviteBtnText, { color: colors.onPrimary }]}>Invite</Text>
+          <TouchableOpacity
+            style={[styles.inviteBtn, { backgroundColor: colors.accent }]}
+            onPress={() => void handleInvite()}
+            disabled={sending}
+          >
+            <Text style={[styles.inviteBtnText, { color: colors.onPrimary }]}>
+              {sending ? 'Sending…' : 'Invite'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

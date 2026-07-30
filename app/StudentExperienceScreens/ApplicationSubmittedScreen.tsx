@@ -25,7 +25,7 @@ export default function ApplicationSubmittedScreen({ navigation, route }: any) {
         Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
       ]),
     ]).start();
-  }, []);
+  }, [fadeAnim, scaleAnim, slideAnim]);
 
   const resetToStudentTab = (screen: 'Home' | 'Discover' | 'Applications') => {
     navigation.reset({

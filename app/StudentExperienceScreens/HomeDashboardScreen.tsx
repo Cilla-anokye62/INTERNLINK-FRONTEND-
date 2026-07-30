@@ -1,18 +1,25 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  listingApi,
+  listingToInternshipData,
+  studentApi,
+  type ListingResponse,
+  type RecommendationResponse,
+} from '../../src/api';
 
 const { width } = Dimensions.get('window');
 
-const RECOMMENDED = [
-  { id: '1', title: 'Frontend Intern',    company: 'Stripe',  location: 'Remote',  pay: 'GHS 45/hr', duration: '12 weeks', match: 96, color: '#7C3AED' },
-  { id: '2', title: 'Product Designer',   company: 'Figma',   location: 'Remote',  pay: 'GHS 45/hr', duration: '12 weeks', match: 91, color: '#F59E0B' },
-  { id: '3', title: 'Data Analyst Intern',company: 'MTN',     location: 'Accra',   pay: 'GHS 50/hr', duration: '8 weeks',  match: 88, color: '#10B981' },
-];
+type RecommendationCard = {
+  recommendation: RecommendationResponse;
+  listing: ListingResponse;
+};
 
 const QUICK_ACTIONS = [
   { id: '1', icon: 'chatbubbles-outline', title: 'Messages',       subtitle: 'Chat with employers',    screen: 'StudentMessages' },
@@ -24,8 +31,38 @@ const QUICK_ACTIONS = [
 export default function HomeDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { isPremium, userName } = useAppStore();
+  const userName = useAppStore((state) => state.userName);
   const username = userName;
+  const [recommendations, setRecommendations] = useState<RecommendationCard[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+
+  const loadRecommendations = useCallback(async () => {
+    try {
+      const matches = await studentApi.recommendations();
+      const cards = await Promise.all(matches.slice(0, 10).map(async (recommendation) => {
+        try {
+          return {
+            recommendation,
+            listing: await listingApi.getOpen(recommendation.internshipId),
+          };
+        } catch {
+          return null;
+        }
+      }));
+      setRecommendations(cards.filter((card): card is RecommendationCard => card !== null));
+    } catch {
+      setRecommendations([]);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoadingRecommendations(true);
+      void loadRecommendations();
+    }, [loadRecommendations]),
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -58,10 +95,12 @@ export default function HomeDashboardScreen({ navigation }: any) {
               <Ionicons name="sparkles" size={12} color="#2CACAD" style={styles.aiMatchBadgeIcon} />
               <Text style={styles.aiMatchBadgeText}>AI Match</Text>
             </View>
-            <Text style={styles.aiBannerTitle}>12 new internships{'\n'}match your profile</Text>
+            <Text style={styles.aiBannerTitle}>
+              {recommendations.length} internship{recommendations.length === 1 ? '' : 's'}{'\n'}match your profile
+            </Text>
             <TouchableOpacity
               style={styles.viewMatchesBtn}
-              onPress={() => navigation.navigate(isPremium ? 'SearchResults' : 'PremiumPaywall')}
+              onPress={() => navigation.navigate('Discover')}
             >
               <Text style={styles.viewMatchesBtnText}>View matches</Text>
               <Ionicons name="arrow-forward" size={14} color="#024D60" style={styles.viewMatchesBtnIcon} />
@@ -86,25 +125,39 @@ export default function HomeDashboardScreen({ navigation }: any) {
           style={styles.horizontalScrollWrapper}
           contentContainerStyle={styles.horizontalScroll}
         >
-          {RECOMMENDED.map(item => (
+          {loadingRecommendations ? (
+            <View style={styles.recommendLoading}>
+              <ActivityIndicator color={colors.accent} />
+            </View>
+          ) : recommendations.length === 0 ? (
+            <View style={styles.recommendEmpty}>
+              <Text style={styles.recommendEmptyText}>
+                Complete your skills and career interests to receive recommendations.
+              </Text>
+            </View>
+          ) : recommendations.slice(0, 5).map(({ recommendation, listing }) => (
             <TouchableOpacity
-              key={item.id}
+              key={recommendation.internshipId}
               style={styles.recommendCard}
               activeOpacity={0.85}
-              onPress={() => navigation.navigate('InternshipDetails', { internship: item })}
+              onPress={() => navigation.navigate('InternshipDetails', {
+                internship: listingToInternshipData(listing, recommendation.matchScore),
+              })}
             >
-              <View style={[styles.companyAvatar, { backgroundColor: item.color }]}>
-                <Text style={styles.companyAvatarText}>{item.company[0]}</Text>
+              <View style={[styles.companyAvatar, { backgroundColor: colors.accent }]}>
+                <Text style={styles.companyAvatarText}>{recommendation.companyName[0]}</Text>
               </View>
               <View style={styles.matchBadge}>
-                <Text style={styles.matchBadgeText}>{item.match}% match</Text>
+                <Text style={styles.matchBadgeText}>{Math.round(recommendation.matchScore)}% match</Text>
               </View>
-              <Text style={styles.recommendTitle}>{item.title}</Text>
-              <Text style={styles.recommendCompany}>{item.company} · {item.location}</Text>
+              <Text style={styles.recommendTitle}>{recommendation.title}</Text>
+              <Text style={styles.recommendCompany}>
+                {recommendation.companyName} · {listing.remote ? 'Remote' : listing.location || 'Location not set'}
+              </Text>
               <View style={styles.recommendFooter}>
-                <Text style={styles.recommendPay}>{item.pay}</Text>
+                <Text style={styles.recommendPay}>{listing.allowance || 'Allowance not set'}</Text>
                 <Text style={styles.recommendDot}> · </Text>
-                <Text style={styles.recommendDuration}>{item.duration}</Text>
+                <Text style={styles.recommendDuration}>{listing.duration || 'Duration not set'}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -281,6 +334,26 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingLeft: 24,
     paddingRight: 24,
     paddingBottom: 24,
+  },
+  recommendLoading: {
+    width: width * 0.55,
+    minHeight: 170,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recommendEmpty: {
+    width: width - 48,
+    minHeight: 100,
+    borderRadius: 16,
+    padding: 18,
+    backgroundColor: colors.card,
+    justifyContent: 'center',
+  },
+  recommendEmptyText: {
+    color: colors.subtitle,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
   },
   recommendCard: {
     backgroundColor: colors.card,

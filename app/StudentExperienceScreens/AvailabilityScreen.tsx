@@ -35,7 +35,7 @@ export default function AvailabilityScreen({ navigation, route }: any) {
   const handleContinue = () => {
     navigation.navigate('ReviewApplication', {
       internship,
-      resumeId: route.params?.resumeId,
+      resume: route.params?.resume,
       coverLetter: route.params?.coverLetter,
       motivation: route.params?.motivation,
       whyThis: route.params?.whyThis,
@@ -71,7 +71,7 @@ export default function AvailabilityScreen({ navigation, route }: any) {
         <Text style={[styles.fieldLabel, { color: colors.title }]}>Earliest Start Date</Text>
         <View style={[styles.inputBox, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
           <Ionicons name="calendar-outline" size={16} color={colors.placeholder} style={{marginRight: 8, marginBottom: 8}} />
-          <TouchableOpacity style={styles.dateChips}>
+          <View style={styles.dateChips}>
             {['Immediately', 'In 2 weeks', 'In 1 month', 'In 3 months'].map((opt) => (
               <TouchableOpacity
                 key={opt}
@@ -86,7 +86,7 @@ export default function AvailabilityScreen({ navigation, route }: any) {
                 }]}>{opt}</Text>
               </TouchableOpacity>
             ))}
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Duration */}

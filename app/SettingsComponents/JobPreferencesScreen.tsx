@@ -1,164 +1,162 @@
-import { useAppTheme } from '../../src/hooks/useAppTheme';
-/**
- * JobPreferencesScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Job Preferences Screen
- *
- * Content:
- *  - Header: back arrow + "Job Preferences" title
- *  - Job type preferences (Full-time, Part-time, Internship, Co-op)
- *  - Location preferences
- *  - Industry preferences
- *  - Save button
- * ─────────────────────────────────────────────────────────────────
- */
-
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  TextInput,
+  ActivityIndicator,
   Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppStore } from '../../src/store/useAppStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-
-
-const JOB_TYPES = ['Full-time', 'Part-time', 'Internship', 'Co-op', 'Remote', 'Hybrid'];
-const INDUSTRIES = ['Technology', 'Finance', 'Healthcare', 'Education', 'Marketing', 'Design', 'Engineering', 'Business'];
+import {
+  getAuthErrorMessage,
+  referenceDataApi,
+  studentApi,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 export default function JobPreferencesScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const profile = useAppStore((state) => state.profile);
-  const updateProfile = useAppStore((state) => state.updateProfile);
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>(profile.jobTypes);
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>(profile.industries);
-  const { preferredLocation: storeLocation, workSetup: storeWorkSetup, willingToRelocate: storeRelocate, setLocationPreferences } = useAppStore();
-  const [preferredLocation, setPreferredLocation] = useState(storeLocation);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [availableInterests, setAvailableInterests] = useState<string[]>([]);
+  const [careerInterests, setCareerInterests] = useState<string[]>([]);
+  const [targetCompanies, setTargetCompanies] = useState('');
+  const [preferredLocation, setPreferredLocation] = useState('');
+  const [willingToRelocate, setWillingToRelocate] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleBackPress = () => {
-    navigation.goBack();
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [profile, options] = await Promise.all([
+        studentApi.getMe(),
+        referenceDataApi.getStudentOnboardingOptions(),
+      ]);
+      setCareerInterests(profile.careerInterests);
+      setTargetCompanies(profile.targetCompanies.join(', '));
+      setPreferredLocation(profile.preferredLocation ?? '');
+      setWillingToRelocate(profile.willingToRelocate);
+      setAvailableInterests(options.careerInterests.map((item) => item.name));
+    } catch (error) {
+      Alert.alert('Unable to load preferences', getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const toggleInterest = (interest: string) => {
+    setCareerInterests((current) => (
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : [...current, interest]
+    ));
   };
 
-  const toggleJobType = (type: string) => {
-    setSelectedJobTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await studentApi.updateMe({
+        careerInterests,
+        targetCompanies: targetCompanies
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+        preferredLocation: preferredLocation.trim(),
+        willingToRelocate,
+      });
+      Alert.alert('Saved', 'Your job preferences were updated.');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Unable to save', getAuthErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.center]}>
+        <ActivityIndicator color={colors.accent} />
+      </SafeAreaView>
     );
-  };
-
-  const toggleIndustry = (industry: string) => {
-    setSelectedIndustries(prev =>
-      prev.includes(industry) ? prev.filter(i => i !== industry) : [...prev, industry]
-    );
-  };
-
-  const handleSave = () => {
-    updateProfile({ jobTypes: selectedJobTypes, industries: selectedIndustries });
-    setLocationPreferences(preferredLocation, storeWorkSetup, storeRelocate);
-    Alert.alert('Success', 'Job preferences saved successfully');
-    navigation.goBack();
-  };
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.backArrow}
-            />
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={22} color={colors.title} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Job Preferences</Text>
+          <Text style={styles.title}>Job Preferences</Text>
         </View>
 
-        {/* Job Types */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Job Type</Text>
-          <View style={styles.chipsContainer}>
-            {JOB_TYPES.map((type) => (
+        <Text style={styles.label}>Career interests</Text>
+        <View style={styles.chips}>
+          {availableInterests.map((interest) => {
+            const selected = careerInterests.includes(interest);
+            return (
               <TouchableOpacity
-                key={type}
-                style={[
-                  styles.chip,
-                  selectedJobTypes.includes(type) && styles.chipSelected,
-                ]}
-                onPress={() => toggleJobType(type)}
-                activeOpacity={0.7}
+                key={interest}
+                style={[styles.chip, selected && styles.selectedChip]}
+                onPress={() => toggleInterest(interest)}
               >
-                <Text style={[
-                  styles.chipText,
-                  selectedJobTypes.includes(type) && styles.chipSelectedText,
-                ]}>
-                  {type}
+                <Text style={[styles.chipText, selected && styles.selectedChipText]}>
+                  {interest}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            );
+          })}
         </View>
 
-        {/* Location */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Preferred Location</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., New York, Remote"
-            placeholderTextColor="#94A3B8"
-            value={preferredLocation}
-            onChangeText={setPreferredLocation}
-          />
-        </View>
+        <Text style={styles.label}>Target companies</Text>
+        <Text style={styles.hint}>Separate multiple companies with commas.</Text>
+        <TextInput
+          style={styles.input}
+          value={targetCompanies}
+          onChangeText={setTargetCompanies}
+          placeholder="e.g. Vodafone, Hubtel"
+          placeholderTextColor={colors.subtitle}
+        />
 
-        {/* Industries */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Industries</Text>
-          <View style={styles.chipsContainer}>
-            {INDUSTRIES.map((industry) => (
-              <TouchableOpacity
-                key={industry}
-                style={[
-                  styles.chip,
-                  selectedIndustries.includes(industry) && styles.chipSelected,
-                ]}
-                onPress={() => toggleIndustry(industry)}
-                activeOpacity={0.7}
-              >
-                <Text style={[
-                  styles.chipText,
-                  selectedIndustries.includes(industry) && styles.chipSelectedText,
-                ]}>
-                  {industry}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        <Text style={styles.label}>Preferred location</Text>
+        <TextInput
+          style={styles.input}
+          value={preferredLocation}
+          onChangeText={setPreferredLocation}
+          placeholder="e.g. Accra or Remote"
+          placeholderTextColor={colors.subtitle}
+        />
 
-        {/* Save Button */}
         <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.7}
+          style={styles.toggleRow}
+          onPress={() => setWillingToRelocate((value) => !value)}
         >
-          <Text style={styles.saveButtonText}>Save Preferences</Text>
+          <Ionicons
+            name={willingToRelocate ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.accent}
+          />
+          <Text style={styles.toggleText}>I am willing to relocate</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.saveButton, saving && styles.disabled]}
+          onPress={() => void handleSave()}
+          disabled={saving}
+        >
+          {saving
+            ? <ActivityIndicator color="#FFFFFF" />
+            : <Text style={styles.saveText}>Save Preferences</Text>}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -166,93 +164,52 @@ export default function JobPreferencesScreen({ navigation }: any) {
 }
 
 const createStyles = (colors: any) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.backBtnBg,
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 20, paddingBottom: 40 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 28 },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.card,
     marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.headerTitle,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.sectionHeader,
-    marginBottom: 12,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  title: { color: colors.title, fontSize: 22, fontWeight: '800' },
+  label: { color: colors.title, fontSize: 15, fontWeight: '700', marginTop: 18, marginBottom: 10 },
+  hint: { color: colors.subtitle, fontSize: 12, marginTop: -5, marginBottom: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    backgroundColor: colors.chip,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: colors.chip,
-  },
-  chipSelected: {
-    backgroundColor: colors.chipSelected,
-    borderColor: colors.chipSelected,
-  },
-  chipText: {
-    fontSize: 14,
-    color: colors.chipText,
-    fontWeight: '600',
-  },
-  chipSelectedText: {
-    color: colors.chipSelectedText,
-  },
-  input: {
-    backgroundColor: colors.inputBg,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
-    color: colors.title,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.inputBorder,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
+  selectedChip: { backgroundColor: colors.accent, borderColor: colors.accent },
+  chipText: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  selectedChipText: { color: '#FFFFFF' },
+  input: {
+    backgroundColor: colors.card,
+    color: colors.text,
+    borderColor: colors.inputBorder,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+  },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 22 },
+  toggleText: { color: colors.text, fontSize: 14, fontWeight: '600' },
   saveButton: {
     backgroundColor: colors.button,
     borderRadius: 12,
-    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 8,
+    paddingVertical: 15,
+    marginTop: 30,
   },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.buttonText,
-  },
+  saveText: { color: colors.buttonText, fontWeight: '800', fontSize: 15 },
+  disabled: { opacity: 0.6 },
 });

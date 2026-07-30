@@ -31,6 +31,7 @@ type SortOption = 'Newest' | 'Oldest' | 'A-Z';
 type CompanyApplicant = BackendApplicantResponse & {
   listingId: number;
   listingTitle: string;
+  multiStage: boolean;
 };
 
 const FILTERS: { label: string; value: ApplicantFilter }[] = [
@@ -59,7 +60,7 @@ const initialsFor = (name: string): string => name
   .map((part) => part.charAt(0).toUpperCase())
   .join('') || 'S';
 
-export default function ApplicantPipelineScreen() {
+export default function ApplicantPipelineScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [applicants, setApplicants] = useState<CompanyApplicant[]>([]);
@@ -82,6 +83,7 @@ export default function ApplicantPipelineScreen() {
             ...applicant,
             listingId: listing.id,
             listingTitle: listing.title,
+            multiStage: listing.multiStage,
           }));
         }),
       );
@@ -239,7 +241,17 @@ export default function ApplicantPipelineScreen() {
               })}
             </Text>
 
-            {item.status !== 'ACCEPTED' && item.status !== 'REJECTED' ? (
+            <TouchableOpacity
+              style={styles.viewButton}
+              onPress={() => navigation.navigate('ApplicantProfile', { applicant: item })}
+            >
+              <Text style={styles.viewButtonText}>
+                {item.multiStage ? 'Review pipeline' : 'View application'}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.accent} />
+            </TouchableOpacity>
+
+            {!item.multiStage && item.status !== 'ACCEPTED' && item.status !== 'REJECTED' ? (
               <View style={styles.quickActions}>
                 <TouchableOpacity
                   style={styles.acceptButton}
@@ -337,6 +349,11 @@ const createStyles = (colors: any) => StyleSheet.create({
   applicantMeta: { fontSize: 12, color: colors.subtitle },
   listingTitle: { fontSize: 13, fontWeight: '700', color: colors.title, marginBottom: 4 },
   appliedDate: { fontSize: 12, color: colors.subtitle },
+  viewButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: 12, paddingVertical: 9, borderTopWidth: 1, borderTopColor: colors.inputBorder,
+  },
+  viewButtonText: { color: colors.accent, fontSize: 12, fontWeight: '700' },
   quickActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   acceptButton: {
     flex: 1, minHeight: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',

@@ -1,406 +1,210 @@
-/**
- * StudentMonitoringScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Student Monitoring (Students tab for university users)
- *
- * Content (from design):
- *  - Header: "Students" title + "1,476 total · 1,248 placed" subtitle
- *    + filter button on the right
- *  - Search bar: "Search students..."
- *  - List of student rows, each with: avatar initials, name, status pill,
- *    and a detail line (major · year · company/status)
- *  - Status pills have different colors depending on status:
- *    Placed (green), Interviewing (orange), Applied (light teal),
- *    Seeking (grey outline)
- *  - Bottom tab bar with "Students" highlighted as active
- *
- * HOW TO USE:
- *  1. Drop inside your screens/ or app/ folder
- *  2. Add to App.tsx:
- *     import StudentMonitoringScreen from './app/StudentMonitoringScreen';
- *     <Stack.Screen name="StudentMonitoring" component={StudentMonitoringScreen} />
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState } from 'react';
-import { useAppTheme } from '../../src/hooks/useAppTheme';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // non-deprecated version
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import FilterModal from './FilterModal';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  getAuthErrorMessage,
+  universityApi,
+  type PlacementStatus,
+  type StudentPlacementResponse,
+} from '../../src/api';
+import { useAppTheme } from '../../src/hooks/useAppTheme';
+import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
+type Filter = PlacementStatus | 'ALL';
 
-// ─── COLOR PALETTE ───────────────────────────────────────────────
-
-
-// ─── DATA ─────────────────────────────────────────────────────────
-
-// Each student's status determines the color of their pill.
-// Storing the 4 possible statuses' styles here means the row rendering
-// logic below can just look up the right colors instead of using a
-// long if/else chain for every student.
-const getStatusStyles = (colors: any): Record<
-  string,
-  { bg: string; text: string; border?: string }
-> => ({
-  Placed: { bg: colors.statusPlacedBg, text: colors.statusPlacedText },
-  Interviewing: { bg: colors.statusInterviewingBg, text: colors.statusInterviewingText },
-  Applied: { bg: colors.statusAppliedBg, text: colors.statusAppliedText },
-  Seeking: {
-    bg: colors.statusSeekingBg,
-    text: colors.statusSeekingText,
-    border: colors.statusSeekingBorder,
-  },
-});
-
-// The student list. In the real app this would come from your backend —
-// for now it's hardcoded to match the design exactly.
-// initials + a unique avatarColor give each row a distinct-looking avatar.
-const STUDENTS = [
-  {
-    id: '1',
-    initials: 'AM',
-    name: 'Alex Morgan',
-    detail: 'CS · Junior · at Airbnb',
-    status: 'Placed',
-  },
-  {
-    id: '2',
-    initials: 'PP',
-    name: 'Priya Patel',
-    detail: 'CS · Senior · at Stripe',
-    status: 'Interviewing',
-  },
-  {
-    id: '3',
-    initials: 'ML',
-    name: 'Marcus Lee',
-    detail: 'EE · Sophomore · at Notion',
-    status: 'Applied',
-  },
-  {
-    id: '4',
-    initials: 'ZK',
-    name: 'Zara Khan',
-    detail: 'EECS · Junior · no offer yet',
-    status: 'Seeking',
-  },
-  {
-    id: '5',
-    initials: 'LN',
-    name: 'Liam Nguyen',
-    detail: 'CS · Senior · at Meta',
-    status: 'Placed',
-  },
+const FILTERS: { label: string; value: Filter }[] = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Placed', value: 'PLACED' },
+  { label: 'Searching', value: 'SEARCHING' },
+  { label: 'Not started', value: 'NOT_STARTED' },
 ];
 
-// Bottom tab bar items — same set used across all university screens.
-// "students" stays highlighted active since this screen IS that tab.
+const initialsFor = (name: string) => name
+  .trim()
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part.charAt(0).toUpperCase())
+  .join('') || 'S';
 
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function StudentMonitoringScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [students, setStudents] = useState<StudentPlacementResponse[]>([]);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<Filter>('ALL');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Stores what the user has typed into the search bar
-  const [searchText, setSearchText] = useState('');
+  const loadStudents = useCallback(async () => {
+    setError('');
+    try {
+      setStudents(await universityApi.listStudents());
+    } catch (loadError) {
+      setError(getAuthErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // Filter modal state
-  const [filterVisible, setFilterVisible] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      void loadStudents();
+    }, [loadStudents]),
+  );
 
-  // Header counts — later these would come from your backend/API
-  const totalStudents = 1476;
-  const placedStudents = 1248;
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return students.filter((student) => {
+      const matchesFilter = filter === 'ALL' || student.placementStatus === filter;
+      const matchesSearch = !query
+        || student.fullName.toLowerCase().includes(query)
+        || student.email?.toLowerCase().includes(query)
+        || student.program?.toLowerCase().includes(query);
+      return matchesFilter && matchesSearch;
+    });
+  }, [filter, search, students]);
 
-  // Filters the STUDENTS array based on search text AND active status filters.
-  const filteredStudents = STUDENTS.filter((student) => {
-    const matchesSearch = student.name.toLowerCase().includes(searchText.toLowerCase());
-    const matchesFilter = activeFilters.length === 0 || activeFilters.includes(student.status);
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleFilterPress = () => {
-    setFilterVisible(true);
-  };
-
-  const handleFilterApply = (filters: string[]) => {
-    setActiveFilters(filters);
-  };
-
-  const handleStudentPress = (studentId: string) => {
-    navigation.navigate('StudentDetail', { studentId });
-  };
+  const placed = students.filter((student) => student.placementStatus === 'PLACED').length;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <View style={styles.header}>
+        <Text style={styles.title}>Students</Text>
+        <Text style={styles.subtitle}>{students.length} total · {placed} placed</Text>
+      </View>
 
-      {/* Main scrollable content sits above the fixed bottom tab bar */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled" // allows tapping a row while the search keyboard is open
-      >
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={17} color={colors.placeholder} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search students..."
+          placeholderTextColor={colors.placeholder}
+        />
+      </View>
 
-        {/* ── HEADER ROW: title/subtitle + filter button ──────────── */}
-        <View style={styles.header}>
-          <View style={styles.headerTextBlock}>
-            <Text style={styles.headerTitle}>Students</Text>
-            <Text style={styles.headerSubtitle}>
-              {totalStudents.toLocaleString()} total · {placedStudents.toLocaleString()} placed
-            </Text>
-          </View>
-
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterRow}>
+        {FILTERS.map((option) => (
           <TouchableOpacity
-            style={styles.filterBtn}
-            onPress={handleFilterPress}
-            activeOpacity={0.7}
+            key={option.value}
+            style={[styles.filterChip, filter === option.value && styles.filterChipActive]}
+            onPress={() => setFilter(option.value)}
           >
-            <Ionicons
-              name="filter-outline"
-              size={18}
-              color={colors.filterIcon}
-            />
+            <Text style={[styles.filterText, filter === option.value && styles.filterTextActive]}>
+              {option.label}
+            </Text>
           </TouchableOpacity>
-        </View>
-        {/* ── END HEADER ──────────────────────────────────────────── */}
-
-
-        {/* ── SEARCH BAR ───────────────────────────────────────────── */}
-        <View style={styles.searchBar}>
-          <Ionicons
-            name="search-outline"
-            size={16}
-            color={colors.searchIcon}
-            style={{ marginRight: 10 }}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search students..."
-            placeholderTextColor={colors.searchPlaceholder}
-            value={searchText}
-            onChangeText={setSearchText}
-            autoCapitalize="none"
-          />
-        </View>
-        {/* ── END SEARCH BAR ───────────────────────────────────────── */}
-
-
-        {/* ── STUDENT LIST ─────────────────────────────────────────── */}
-        {/*
-          .map() loops over filteredStudents (NOT the original STUDENTS
-          array) so the list updates live as the user types in the search
-          bar above.
-        */}
-        {filteredStudents.map((student) => {
-          // Look up the right pill colors for this student's status.
-          // Falls back to the "Seeking" style if an unrecognized status
-          // ever sneaks in, so the row never crashes from a missing color.
-          const statusStyle = getStatusStyles(colors)[student.status] ?? getStatusStyles(colors).Seeking;
-
-          return (
-            <TouchableOpacity
-              key={student.id}
-              style={styles.studentRow}
-              onPress={() => handleStudentPress(student.id)}
-              activeOpacity={0.85}
-            >
-
-              {/* Left: avatar circle with initials */}
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{student.initials}</Text>
-              </View>
-
-              {/* Middle: name + detail line, fills remaining space */}
-              <View style={styles.studentTextBlock}>
-                <Text style={styles.studentName}>{student.name}</Text>
-                <Text style={styles.studentDetail}>{student.detail}</Text>
-              </View>
-
-              {/* Right: status pill — colors come from statusStyle above */}
-              <View
-                style={[
-                  styles.statusPill,
-                  { backgroundColor: statusStyle.bg },
-                  // Only "Seeking" has a border in this design; the
-                  // others rely on their background color alone
-                  statusStyle.border ? { borderWidth: 1, borderColor: statusStyle.border } : null,
-                ]}
-              >
-                <Text style={[styles.statusPillText, { color: statusStyle.text }]}>
-                  {student.status}
-                </Text>
-              </View>
-
-            </TouchableOpacity>
-          );
-        })}
-
-        {/* Shown only when the search filters out every student */}
-        {filteredStudents.length === 0 && (
-          <Text style={styles.noResultsText}>
-            No students match "{searchText}"
-          </Text>
-        )}
-        {/* ── END STUDENT LIST ─────────────────────────────────────── */}
-
+        ))}
       </ScrollView>
 
-      {/* ── FILTER MODAL ───────────────────────────────────────── */}
-      <FilterModal
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-        onApply={handleFilterApply}
-        activeFilters={activeFilters}
+      <FlatList
+        data={filtered}
+        keyExtractor={(student) => String(student.studentId)}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => void loadStudents()}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.studentRow}
+            onPress={() => navigation.navigate('StudentDetail', { student: item })}
+          >
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initialsFor(item.fullName)}</Text>
+            </View>
+            <View style={styles.studentInfo}>
+              <Text style={styles.studentName}>{item.fullName}</Text>
+              <Text style={styles.studentMeta}>
+                {[item.program, item.level].filter(Boolean).join(' · ') || item.email || 'Profile incomplete'}
+              </Text>
+              <Text style={styles.applicationCount}>{item.applicationCount} application{item.applicationCount === 1 ? '' : 's'}</Text>
+            </View>
+            <View style={[
+              styles.statusPill,
+              item.placementStatus === 'PLACED' && styles.placedPill,
+            ]}>
+              <Text style={[
+                styles.statusText,
+                item.placementStatus === 'PLACED' && styles.placedText,
+              ]}>
+                {item.placementStatus.replace('_', ' ')}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            {loading ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : error ? (
+              <>
+                <Text style={styles.emptyTitle}>Could not load students</Text>
+                <Text style={styles.emptyText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={() => void loadStudents()}>
+                  <Text style={styles.retryText}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="school-outline" size={44} color={colors.subtitle} />
+                <Text style={styles.emptyTitle}>No students found</Text>
+                <Text style={styles.emptyText}>Students appear after selecting this university in their profile.</Text>
+              </>
+            )}
+          </View>
+        }
       />
-      
     </SafeAreaView>
   );
 }
 
-
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // Scrollable content — leaves room at the bottom so the tab bar
-  // doesn't cover the last items
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 100, // extra space so content isn't hidden behind tab bar
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  headerTextBlock: {
-    flex: 1, // fills space to the left of the filter button
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.headerTitle,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    color: colors.headerSubtitle,
-  },
-  filterBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.filterBtnBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-
-  // ── Search bar ────────────────────────────────────────────────
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.searchBg,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.headerTitle,
-  },
-
-  // ── Student rows ──────────────────────────────────────────────
-  studentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.rowBg,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12, // space between each student's row
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: colors.avatarBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.avatarText,
-  },
-  studentTextBlock: {
-    flex: 1, // fills space between avatar and status pill
-  },
-  studentName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.studentName,
-    marginBottom: 2,
-  },
-  studentDetail: {
-    fontSize: 12,
-    color: colors.studentDetail,
-  },
-
-  // ── Status pill (color comes from STATUS_STYLES at render time) ───
-  statusPill: {
-    borderRadius: 50,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginLeft: 8,
-  },
-  statusPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  // Shown only when search filters out every result
-  noResultsText: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: colors.studentDetail,
-    marginTop: 20,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { paddingHorizontal: 20, paddingTop: 15, marginBottom: 14 },
+  title: { color: colors.title, fontSize: 22, fontWeight: '700' },
+  subtitle: { color: colors.subtitle, fontSize: 13, marginTop: 3 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 47, marginHorizontal: 20, borderRadius: 14, paddingHorizontal: 13, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  searchInput: { flex: 1, color: colors.text, fontSize: 14 },
+  filterScroll: { flexGrow: 0, marginVertical: 13 },
+  filterRow: { paddingHorizontal: 20, gap: 8 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  filterChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  filterText: { color: colors.subtitle, fontSize: 12, fontWeight: '600' },
+  filterTextActive: { color: colors.onPrimary },
+  listContent: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: TAB_BAR_BOTTOM_PADDING, gap: 10 },
+  studentRow: { flexDirection: 'row', alignItems: 'center', padding: 13, borderRadius: 15, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.inputBorder },
+  avatar: { width: 45, height: 45, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
+  avatarText: { color: colors.onPrimary, fontSize: 13, fontWeight: '800' },
+  studentInfo: { flex: 1, marginRight: 6 },
+  studentName: { color: colors.title, fontSize: 14, fontWeight: '700' },
+  studentMeta: { color: colors.subtitle, fontSize: 11, marginTop: 2 },
+  applicationCount: { color: colors.accent, fontSize: 10, fontWeight: '600', marginTop: 5 },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.iconCircle },
+  statusText: { color: colors.accent, fontSize: 9, fontWeight: '800' },
+  placedPill: { backgroundColor: '#DCFCE7' },
+  placedText: { color: '#166534' },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 70, paddingHorizontal: 28, gap: 10 },
+  emptyTitle: { color: colors.title, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  emptyText: { color: colors.subtitle, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  retryButton: { marginTop: 5, paddingHorizontal: 19, paddingVertical: 10, borderRadius: 20, backgroundColor: colors.accent },
+  retryText: { color: colors.onPrimary, fontSize: 13, fontWeight: '700' },
 });

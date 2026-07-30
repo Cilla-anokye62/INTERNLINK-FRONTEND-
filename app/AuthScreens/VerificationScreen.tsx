@@ -85,7 +85,11 @@ export default function VerificationScreen({ navigation, route }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={insets.top}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingView}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={insets.top}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView style={styles.container}>
       {/* Back button */}
@@ -151,6 +155,10 @@ export default function VerificationScreen({ navigation, route }: Props) {
 }
 
 const createStyles = (colors: any) => StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

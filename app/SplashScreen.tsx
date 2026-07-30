@@ -1,20 +1,13 @@
 import { View, StyleSheet, Image, Text, Animated, Dimensions, Platform } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import WelcomeOnboardingScreen from './WelcomeOnboardingScreen';
-import { useAppStore } from '../src/store/useAppStore';
 
 const { height } = Dimensions.get('window');
 
-export default function SplashScreen({ navigation }: any) {
-
+export default function SplashScreen() {
   const logoScale = useRef(new Animated.Value(0.9)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const splashFade = useRef(new Animated.Value(1)).current;
-  const [assetsReady, setAssetsReady] = useState(false);
-  const hasHydrated = useAppStore((state) => state.hasHydrated);
-  const sessionInitialized = useAppStore((state) => state.sessionInitialized);
 
   useEffect(() => {
     Animated.parallel([
@@ -39,39 +32,15 @@ export default function SplashScreen({ navigation }: any) {
         }
       } catch (e) {
         console.log('Image preload error:', e);
-      } finally {
-        setAssetsReady(true);
       }
     };
-    preload();
-
-    return () => {};
-  }, []);
-
-  useEffect(() => {
-    if (!assetsReady || !hasHydrated || !sessionInitialized) return;
-
-    const exitTimer = setTimeout(() => {
-      Animated.timing(splashFade, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        navigation.replace('WelcomeOnboarding');
-      });
-    }, 2000);
-
-    return () => clearTimeout(exitTimer);
-  }, [assetsReady, hasHydrated, navigation, sessionInitialized, splashFade]);
+    void preload();
+  }, [logoOpacity, logoScale]);
 
   return (
     <View style={styles.root}>
-      <View style={StyleSheet.absoluteFillObject}>
-        <WelcomeOnboardingScreen navigation={navigation} />
-      </View>
-
       <Animated.View
-        style={[styles.splashOverlay, { opacity: splashFade }]}
+        style={styles.splashOverlay}
         pointerEvents="auto"
         onStartShouldSetResponder={() => true}
       >

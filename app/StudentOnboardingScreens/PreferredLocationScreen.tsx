@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions, ScrollView } from 'react-native';
-import { useState } from 'react';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -9,13 +9,16 @@ import { useAppStore } from '../../src/store/useAppStore';
 
 const { height } = Dimensions.get('window');
 
-const WORK_SETUP: Array<'Remote' | 'Hybrid' | 'On-site'> = ['Remote', 'Hybrid', 'On-site'];
+const WORK_SETUP: ('Remote' | 'Hybrid' | 'On-site')[] = ['Remote', 'Hybrid', 'On-site'];
 
 export default function PreferredLocationScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const { preferredLocation, workSetup: storeWorkSetup, willingToRelocate: storeRelocate, setLocationPreferences } = useAppStore();
+  const preferredLocation = useAppStore((state) => state.preferredLocation);
+  const storeWorkSetup = useAppStore((state) => state.workSetup);
+  const storeRelocate = useAppStore((state) => state.willingToRelocate);
+  const setLocationPreferences = useAppStore((state) => state.setLocationPreferences);
 
   const [location, setLocation] = useState(preferredLocation);
   const [workSetup, setWorkSetup] = useState<'Remote' | 'Hybrid' | 'On-site'>(storeWorkSetup);

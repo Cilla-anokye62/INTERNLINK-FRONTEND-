@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   View,
   Text,
   TouchableOpacity,
@@ -14,6 +15,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 import { getAuthErrorMessage, listingApi, type ListingResponse } from '../../src/api';
+import { ApplicationLimitIndicator } from '../../src/components/PremiumComponents';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
 // ---------- Types ----------
 type Props = NativeStackScreenProps<any, any>;
@@ -24,6 +27,18 @@ type FilterTab = 'All' | ListingStatus;
 const ListingsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const {
+    entitlement,
+    hasFeature,
+    refresh: refreshSubscription,
+  } = useSubscription();
+  const listingEntitlement = entitlement('COMPANY_ACTIVE_LISTINGS');
+  const pipelineEnabled = hasFeature('COMPANY_PIPELINE_WORKFLOW');
+  const listingLimitReached = Boolean(
+    listingEntitlement?.limit != null
+    && listingEntitlement.remaining != null
+    && listingEntitlement.remaining <= 0,
+  );
 
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
   const [listings, setListings] = useState<ListingResponse[]>([]);
@@ -33,13 +48,17 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
   const loadListings = useCallback(async () => {
     setLoadError('');
     try {
-      setListings(await listingApi.listOwn());
+      const [nextListings] = await Promise.all([
+        listingApi.listOwn(),
+        refreshSubscription(),
+      ]);
+      setListings(nextListings);
     } catch (error) {
       setLoadError(getAuthErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshSubscription]);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +87,57 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const renderListing = ({ item: listing }: { item: ListingResponse }) => {
+    const displayStatus: ListingStatus = listing.status === 'OPEN' ? 'Active' : 'Closed';
+    const statusStyle = getStatusStyle(displayStatus);
+    return (
+      <View style={styles.listingCard}>
+        <View style={styles.listingHeader}>
+          <Text style={styles.listingTitle}>{listing.title}</Text>
+          <View style={[styles.statusBadge, statusStyle.badge]}>
+            <Text style={[styles.statusBadgeText, statusStyle.text]}>
+              {displayStatus}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.applicantsText}>{listing.location || 'Location not specified'}</Text>
+
+        <View style={styles.listingFooter}>
+          <View style={styles.listingStats}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="time-outline" size={12} color={colors.subtitle} />
+              <Text style={styles.statItem}>{listing.duration || 'Duration not specified'}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="cash-outline" size={12} color={colors.subtitle} />
+              <Text style={styles.statItem}>{listing.allowance || 'Allowance not specified'}</Text>
+            </View>
+          </View>
+        </View>
+        {listing.status === 'OPEN' ? (
+          <TouchableOpacity
+            style={styles.pipelineButton}
+            onPress={() => pipelineEnabled
+              ? navigation.navigate('PipelineSetup', { listing })
+              : navigation.navigate('PremiumPlans', { source: 'company-pipeline' })}
+          >
+            <Ionicons
+              name={pipelineEnabled ? 'git-branch-outline' : 'lock-closed-outline'}
+              size={15}
+              color={colors.accent}
+            />
+            <Text style={styles.pipelineButtonText}>
+              {pipelineEnabled
+                ? listing.multiStage ? 'Manage hiring pipeline' : 'Set up hiring pipeline'
+                : 'Premium hiring pipeline'}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
@@ -79,10 +149,21 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.addButton}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('PostInternshipWizard')}
+          onPress={() => listingLimitReached
+            ? navigation.navigate('PremiumPlans', { source: 'listing-limit' })
+            : navigation.navigate('PostInternshipWizard')}
         >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.limitWrap}>
+        <ApplicationLimitIndicator
+          entitlement={listingEntitlement}
+          title="Active listings used"
+          unlimitedValue="Unlimited Active Listings"
+          onUpgrade={() => navigation.navigate('PremiumPlans', { source: 'listing-limit' })}
+        />
       </View>
 
       {/* Filter tabs */}
@@ -115,67 +196,42 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
       </ScrollView>
 
       {/* Listings */}
-      <ScrollView
+      <FlatList
         style={styles.container}
+        data={filteredListings}
+        keyExtractor={(listing) => String(listing.id)}
+        renderItem={renderListing}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        {isLoading && listings.length === 0 ? (
+        refreshing={isLoading}
+        onRefresh={() => {
+          setIsLoading(true);
+          void loadListings();
+        }}
+        ListEmptyComponent={(
           <View style={styles.stateContainer}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.stateText}>Loading listings...</Text>
+            {isLoading ? (
+              <>
+                <ActivityIndicator color={colors.accent} />
+                <Text style={styles.stateText}>Loading listings...</Text>
+              </>
+            ) : loadError ? (
+              <>
+                <Ionicons name="cloud-offline-outline" size={36} color={colors.subtitle} />
+                <Text style={styles.stateText}>{loadError}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={() => void loadListings()}>
+                  <Text style={styles.retryButtonText}>Try again</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Ionicons name="briefcase-outline" size={36} color={colors.subtitle} />
+                <Text style={styles.stateText}>No {activeFilter.toLowerCase()} listings yet.</Text>
+              </>
+            )}
           </View>
-        ) : null}
-
-        {loadError && listings.length === 0 ? (
-          <View style={styles.stateContainer}>
-            <Ionicons name="cloud-offline-outline" size={36} color={colors.subtitle} />
-            <Text style={styles.stateText}>{loadError}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => void loadListings()}>
-              <Text style={styles.retryButtonText}>Try again</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {filteredListings.map((listing) => {
-          const displayStatus: ListingStatus = listing.status === 'OPEN' ? 'Active' : 'Closed';
-          const statusStyle = getStatusStyle(displayStatus);
-          return (
-            <View key={listing.id} style={styles.listingCard}>
-              <View style={styles.listingHeader}>
-                <Text style={styles.listingTitle}>{listing.title}</Text>
-                <View style={[styles.statusBadge, statusStyle.badge]}>
-                  <Text style={[styles.statusBadgeText, statusStyle.text]}>
-                    {displayStatus}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={styles.applicantsText}>{listing.location || 'Location not specified'}</Text>
-
-              <View style={styles.listingFooter}>
-                <View style={styles.listingStats}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="time-outline" size={12} color={colors.subtitle} />
-                    <Text style={styles.statItem}>{listing.duration || 'Duration not specified'}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="cash-outline" size={12} color={colors.subtitle} />
-                    <Text style={styles.statItem}>{listing.allowance || 'Allowance not specified'}</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          );
-        })}
-
-        {!isLoading && !loadError && filteredListings.length === 0 ? (
-          <View style={styles.stateContainer}>
-            <Ionicons name="briefcase-outline" size={36} color={colors.subtitle} />
-            <Text style={styles.stateText}>No {activeFilter.toLowerCase()} listings yet.</Text>
-          </View>
-        ) : null}
-      </ScrollView>
+        )}
+      />
     </SafeAreaView>
   );
 };
@@ -354,6 +410,21 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 13,
     color: colors.accent,
     fontWeight: '600',
+  },
+  limitWrap: { paddingHorizontal: 20, paddingBottom: 12 },
+  pipelineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingTop: 12,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.inputBorder,
+  },
+  pipelineButtonText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

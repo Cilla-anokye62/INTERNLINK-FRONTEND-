@@ -18,7 +18,7 @@
  */
 
 // ─── IMPORTS ─────────────────────────────────────────────────────
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import {
   View,
@@ -28,12 +28,20 @@ import {
   StatusBar,
   ScrollView,
   Image,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '../../src/store/useAppStore';
-import { signOut } from '../../src/api';
+import {
+  companyApi,
+  resolveMediaUrl,
+  signOut,
+  studentApi,
+  universityApi,
+} from '../../src/api';
+import SignOutConfirmationDialog from '../../src/components/SignOutConfirmationDialog';
+import { SubscriptionStatusCard } from '../../src/components/PremiumComponents';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
 
 // ─── COLOR PALETTE ───────────────────────────────────────────────
@@ -49,7 +57,7 @@ const SETTINGS_SECTIONS = [
       { id: 'personalInfo', title: 'Personal info' },
       { id: 'emailPassword', title: 'Email & password' },
       { id: 'connectedAccounts', title: 'Connected accounts' },
-      { id: 'subscription', title: 'Subscription' },
+      { id: 'subscription', title: 'Premium & subscription' },
     ],
   },
   {
@@ -67,7 +75,9 @@ const SETTINGS_SECTIONS = [
     label: 'SUPPORT',
     items: [
       { id: 'helpCenter', title: 'Help center' },
+      { id: 'reportProblem', title: 'Report a problem' },
       { id: 'sendFeedback', title: 'Send feedback' },
+      { id: 'about', title: 'About InternLink' },
     ],
   },
 ];
@@ -79,20 +89,77 @@ export default function SettingsScreen({ navigation, route }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const storedRole = useAppStore((state) => state.userRole);
   const userRole = route.params?.role || storedRole || 'student';
-  const isPremium = useAppStore((state) => state.isPremium);
   const userName = useAppStore((state) => state.userName);
   const userProfile = useAppStore((state) => state.profile);
-  const displayName = userName || (userRole === 'student' ? 'Student' : userRole === 'employer' ? 'Employer' : 'University');
+  const { snapshot } = useSubscription();
+  const [backendName, setBackendName] = useState('');
+  const [backendEmail, setBackendEmail] = useState('');
+  const [signOutVisible, setSignOutVisible] = useState(false);
+  const displayName = backendName || userName || (userRole === 'student' ? 'Student' : userRole === 'employer' ? 'Employer' : 'University');
   const profilePhoto = userProfile.photoUri;
   const profile = {
     initials: displayName.charAt(0).toUpperCase(),
     name: displayName,
-    email: userProfile.email || 'user@example.com',
+    email: backendEmail || userProfile.email || 'Loading account…',
   };
+  const visibleSections = SETTINGS_SECTIONS.map((section) => {
+    if (section.id !== 'preferences') return section;
+    const studentItems = userRole === 'student'
+      ? [{ id: 'jobPreferences', title: 'Job preferences' }]
+      : [];
+    return {
+      ...section,
+      items: [
+        ...studentItems,
+        ...section.items,
+        { id: 'dataStorage', title: 'Data & storage' },
+      ],
+    };
+  });
+
+  useEffect(() => {
+    let active = true;
+    const request = userRole === 'employer'
+      ? companyApi.getMe().then((value) => ({
+        name: value.companyName,
+        email: value.email,
+        photoUrl: value.logoUrl,
+      }))
+      : userRole === 'university'
+        ? universityApi.getMe().then((value) => ({
+          name: value.name,
+          email: value.contactEmail,
+          photoUrl: value.logoUrl,
+        }))
+        : studentApi.getMe().then((value) => ({
+          name: value.fullName,
+          email: value.email ?? '',
+          photoUrl: value.profileImageUrl,
+        }));
+
+    request
+      .then((value) => {
+        if (!active) return;
+        setBackendName(value.name);
+        setBackendEmail(value.email);
+        const photoUri = resolveMediaUrl(value.photoUrl);
+        if (photoUri) useAppStore.getState().updateProfile({ photoUri });
+      })
+      .catch(() => {
+        // The stored session identity remains visible if profile refresh fails.
+      });
+    return () => {
+      active = false;
+    };
+  }, [userRole]);
 
   const handleBackPress = () => {
     if (userRole === 'employer') {
       navigation.navigate('Dashboard');
+      return;
+    }
+    if (userRole === 'university') {
+      navigation.navigate('Overview');
       return;
     }
 
@@ -102,6 +169,10 @@ export default function SettingsScreen({ navigation, route }: any) {
   const handleProfilePress = () => {
     if (userRole === 'employer') {
       navigation.navigate('Company');
+      return;
+    }
+    if (userRole === 'university') {
+      navigation.navigate('UniversityEditProfile');
       return;
     }
 
@@ -120,10 +191,13 @@ export default function SettingsScreen({ navigation, route }: any) {
         navigation.navigate('ConnectedAccounts');
         break;
       case 'subscription':
-        navigation.navigate('PremiumManage');
+        navigation.navigate('Subscription');
         break;
       case 'notifications':
         navigation.navigate('NotificationSettings');
+        break;
+      case 'jobPreferences':
+        navigation.navigate('JobPreferences');
         break;
       case 'privacy':
         navigation.navigate('PrivacySettings');
@@ -134,31 +208,33 @@ export default function SettingsScreen({ navigation, route }: any) {
       case 'appearance':
         navigation.navigate('AppearanceSettings');
         break;
+      case 'dataStorage':
+        navigation.navigate('DataStorage');
+        break;
       case 'helpCenter':
         navigation.navigate('HelpCenter');
+        break;
+      case 'reportProblem':
+        navigation.navigate('ReportProblem');
         break;
       case 'sendFeedback':
         navigation.navigate('SendFeedback');
         break;
+      case 'about':
+        navigation.navigate('About');
+        break;
       default:
-        console.log('Unknown setting:', rowId);
+        break;
     }
   };
 
   const handleSignOut = () => {
+    setSignOutVisible(false);
     void signOut();
   };
 
   const confirmSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'No', style: 'cancel' },
-        { text: 'Yes', style: 'destructive', onPress: handleSignOut },
-      ],
-      { cancelable: true }
-    );
+    setSignOutVisible(true);
   };
 
   return (
@@ -211,9 +287,13 @@ export default function SettingsScreen({ navigation, route }: any) {
           </View>
         </TouchableOpacity>
 
+        <SubscriptionStatusCard
+          snapshot={snapshot}
+          onPress={() => navigation.navigate('Subscription')}
+        />
 
         {/* Settings Sections */}
-        {SETTINGS_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <View key={section.id} style={styles.section}>
             <Text style={styles.sectionLabel}>{section.label}</Text>
             <View style={styles.sectionCard}>
@@ -229,11 +309,6 @@ export default function SettingsScreen({ navigation, route }: any) {
                 >
                   <View style={styles.rowLeft}>
                     <Text style={styles.rowText}>{item.title}</Text>
-                    {item.id === 'subscription' && isPremium && (
-                      <View style={styles.subscriptionBadge}>
-                        <Ionicons name="diamond-outline" size={14} color={colors.accent} />
-                      </View>
-                    )}
                   </View>
                   <Ionicons
                     name="chevron-forward-outline"
@@ -256,6 +331,12 @@ export default function SettingsScreen({ navigation, route }: any) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      <SignOutConfirmationDialog
+        visible={signOutVisible}
+        onDismiss={() => setSignOutVisible(false)}
+        onConfirm={handleSignOut}
+      />
     </SafeAreaView>
   );
 }

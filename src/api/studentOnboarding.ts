@@ -1,6 +1,8 @@
 import { useAppStore } from '../store/useAppStore';
 import { authApi } from './authApi';
+import { ApiError } from './client';
 import { studentApi } from './studentApi';
+import { resolveMediaUrl } from './mediaApi';
 import type { StudentProfileResponse, UpdateStudentProfileRequest } from './types';
 
 export interface CompleteStudentOnboardingRequest {
@@ -28,21 +30,39 @@ export const completeStudentOnboarding = async ({
   let universityId: number | undefined;
 
   if (trimmedUniversityName) {
-    const universities = await studentApi.listUniversities();
-    const exactMatch = universities.find(
-      (university) => university.name.toLowerCase() === trimmedUniversityName.toLowerCase(),
-    );
-    const normalizedName = normalizeUniversityName(trimmedUniversityName);
-    const normalizedMatch = exactMatch ?? universities.find(
-      (university) => normalizeUniversityName(university.name) === normalizedName,
-    );
-    universityId = normalizedMatch?.id;
+    try {
+      const universities = await studentApi.listUniversities();
+      const exactMatch = universities.find(
+        (university) => university.name.toLowerCase() === trimmedUniversityName.toLowerCase(),
+      );
+      const normalizedName = normalizeUniversityName(trimmedUniversityName);
+      const normalizedMatch = exactMatch ?? universities.find(
+        (university) => normalizeUniversityName(university.name) === normalizedName,
+      );
+      universityId = normalizedMatch?.id;
+    } catch {
+      // A university link improves monitoring but is not required to finish a
+      // student's profile. Legacy local university data may use an older
+      // encryption key, so an unreadable summary must not block onboarding.
+      universityId = undefined;
+    }
   }
 
-  await studentApi.updateMe({
+  const profileRequest: UpdateStudentProfileRequest = {
     ...profile,
     ...(universityId === undefined ? {} : { universityId }),
-  });
+  };
+  try {
+    await studentApi.updateMe(profileRequest);
+  } catch (error) {
+    if (universityId === undefined || !(error instanceof ApiError) || error.status < 500) {
+      throw error;
+    }
+    const { universityId: ignoredUniversityId, ...profileWithoutUniversity } = profileRequest;
+    void ignoredUniversityId;
+    await studentApi.updateMe(profileWithoutUniversity);
+    universityId = undefined;
+  }
   await authApi.completeOnboarding();
 
   const completedProfile = await studentApi.getMe();
@@ -55,7 +75,10 @@ export const completeStudentOnboarding = async ({
   state.updateProfile({
     email: completedProfile.email ?? state.profile.email,
     phone: completedProfile.phoneNumber ?? state.profile.phone,
+    bio: completedProfile.background ?? state.profile.bio,
+    about: completedProfile.background ?? state.profile.about,
     skills: completedProfile.skills,
+    photoUri: resolveMediaUrl(completedProfile.profileImageUrl) ?? state.profile.photoUri,
   });
   state.setAcademicInfo(
     completedProfile.universityName ?? state.university,

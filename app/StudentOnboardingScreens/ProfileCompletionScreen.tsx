@@ -1,13 +1,14 @@
-import React from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput, Modal } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { useAppStore } from '../../src/store/useAppStore';
-import { completeStudentOnboarding, getAuthErrorMessage } from '../../src/api';
+import { completeStudentOnboarding, getAuthErrorMessage, mediaApi, resolveMediaUrl } from '../../src/api';
+import { persistProfileResume } from '../../src/utils/resumeFiles';
 
 const { height } = Dimensions.get('window');
 
@@ -24,7 +25,7 @@ const STAND_OUT_ITEMS = [
     id: 'resume',
     icon: 'document-text-outline',
     title: 'Upload your resume',
-    subtitle: 'PDF, max 5MB',
+    subtitle: 'PDF or DOCX, max 10MB',
   },
   {
     id: 'portfolio',
@@ -56,6 +57,11 @@ export default function ProfileCompletionScreen() {
 
   const [fullName, setFullName] = useState(userName);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(profile.photoUri);
+  const [profilePhotoFile, setProfilePhotoFile] = useState<{
+    uri: string;
+    name: string;
+    mimeType?: string | null;
+  } | null>(null);
   const [completionItems, setCompletionItems] = useState(COMPLETION_ITEMS);
   const [resumeUploaded, setResumeUploaded] = useState(profile.resumeUploaded);
   const [resumeFileName, setResumeFileName] = useState(profile.resumeName);
@@ -86,10 +92,18 @@ export default function ProfileCompletionScreen() {
     setIsSubmitting(true);
     setSubmitError('');
     try {
+      if (profilePhotoFile) {
+        const uploaded = await mediaApi.uploadAccountImage(profilePhotoFile);
+        const uploadedUrl = resolveMediaUrl(uploaded.url);
+        setProfilePhoto(uploadedUrl);
+        updateProfile({ photoUri: uploadedUrl });
+        setProfilePhotoFile(null);
+      }
       await completeStudentOnboarding({
         universityName: university,
         profile: {
           fullName: savedFullName,
+          background: bio.trim(),
           program: programme.trim(),
           level: academicLevel.trim(),
           skills: profile.skills,
@@ -121,7 +135,13 @@ export default function ProfileCompletionScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets[0]) {
-      setProfilePhoto(result.assets[0].uri);
+      const asset = result.assets[0];
+      setProfilePhoto(asset.uri);
+      setProfilePhotoFile({
+        uri: asset.uri,
+        name: asset.fileName || `profile-${Date.now()}.jpg`,
+        mimeType: asset.mimeType,
+      });
       // Update photo status to Done
       setCompletionItems(prev => 
         prev.map(item => 
@@ -140,14 +160,21 @@ export default function ProfileCompletionScreen() {
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
         const name = file.name;
-        const uri = file.uri;
+        const uri = persistProfileResume({
+          uri: file.uri,
+          name,
+          size: file.size,
+        });
         setResumeFileName(name);
         setResumeUri(uri);
         setResumeUploaded(true);
         setShowResumeModal(false);
       }
     } catch (error) {
-      console.error('Document pick error:', error);
+      Alert.alert(
+        'Resume upload failed',
+        error instanceof Error ? error.message : 'The selected resume could not be saved.',
+      );
     }
   };
 
@@ -334,7 +361,7 @@ export default function ProfileCompletionScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Upload Resume</Text>
-            <Text style={styles.modalSubtitle}>Select a PDF or DOCX file (max 5MB)</Text>
+            <Text style={styles.modalSubtitle}>Select a PDF or DOCX file (max 10MB)</Text>
             {resumeUploaded && resumeFileName ? (
               <View style={styles.uploadedFile}>
                 <Ionicons name="document-text-outline" size={18} color={colors.accent} style={{ marginRight: 8 }} />

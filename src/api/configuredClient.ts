@@ -7,6 +7,11 @@ import type { AuthSession } from './types';
 const explicitBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 const localApiPort = process.env.EXPO_PUBLIC_API_PORT?.trim() || '8081';
 
+const positiveTimeout = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+};
+
 const getDevelopmentHost = () => {
   const hostUri = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost;
   if (!hostUri) return null;
@@ -31,7 +36,18 @@ if (!configuredBaseUrl) {
   );
 }
 
-export const publicApiClient = createApiClient({ baseUrl: configuredBaseUrl });
+const defaultTimeoutMs = positiveTimeout(process.env.EXPO_PUBLIC_API_TIMEOUT_MS, 15_000);
+const initialTimeoutMs = positiveTimeout(
+  process.env.EXPO_PUBLIC_API_COLD_START_TIMEOUT_MS,
+  !__DEV__ && configuredBaseUrl.startsWith('https://') ? 75_000 : defaultTimeoutMs,
+);
+
+export const publicApiClient = createApiClient({
+  baseUrl: configuredBaseUrl,
+  defaultTimeoutMs,
+  initialTimeoutMs,
+  initialRetryCount: 1,
+});
 
 let refreshInFlight: Promise<AuthSession | null> | null = null;
 
@@ -73,6 +89,9 @@ export const apiClient: ApiClient = createApiClient({
   baseUrl: configuredBaseUrl,
   getAccessToken,
   refreshAccessToken,
+  defaultTimeoutMs,
+  initialTimeoutMs,
+  initialRetryCount: 1,
 });
 
 export const apiBaseUrl = configuredBaseUrl;

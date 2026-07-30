@@ -35,17 +35,6 @@ export function detectCardType(raw: string): CardType {
   return 'unknown';
 }
 
-/** Max expected length per card brand. */
-function maxLen(type: CardType): number {
-  switch (type) {
-    case 'amex': return 15;
-    case 'visa': return 16;
-    case 'mastercard': return 16;
-    case 'discover': return 16;
-    default: return 19;
-  }
-}
-
 function minLen(type: CardType): number {
   switch (type) {
     case 'amex': return 15;

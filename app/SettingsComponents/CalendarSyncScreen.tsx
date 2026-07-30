@@ -28,6 +28,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 
 const SYNC_FREQUENCIES = ['Real-time', 'Hourly', 'Daily', 'Weekly'];
+const CALENDAR_OPTIONS = ['Google Calendar', 'Apple Calendar', 'Outlook Calendar'];
 
 export default function CalendarSyncScreen({ navigation }: any) {
     const { colors } = useAppTheme();
@@ -87,25 +88,35 @@ const [syncEnabled, setSyncEnabled] = useState(false);
         {/* Calendar Selection */}
         <View style={styles.card}>
           <Text style={styles.sectionHeader}>CALENDAR</Text>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <View style={styles.optionInfo}>
-              <Ionicons name="calendar-outline" size={20} color={colors.switchActive} />
-              <Text style={styles.optionLabel}>{selectedCalendar}</Text>
-            </View>
-            <Ionicons name="checkmark-circle-outline" size={20} color={colors.switchActive} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <View style={styles.optionInfo}>
-              <Ionicons name="calendar-outline" size={20} color={colors.placeholder} />
-              <Text style={styles.optionLabel}>Apple Calendar</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionRow} activeOpacity={0.7}>
-            <View style={styles.optionInfo}>
-              <Ionicons name="calendar-outline" size={20} color={colors.placeholder} />
-              <Text style={styles.optionLabel}>Outlook Calendar</Text>
-            </View>
-          </TouchableOpacity>
+          {CALENDAR_OPTIONS.map((calendar) => {
+            const isSelected = selectedCalendar === calendar;
+            return (
+              <TouchableOpacity
+                key={calendar}
+                style={styles.optionRow}
+                onPress={() => setSelectedCalendar(calendar)}
+                activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
+              >
+                <View style={styles.optionInfo}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={20}
+                    color={isSelected ? colors.switchActive : colors.placeholder}
+                  />
+                  <Text style={styles.optionLabel}>{calendar}</Text>
+                </View>
+                {isSelected ? (
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={20}
+                    color={colors.switchActive}
+                  />
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Sync Frequency */}

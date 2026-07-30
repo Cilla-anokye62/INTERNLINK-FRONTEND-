@@ -6,16 +6,18 @@ import { useAppTheme } from '../../src/hooks/useAppTheme';
 
 const { height } = Dimensions.get('window');
 
-export default function ApplicationSentScreen({ navigation }: any) {
+export default function ApplicationSentScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const company = route.params?.company || 'The company';
+  const title = route.params?.title || 'Internship';
 
   const handleTrackApplication = () => {
-    navigation.navigate('Applications');
+    navigation.navigate('StudentApp', { screen: 'Applications' });
   };
 
   const handleBrowseMore = () => {
-    navigation.navigate('Discover');
+    navigation.navigate('StudentApp', { screen: 'Discover' });
   };
 
   return (
@@ -37,22 +39,23 @@ export default function ApplicationSentScreen({ navigation }: any) {
         {/* Title */}
         <Text style={styles.title}>Application sent!</Text>
         <Text style={styles.subtitle}>
-          Airbnb received your application for Software Engineering Intern. You'll get a response within 7 days.
+          {company} received your application for {title}. Track it from My Applications
+          for status and hiring-stage updates.
         </Text>
 
         {/* Application card */}
         <View style={styles.card}>
           <View style={styles.companyAvatar}>
-            <Text style={styles.companyAvatarText}>A</Text>
+            <Text style={styles.companyAvatarText}>{company.charAt(0).toUpperCase()}</Text>
           </View>
           <View style={styles.cardInfo}>
             <View style={styles.cardTitleRow}>
-              <Text style={styles.cardTitle}>Software Engineering Intern</Text>
+              <Text style={styles.cardTitle}>{title}</Text>
               <View style={styles.statusBadge}>
                 <Text style={styles.statusText}>In review</Text>
               </View>
             </View>
-            <Text style={styles.cardSubtitle}>Airbnb · Submitted today</Text>
+            <Text style={styles.cardSubtitle}>{company} · Submitted today</Text>
           </View>
         </View>
       </View>

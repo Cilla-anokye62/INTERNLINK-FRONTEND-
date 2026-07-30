@@ -6,8 +6,10 @@ node_modules/
 # Expo
 .expo/
 dist/
+dist-ci/
 web-build/
 expo-env.d.ts
+coverage/
 
 # Native
 .kotlin/
@@ -25,13 +27,19 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+.devin/
 
 # macOS
 .DS_Store
 *.pem
+google-services.json
+GoogleService-Info.plist
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo

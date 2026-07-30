@@ -26,6 +26,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { accountApi, getAuthErrorMessage } from '../../src/api';
 
 
 
@@ -36,13 +37,13 @@ export default function ReportProblemScreen({ navigation }: any) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [selectedType, setSelectedType] = useState('');
   const [description, setDescription] = useState('');
-  const [hasScreenshot, setHasScreenshot] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedType) {
       Alert.alert('Required', 'Please select a problem type');
       return;
@@ -51,13 +52,17 @@ export default function ReportProblemScreen({ navigation }: any) {
       Alert.alert('Required', 'Please provide a description');
       return;
     }
-    Alert.alert('Success', 'Your report has been submitted. Thank you for your feedback!');
-    navigation.goBack();
-  };
-
-  const handleAttachScreenshot = () => {
-    // TODO: Implement image picker
-    setHasScreenshot(!hasScreenshot);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await accountApi.problem(selectedType, description.trim());
+      Alert.alert('Success', 'Your report has been submitted. Thank you for your feedback!');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Could not submit report', getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -124,35 +129,14 @@ export default function ReportProblemScreen({ navigation }: any) {
           />
         </View>
 
-        {/* Screenshot */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ATTACHMENTS</Text>
-          <TouchableOpacity
-            style={styles.screenshotButton}
-            onPress={handleAttachScreenshot}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={hasScreenshot ? 'checkmark-circle' : 'image-outline'}
-              size={20}
-              color={hasScreenshot ? colors.button : '#94A3B8'}
-            />
-            <Text style={[
-              styles.screenshotButtonText,
-              hasScreenshot && styles.screenshotButtonTextAttached,
-            ]}>
-              {hasScreenshot ? 'Screenshot Attached' : 'Attach Screenshot'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Submit Button */}
         <TouchableOpacity
           style={styles.submitButton}
-          onPress={handleSubmit}
+            onPress={() => void handleSubmit()}
+            disabled={submitting}
           activeOpacity={0.7}
         >
-          <Text style={styles.submitButtonText}>Submit Report</Text>
+          <Text style={styles.submitButtonText}>{submitting ? 'Submitting...' : 'Submit Report'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

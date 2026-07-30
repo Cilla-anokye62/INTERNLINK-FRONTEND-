@@ -1,310 +1,66 @@
-/**
- * NotificationSettingsScreen.tsx
- * ─────────────────────────────────────────────────────────────────
- * InternLink — Notification Settings (PREFERENCES section in SettingsScreen)
- *
- * Content:
- *  - Grouped toggle switches under sub-headers
- *  - "Push Notifications": New matches, Application updates, Messages
- *  - "Email Notifications": Weekly digest, Marketing emails
- *  - Each row: icon + label + Switch on the right
- *
- * HOW TO USE:
- *  1. Drop inside your screens/ or app/ folder
- *  2. Add to App.tsx:
- *     import NotificationSettingsScreen from './app/NotificationSettingsScreen';
- *     <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
- * 
- * NOTE: Uses React Native's built-in Switch component (no extra install needed)
- * ─────────────────────────────────────────────────────────────────
- */
-
-// ─── IMPORTS ─────────────────────────────────────────────────────
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ScrollView,
-  Switch,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { accountApi, getAuthErrorMessage, type AccountPreferenceResponse } from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 
-
-// ─── DATA ─────────────────────────────────────────────────────────
-// Push notification settings
-const PUSH_NOTIFICATIONS = [
-  {
-    id: 'newMatches',
-    label: 'New matches',
-    icon: 'heart-outline',
-  },
-  {
-    id: 'appUpdates',
-    label: 'Application updates',
-    icon: 'notifications-outline',
-  },
-  {
-    id: 'messages',
-    label: 'Messages',
-    icon: 'chatbubble-outline',
-  },
-];
-
-// Email notification settings
-const EMAIL_NOTIFICATIONS = [
-  {
-    id: 'weeklyDigest',
-    label: 'Weekly digest',
-    icon: 'mail-outline',
-  },
-  {
-    id: 'marketingEmails',
-    label: 'Marketing emails',
-    icon: 'megaphone-outline',
-  },
-];
-
-
-// ─── MAIN SCREEN COMPONENT ───────────────────────────────────────
 export default function NotificationSettingsScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [value, setValue] = useState<AccountPreferenceResponse | null>(null);
 
-  // Push notification toggle states
-  const [pushSettings, setPushSettings] = useState<Record<string, boolean>>({
-    newMatches: true,
-    appUpdates: true,
-    messages: true,
-  });
+  useEffect(() => {
+    accountApi.preferences().then(setValue)
+      .catch((error) => Alert.alert('Could not load preferences', getAuthErrorMessage(error)));
+  }, []);
 
-  // Email notification toggle states
-  const [emailSettings, setEmailSettings] = useState<Record<string, boolean>>({
-    weeklyDigest: true,
-    marketingEmails: false,
-  });
-
-  const handleBackPress = () => {
-    navigation.goBack();
-  };
-
-  const togglePushSetting = (settingId: string) => {
-    setPushSettings((prev) => ({
-      ...prev,
-      [settingId]: !prev[settingId],
-    }));
-    console.log('Toggled push setting:', settingId);
-    // TODO: sync with backend
-  };
-
-  const toggleEmailSetting = (settingId: string) => {
-    setEmailSettings((prev) => ({
-      ...prev,
-      [settingId]: !prev[settingId],
-    }));
-    console.log('Toggled email setting:', settingId);
-    // TODO: sync with backend
+  const toggle = async (key: keyof AccountPreferenceResponse, enabled: boolean) => {
+    if (!value) return;
+    const previous = value;
+    setValue({ ...value, [key]: enabled });
+    try {
+      setValue(await accountApi.updatePreferences({ [key]: enabled }));
+    } catch (error) {
+      setValue(previous);
+      Alert.alert('Could not save preference', getAuthErrorMessage(error));
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-
-        {/* ── HEADER ROW: back arrow + title ──────────────────────── */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={22}
-              color={colors.title}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notifications</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={22} color={colors.title} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Notifications</Text>
+      </View>
+      {!value ? <View style={styles.center}><ActivityIndicator color={colors.accent} /></View> : (
+        <View style={styles.content}>
+          <PreferenceRow label="Email notifications" value={value.emailNotifications} onChange={(next: boolean) => void toggle('emailNotifications', next)} styles={styles} colors={colors} />
+          <PreferenceRow label="Push notifications" value={value.pushNotifications} onChange={(next: boolean) => void toggle('pushNotifications', next)} styles={styles} colors={colors} />
+          <PreferenceRow label="Application updates" value={value.applicationUpdates} onChange={(next: boolean) => void toggle('applicationUpdates', next)} styles={styles} colors={colors} />
+          <PreferenceRow label="Message updates" value={value.messageUpdates} onChange={(next: boolean) => void toggle('messageUpdates', next)} styles={styles} colors={colors} />
+          <PreferenceRow label="Product news and marketing" value={value.marketingEmails} onChange={(next: boolean) => void toggle('marketingEmails', next)} styles={styles} colors={colors} />
+          <Text style={styles.note}>In-app notifications remain available in your account history. Push delivery still requires a development build with native Firebase configuration.</Text>
         </View>
-        {/* ── END HEADER ──────────────────────────────────────────── */}
-
-
-        {/* ── PUSH NOTIFICATIONS SECTION ───────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>Push Notifications</Text>
-
-          {PUSH_NOTIFICATIONS.map((item) => (
-            <View
-              key={item.id}
-              style={[
-                styles.settingRow,
-                PUSH_NOTIFICATIONS.indexOf(item) < PUSH_NOTIFICATIONS.length - 1 && styles.settingRowNotLast,
-              ]}
-            >
-              {/* Icon Circle */}
-              <View style={styles.iconCircle}>
-                <Ionicons
-                  name={item.icon as any}
-                  size={18}
-                  color={colors.icon}
-                />
-              </View>
-
-              {/* Label */}
-              <Text style={styles.rowText}>{item.label}</Text>
-
-              {/* Switch */}
-              <Switch
-                value={pushSettings[item.id]}
-                onValueChange={() => togglePushSetting(item.id)}
-                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
-                thumbColor={colors.switchThumb}
-                ios_backgroundColor={colors.switchTrack}
-              />
-            </View>
-          ))}
-        </View>
-        {/* ── END PUSH NOTIFICATIONS SECTION ─────────────────────── */}
-
-
-        {/* ── EMAIL NOTIFICATIONS SECTION ──────────────────────────── */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionHeader}>Email Notifications</Text>
-
-          {EMAIL_NOTIFICATIONS.map((item) => (
-            <View
-              key={item.id}
-              style={[
-                styles.settingRow,
-                EMAIL_NOTIFICATIONS.indexOf(item) < EMAIL_NOTIFICATIONS.length - 1 && styles.settingRowNotLast,
-              ]}
-            >
-              {/* Icon Circle */}
-              <View style={styles.iconCircle}>
-                <Ionicons
-                  name={item.icon as any}
-                  size={18}
-                  color={colors.icon}
-                />
-              </View>
-
-              {/* Label */}
-              <Text style={styles.rowText}>{item.label}</Text>
-
-              {/* Switch */}
-              <Switch
-                value={emailSettings[item.id]}
-                onValueChange={() => toggleEmailSetting(item.id)}
-                trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
-                thumbColor={colors.switchThumb}
-                ios_backgroundColor={colors.switchTrack}
-              />
-            </View>
-          ))}
-        </View>
-        {/* ── END EMAIL NOTIFICATIONS SECTION ─────────────────────── */}
-
-      </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
+function PreferenceRow({ label, value, onChange, styles, colors }: any) {
+  return <View style={styles.row}><Text style={styles.label}>{label}</Text><Switch value={value} onValueChange={onChange} trackColor={{ false: colors.inputBorder, true: colors.accent }} /></View>;
+}
 
-// ─── STYLES ──────────────────────────────────────────────────────
 const createStyles = (colors: any) => StyleSheet.create({
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-
-  // ── Header ────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.title,
-  },
-
-  // ── Section Cards ─────────────────────────────────────────────
-  sectionCard: {
-    backgroundColor: colors.card,
-    borderRadius: 18,
-    padding: 8,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  sectionHeader: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.sectionHeader,
-    letterSpacing: 1,
-    marginBottom: 12,
-    marginLeft: 12,
-    marginTop: 12,
-  },
-
-  // ── Setting Row ───────────────────────────────────────────────
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  settingRowNotLast: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowBorder,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.iconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  rowText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.rowText,
-  },
-
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 20 },
+  back: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  title: { color: colors.title, fontSize: 22, fontWeight: '800' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: 20 },
+  row: { minHeight: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.inputBorder, paddingHorizontal: 16 },
+  label: { color: colors.title, fontSize: 14, fontWeight: '600', flex: 1 },
+  note: { color: colors.subtitle, fontSize: 12, lineHeight: 18, padding: 15, marginTop: 14, borderRadius: 12, backgroundColor: colors.iconCircle },
 });

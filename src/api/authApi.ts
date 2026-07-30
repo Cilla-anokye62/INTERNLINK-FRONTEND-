@@ -3,6 +3,8 @@ import { apiClient, publicApiClient } from './configuredClient';
 import type {
   AuthSession,
   EmailRoleRequest,
+  ForgotPasswordRequest,
+  GoogleLoginRequest,
   LoginRequest,
   MessageResponse,
   RegistrationResponse,
@@ -39,10 +41,18 @@ export const authApi = {
     );
   },
 
-  login(role: UserRole, request: LoginRequest) {
-    return publicApiClient.request<AuthSession>(`/api/auth/${endpointRole[role]}/login`, {
+  login(request: LoginRequest) {
+    return publicApiClient.request<AuthSession>('/api/auth/login', {
       method: 'POST',
       body: request,
+      requiresAuth: false,
+    });
+  },
+
+  google(request: GoogleLoginRequest) {
+    return publicApiClient.request<AuthSession>('/api/auth/google', {
+      method: 'POST',
+      body: { idToken: request.idToken },
       requiresAuth: false,
     });
   },
@@ -63,7 +73,7 @@ export const authApi = {
     });
   },
 
-  forgotPassword(request: EmailRoleRequest) {
+  forgotPassword(request: ForgotPasswordRequest) {
     return publicApiClient.request<MessageResponse>('/api/auth/forgot-password', {
       method: 'POST',
       body: request,

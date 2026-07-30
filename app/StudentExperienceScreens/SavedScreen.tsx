@@ -1,304 +1,216 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList, TextInput } from 'react-native';
-import { useState, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import {
+  bookmarkApi,
+  getAuthErrorMessage,
+  listingApi,
+  listingToInternshipData,
+  type BookmarkResponse,
+  type ListingResponse,
+} from '../../src/api';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 
-const FILTERS = ['All ', 'Engineering ', 'Design', 'Closing soon'];
-
-const SAVED_INTERNSHIPS = [
-  { id: '1', title: 'Frontend Intern', company: 'Stripe', daysLeft: 4, location: 'Remote', color: '#7C3AED', match: 96, pay: 'GHS 45/hr', duration: '12 weeks', workMode: 'remote' },
-  { id: '2', title: 'Product Design Intern', company: 'Figma', daysLeft: 7, location: 'Remote', color: '#EF4444', match: 91, pay: 'GHS 42/hr', duration: '12 weeks', workMode: 'remote' },
-  { id: '3', title: 'DevTools Intern', company: 'Vercel', daysLeft: 12, location: 'Remote', color: '#0F172A', match: 87, pay: 'GHS 50/hr', duration: '12 weeks', workMode: 'remote' },
-  { id: '4', title: 'Data Intern', company: 'Notion', daysLeft: 18, location: 'Remote', color: '#0F172A', match: 83, pay: 'GHS 45/hr', duration: '10 weeks', workMode: 'remote' },
-];
+type SavedItem = {
+  bookmark: BookmarkResponse;
+  listing: ListingResponse | null;
+};
 
 export default function SavedScreen({ navigation }: any) {
   const { colors } = useAppTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { savedInternships, toggleSavedInternship } = useAppStore();
-
-  const [activeFilter, setActiveFilter] = useState('All (14)');
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [items, setItems] = useState<SavedItem[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
-  const toggleSave = useCallback((id: string) => {
-    toggleSavedInternship(id);
-  }, [toggleSavedInternship]);
+  const loadSaved = useCallback(async () => {
+    setError('');
+    try {
+      const bookmarks = await bookmarkApi.list();
+      const resolved = await Promise.all(bookmarks.map(async (bookmark) => {
+        try {
+          return { bookmark, listing: await listingApi.getOpen(bookmark.listingId) };
+        } catch {
+          return { bookmark, listing: null };
+        }
+      }));
+      setItems(resolved);
+    } catch (loadError) {
+      setError(getAuthErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const filtered = SAVED_INTERNSHIPS.filter(item => {
-    const matchesSaved = savedInternships.includes(item.id);
-    const matchesSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.company.toLowerCase().includes(search.toLowerCase());
-    return matchesSaved && matchesSearch;
-  });
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      void loadSaved();
+    }, [loadSaved]),
+  );
 
-  const renderItem = useCallback(({ item }: { item: typeof SAVED_INTERNSHIPS[0] }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('InternshipDetails', { internship: item })}>
-      {/* Avatar */}
-      <View style={[styles.avatar, { backgroundColor: item.color }]}>
-        <Text style={styles.avatarText}>{item.company[0]}</Text>
-      </View>
+  const removeBookmark = async (listingId: number) => {
+    if (removingId !== null) return;
+    setRemovingId(listingId);
+    try {
+      await bookmarkApi.setSaved(listingId, false);
+      setItems((current) => current.filter((item) => item.bookmark.listingId !== listingId));
+    } catch (removeError) {
+      setError(getAuthErrorMessage(removeError));
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
-      {/* Info */}
-      <View style={styles.cardInfo}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardCompany}>{item.company}</Text>
-        <View style={styles.tagsRow}>
-          <View style={styles.daysTag}>
-            <Ionicons name="time-outline" size={10} color="#92400E" style={{marginRight: 2}} />
-            <Text style={styles.daysText}>{item.daysLeft}d left</Text>
-          </View>
-          <View style={styles.locationTag}>
-            <Text style={styles.locationText}>{item.location}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Save toggle */}
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={() => toggleSave(item.id)}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="bookmark" size={18} color={colors.accent} />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  ), [navigation, colors, toggleSave]);
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return items.filter(({ bookmark }) => !query
+      || bookmark.listingTitle.toLowerCase().includes(query)
+      || bookmark.companyName.toLowerCase().includes(query));
+  }, [items, search]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-
-      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Saved</Text>
-          <Text style={styles.headerSub}>{filtered.length} internships</Text>
-        </View>
+        <Text style={styles.headerTitle}>Saved</Text>
+        <Text style={styles.headerSub}>{items.length} internship{items.length === 1 ? '' : 's'}</Text>
       </View>
 
-      {/* Search bar */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={16} color={colors.searchIcon} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search saved..."
-            placeholderTextColor={colors.placeholder}
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={17} color={colors.placeholder} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search saved internships..."
+          placeholderTextColor={colors.placeholder}
+        />
       </View>
 
-      {/* Filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filtersScroll}
-        contentContainerStyle={styles.filtersRow}
-      >
-        {FILTERS.map(filter => (
-          <TouchableOpacity
-            key={filter}
-            style={[styles.filterChip, activeFilter === filter && styles.filterChipActive]}
-            onPress={() => setActiveFilter(filter)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}
-              numberOfLines={1}
-            >
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      {error ? (
+        <TouchableOpacity style={styles.errorCard} onPress={() => void loadSaved()}>
+          <Text style={styles.errorText}>{error} Tap to retry.</Text>
+        </TouchableOpacity>
+      ) : null}
 
-      {/* Saved list */}
       <FlatList
-        style={styles.list}
         data={filtered}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => String(item.bookmark.id)}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        renderItem={renderItem}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => void loadSaved()}
+            colors={[colors.accent]}
+            tintColor={colors.accent}
+          />
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={item.listing ? 0.85 : 1}
+            onPress={() => item.listing && navigation.navigate('InternshipDetails', {
+              internship: listingToInternshipData(item.listing),
+            })}
+          >
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{item.bookmark.companyName.charAt(0).toUpperCase()}</Text>
+            </View>
+            <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle}>{item.bookmark.listingTitle}</Text>
+              <Text style={styles.companyName}>{item.bookmark.companyName}</Text>
+              <Text style={styles.metaText}>
+                {item.listing
+                  ? `${item.listing.remote ? 'Remote' : item.listing.location || 'Location not set'} · ${item.listing.duration || 'Duration not set'}`
+                  : 'This listing is no longer open'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.bookmarkButton}
+              disabled={removingId !== null}
+              onPress={(event) => {
+                event.stopPropagation();
+                void removeBookmark(item.bookmark.listingId);
+              }}
+            >
+              {removingId === item.bookmark.listingId
+                ? <ActivityIndicator size="small" color={colors.accent} />
+                : <Ionicons name="bookmark" size={20} color={colors.accent} />}
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            {loading ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : (
+              <>
+                <Ionicons name="bookmark-outline" size={46} color={colors.subtitle} />
+                <Text style={styles.emptyTitle}>No saved internships</Text>
+                <Text style={styles.emptyText}>Save an internship from its details page to find it here.</Text>
+              </>
+            )}
+          </View>
+        }
       />
     </SafeAreaView>
   );
 }
 
 const createStyles = (colors: any) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.title,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: colors.subtitle,
-    marginTop: 2,
-  },
-
-  // Search
-  searchRow: {
-    paddingHorizontal: 24,
-    marginBottom: 14,
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  header: { paddingHorizontal: 24, paddingTop: 16, marginBottom: 15 },
+  headerTitle: { color: colors.title, fontSize: 24, fontWeight: '700' },
+  headerSub: { color: colors.subtitle, fontSize: 13, marginTop: 3 },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBg,
-    borderRadius: 30,
-    paddingHorizontal: 16,
+    gap: 8,
+    marginHorizontal: 24,
+    marginBottom: 14,
     height: 48,
+    borderRadius: 24,
+    paddingHorizontal: 15,
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
     borderColor: colors.inputBorder,
   },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-  },
-
-  // Filters — sized to match DiscoverScreen / MyApplicationsScreen chips
-  filtersScroll: {
-    flexGrow: 0,
-    marginBottom: 14,
-  },
-  filtersRow: {
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    gap: 8,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 30,
-    backgroundColor: colors.card,
-    borderWidth: 1.5,
-    borderColor: colors.inputBorder,
-    flexShrink: 0,
-  },
-  filterChipActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  filterText: {
-    fontSize: 13,
-    color: colors.subtitle,
-    fontWeight: '600',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
-  // List
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: 24,
-    paddingBottom: TAB_BAR_BOTTOM_PADDING,
-    gap: 12,
-  },
-
-  // Card
+  searchInput: { flex: 1, color: colors.text, fontSize: 14 },
+  errorCard: { marginHorizontal: 24, marginBottom: 12, padding: 11, borderRadius: 10, backgroundColor: colors.withdrawBg },
+  errorText: { color: colors.withdrawText, fontSize: 12 },
+  listContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: TAB_BAR_BOTTOM_PADDING, gap: 11 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    padding: 14,
     borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: colors.cardTitle,
-    marginBottom: 2,
-  },
-  cardCompany: {
-    fontSize: 13,
-    color: colors.subtitle,
-    marginBottom: 8,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  daysTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  daysText: {
-    fontSize: 11,
-    color: '#92400E',
-    fontWeight: '600',
-  },
-  locationTag: {
-    backgroundColor: colors.ratePillBg,
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  locationText: {
-    fontSize: 11,
-    color: colors.ratePillText,
-    fontWeight: '500',
-  },
-
-  // Save button
-  saveButton: {
-    marginLeft: 8,
-    padding: 4,
-  },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  avatarText: { color: colors.onPrimary, fontSize: 17, fontWeight: '700' },
+  cardInfo: { flex: 1 },
+  cardTitle: { color: colors.title, fontSize: 14, fontWeight: '700' },
+  companyName: { color: colors.subtitle, fontSize: 12, marginTop: 2 },
+  metaText: { color: colors.placeholder, fontSize: 11, marginTop: 7 },
+  bookmarkButton: { padding: 8, marginLeft: 5 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingTop: 70, paddingHorizontal: 30, gap: 9 },
+  emptyTitle: { color: colors.title, fontSize: 18, fontWeight: '700' },
+  emptyText: { color: colors.subtitle, fontSize: 13, lineHeight: 19, textAlign: 'center' },
 });

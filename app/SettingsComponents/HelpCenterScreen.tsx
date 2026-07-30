@@ -59,7 +59,7 @@ const FAQ_ITEMS = [
   {
     id: 'deleteAccount',
     question: 'How do I delete my account?',
-    answer: 'Account deletion is permanent. Please contact support@internlink.com to request account deletion. Our team will guide you through the process.',
+    answer: 'Go to Settings, open Data & Storage, then choose Delete Account. Read the warning and confirm to permanently erase your account.',
   },
 ];
 
@@ -94,8 +94,6 @@ export default function HelpCenterScreen({ navigation }: any) {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    console.log('Searching for:', query);
-    // TODO: implement search filtering
   };
 
   const handleContactSupport = () => {

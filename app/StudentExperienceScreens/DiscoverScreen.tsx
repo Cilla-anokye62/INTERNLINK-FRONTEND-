@@ -1,32 +1,52 @@
-import React from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList, RefreshControl } from 'react-native';
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, FlatList, RefreshControl, Image } from 'react-native';
+
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
-import { getAuthErrorMessage, listingApi, listingToInternshipData, type ListingResponse } from '../../src/api';
+import {
+  bookmarkApi,
+  getAuthErrorMessage,
+  listingApi,
+  listingToInternshipData,
+  resolveMediaUrl,
+  type ListingResponse,
+} from '../../src/api';
 
 const CATEGORIES = ['All', 'Engineering', 'Design', 'Data', 'Marketing', 'Finance'];
 
 export default function DiscoverScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { savedInternships, toggleSavedInternship } = useAppStore();
-
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [internships, setInternships] = useState<ListingResponse[]>([]);
+  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+  const [savingId, setSavingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
   const loadInternships = useCallback(async () => {
     setLoadError('');
     try {
-      setInternships(await listingApi.listOpen());
-    } catch (error) {
-      setLoadError(getAuthErrorMessage(error));
+      const [listingsResult, bookmarksResult] = await Promise.allSettled([
+        listingApi.listOpen(),
+        bookmarkApi.list(),
+      ]);
+
+      if (listingsResult.status === 'rejected') {
+        setInternships([]);
+        setLoadError(getAuthErrorMessage(listingsResult.reason));
+      } else {
+        setInternships(listingsResult.value);
+      }
+
+      if (bookmarksResult.status === 'fulfilled') {
+        setBookmarkedIds(
+          bookmarksResult.value.map((bookmark) => bookmark.listingId),
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -39,9 +59,23 @@ export default function DiscoverScreen({ navigation }: any) {
     }, [loadInternships]),
   );
 
-  const toggleSave = useCallback((id: string) => {
-    toggleSavedInternship(id);
-  }, [toggleSavedInternship]);
+  const toggleSave = useCallback(async (id: number) => {
+    if (savingId !== null) return;
+    setSavingId(id);
+    try {
+      const shouldSave = !bookmarkedIds.includes(id);
+      await bookmarkApi.setSaved(id, shouldSave);
+      if (shouldSave) {
+        setBookmarkedIds((current) => current.includes(id) ? current : [...current, id]);
+      } else {
+        setBookmarkedIds((current) => current.filter((item) => item !== id));
+      }
+    } catch (error) {
+      Alert.alert('Unable to update saved internships', getAuthErrorMessage(error));
+    } finally {
+      setSavingId(null);
+    }
+  }, [bookmarkedIds, savingId]);
 
   const filtered = internships.filter(item => {
     const matchesSearch =
@@ -62,7 +96,11 @@ export default function DiscoverScreen({ navigation }: any) {
     >
       {/* Left: company avatar */}
       <View style={styles.companyAvatar}>
-        <Text style={styles.companyAvatarText}>{item.companyName.charAt(0).toUpperCase()}</Text>
+        {item.imageUrl ? (
+          <Image source={{ uri: resolveMediaUrl(item.imageUrl) || undefined }} style={styles.companyAvatarImage} />
+        ) : (
+          <Text style={styles.companyAvatarText}>{item.companyName.charAt(0).toUpperCase()}</Text>
+        )}
       </View>
 
       {/* Middle: info */}
@@ -88,17 +126,25 @@ export default function DiscoverScreen({ navigation }: any) {
       {/* Right: save button */}
       <TouchableOpacity
         style={styles.saveButton}
-        onPress={() => toggleSave(String(item.id))}
+        onPress={(event) => {
+          event.stopPropagation();
+          void toggleSave(item.id);
+        }}
         activeOpacity={0.7}
+        disabled={savingId === item.id}
       >
-        <Ionicons
-          name={savedInternships.includes(String(item.id)) ? 'bookmark' : 'bookmark-outline'}
-          size={18}
-          color={savedInternships.includes(String(item.id)) ? colors.accent : colors.placeholder}
-        />
+        {savingId === item.id
+          ? <ActivityIndicator size="small" color={colors.accent} />
+          : (
+            <Ionicons
+              name={bookmarkedIds.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+              size={18}
+              color={bookmarkedIds.includes(item.id) ? colors.accent : colors.placeholder}
+            />
+          )}
       </TouchableOpacity>
     </TouchableOpacity>
-  ), [navigation, colors, savedInternships, toggleSave, styles]);
+  ), [navigation, colors, bookmarkedIds, savingId, toggleSave, styles]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -308,7 +354,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
+  companyAvatarImage: { width: '100%', height: '100%' },
   companyAvatarText: {
     color: '#FFFFFF',
     fontWeight: 'bold',

@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   View,
   Text,
   TextInput,
@@ -28,6 +30,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedSize, setSelectedSize] = useState<CompanySize | null>(null);
   const [headquarters, setHeadquarters] = useState('');
   const [description, setDescription] = useState('');
+  const industryDraft = useRef('');
+  const headquartersDraft = useRef('');
+  const descriptionDraft = useRef('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -46,6 +51,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
         setSelectedSize(profile.companySize);
         setHeadquarters(profile.headquarters ?? '');
         setDescription(profile.description ?? '');
+        industryDraft.current = profile.industry ?? '';
+        headquartersDraft.current = profile.headquarters ?? '';
+        descriptionDraft.current = profile.description ?? '';
       })
       .catch((error: unknown) => {
         if (active) setLoadError(getAuthErrorMessage(error));
@@ -62,9 +70,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
   const handleContinue = async (): Promise<void> => {
     if (isSubmitting) return;
 
-    const cleanIndustry = industry.trim();
-    const cleanHeadquarters = headquarters.trim();
-    const cleanDescription = description.trim();
+    const cleanIndustry = industryDraft.current.trim();
+    const cleanHeadquarters = headquartersDraft.current.trim();
+    const cleanDescription = descriptionDraft.current.trim();
 
     if (!cleanIndustry) {
       setSubmitError('Enter your company industry.');
@@ -141,10 +149,17 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoider}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          showsVerticalScrollIndicator={false}
+        >
         {/* Step indicator */}
         <View style={styles.stepRow}>
           <Text style={styles.stepText}>Company setup · Step 2 of 4</Text>
@@ -166,10 +181,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
           <Ionicons name="business-outline" size={16} color={colors.subtitle} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.input}
-            value={industry}
+            defaultValue={industry}
             onChangeText={(value) => {
-              setIndustry(value);
-              setSubmitError(null);
+              industryDraft.current = value;
             }}
             placeholder="e.g. Software & SaaS"
             placeholderTextColor={colors.placeholder}
@@ -213,10 +227,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
           <Ionicons name="location-outline" size={16} color={colors.subtitle} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.input}
-            value={headquarters}
+            defaultValue={headquarters}
             onChangeText={(value) => {
-              setHeadquarters(value);
-              setSubmitError(null);
+              headquartersDraft.current = value;
             }}
             placeholder="e.g. San Francisco, CA"
             placeholderTextColor={colors.placeholder}
@@ -230,10 +243,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.textAreaContainer}>
           <TextInput
             style={styles.textArea}
-            value={description}
+            defaultValue={description}
             onChangeText={(value) => {
-              setDescription(value);
-              setSubmitError(null);
+              descriptionDraft.current = value;
             }}
             placeholder="Tell students about your company..."
             placeholderTextColor={colors.placeholder}
@@ -260,7 +272,8 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.continueButtonText}>Next →</Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -271,7 +284,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  keyboardAvoider: {
+    flex: 1,
+  },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 40,

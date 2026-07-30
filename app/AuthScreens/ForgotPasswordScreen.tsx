@@ -12,7 +12,7 @@ const { height } = Dimensions.get('window');
 
 type Props = StackScreenProps<RootStackParamList, 'ForgotPassword'>;
 
-export default function ForgotPasswordScreen({ navigation, route }: Props) {
+export default function ForgotPasswordScreen({ navigation }: Props) {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
@@ -34,7 +34,6 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
     try {
       const response = await authApi.forgotPassword({
         email: email.trim().toLowerCase(),
-        role: route.params?.role ?? 'student',
       });
       setStatusMessage(response.message);
       setSent(true);
@@ -56,8 +55,14 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
       <SafeAreaView style={styles.safeArea}>
 
         {/* Back button */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>{'<'}</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={10}
+        >
+          <Ionicons name="chevron-back" size={22} color="#024D60" />
         </TouchableOpacity>
 
         {/* Spacer — pushes content down proportionally */}
@@ -144,11 +149,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     // marginBottom: 180 removed — replaced by spacer below
-  },
-  backArrow: {
-    fontSize: 18,
-    color: '#024D60',
-    fontWeight: 'bold',
   },
   spacer: {
     flex: 1,                        // pushes title down proportionally on any screen

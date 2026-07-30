@@ -205,7 +205,7 @@ The navigator files under `src/navigation/` are refactor candidates and are not 
 - selected user role and onboarding completion;
 - student profile, academic, location, and job preferences;
 - light/dark/system theme preference;
-- local premium entitlement and application usage;
+- authenticated Premium entitlement state loaded from the backend;
 - mock applications and employer listings;
 - saved internship IDs;
 - local notifications, conversations, and chat messages; and
@@ -253,7 +253,7 @@ Do not place database passwords, JWT secrets, service-account JSON, or other bac
 - Internship, application, employer, and university data is largely seeded or hardcoded.
 - Resume and image selection produces device-local URIs; files are not uploaded.
 - Messages and notifications are not delivered to another user.
-- Premium payment and entitlement are simulated locally.
+- Premium checkout uses the backend's Paystack test integration. The Expo app never contains the Paystack secret key or card data.
 - Company and university onboarding do not yet retain every step as one complete API payload.
 - The employer Listings tab and listing wizard use different local data sources.
 - The employer dashboard notification action targets a route that is not registered in the employer stack.

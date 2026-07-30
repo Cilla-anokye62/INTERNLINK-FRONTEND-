@@ -4,7 +4,10 @@ Expo SDK 54 / React Native 0.81 / React 19.1. Docs: https://docs.expo.dev/versio
 
 ## Verify
 
-No lint, no tests, no CI. Only check: `npx tsc --noEmit`
+- Full local quality gate: `npm run check` (ESLint, strict TypeScript, Jest).
+- Android Metro/Hermes bundle and size budget: `npm run bundle:android`.
+- Native dependency/configuration diagnostics: `npx expo-doctor`.
+- GitHub Actions runs the quality gate and Android bundle check on pushes and pull requests.
 
 ## Navigation
 
@@ -37,7 +40,6 @@ All 200+ dark tokens in `Colors.ts` derive from these. Don't add new dark colors
 - `src/` — reusable code: `components/`, `constants/`, `context/`, `hooks/`, `navigation/`, `store/`
 - `src/components/PrimaryButton.tsx` — shared button component using theme
 - Tab navigators: `StudentTabs.tsx`, `UniversityTabs.tsx`, `CompanyTabs.tsx` (each wraps Bottom Tab Navigator)
-- `ts-morph` is a devDependency used for AST-based refactoring scripts (e.g. `ast_refactor.js`)
 
 ## Conventions
 

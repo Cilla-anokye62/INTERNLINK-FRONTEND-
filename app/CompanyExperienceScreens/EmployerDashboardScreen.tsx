@@ -8,28 +8,26 @@ import { useAppStore } from '../../src/store/useAppStore';
 import { TAB_BAR_BOTTOM_PADDING } from '../../src/constants/Colors';
 import { applicationApi, getAuthErrorMessage, listingApi } from '../../src/api';
 import type { BackendApplicantResponse, ListingResponse } from '../../src/api';
+import { useSubscription } from '../../src/context/SubscriptionContext';
 
 type DashboardListing = ListingResponse & { applicantCount: number };
 
 export default function EmployerDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { userId, userName, getAnalytics, applications, conversations, listings: localListings } = useAppStore();
+  const userName = useAppStore((state) => state.userName);
+  const { entitlement, hasFeature, refresh: refreshSubscription } = useSubscription();
   const [backendListings, setBackendListings] = useState<DashboardListing[]>([]);
   const [backendApplicants, setBackendApplicants] = useState<BackendApplicantResponse[]>([]);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
-  const analytics = useMemo(() => getAnalytics(userId), [applications, getAnalytics, localListings, userId]);
-  const unreadMessages = useMemo(
-    () => conversations
-      .filter((conversation) => conversation.ownerId === userId && !conversation.isArchived && conversation.unreadCount > 0)
-      .reduce((sum, conversation) => sum + conversation.unreadCount, 0),
-    [conversations, userId]
-  );
   const loadDashboard = useCallback(async () => {
     try {
       setDashboardError(null);
-      const ownListings = await listingApi.listOwn();
+      const [ownListings] = await Promise.all([
+        listingApi.listOwn(),
+        refreshSubscription(),
+      ]);
       const applicantGroups = await Promise.all(
         ownListings.map((listing) => applicationApi.listApplicants(listing.id)),
       );
@@ -44,7 +42,7 @@ export default function EmployerDashboardScreen({ navigation }: any) {
     } catch (error) {
       setDashboardError(getAuthErrorMessage(error));
     }
-  }, []);
+  }, [refreshSubscription]);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,15 +71,35 @@ export default function EmployerDashboardScreen({ navigation }: any) {
   const quickActions = [
     { icon: 'add-circle-outline' as const, title: 'Post Internship', subtitle: `Publish a new role`, highlighted: true, screen: 'PostInternshipWizard' },
     { icon: 'people-outline' as const, title: 'Review Applicants', subtitle: `${pendingApps.length} awaiting review`, highlighted: false, screen: 'Applicants' },
-    { icon: 'chatbubble-outline' as const, title: 'Messages', subtitle: unreadMessages > 0 ? `${unreadMessages} unread` : 'All read', highlighted: unreadMessages > 0, screen: 'Messages' },
+    { icon: 'chatbubble-outline' as const, title: 'Messages', subtitle: 'Chat with applicants', highlighted: false, screen: 'Messages' },
     { icon: 'bar-chart-outline' as const, title: 'Insights', subtitle: `${backendApplicants.length} total apps`, highlighted: false, screen: 'Insights' },
   ];
 
   const stats = [
     { label: 'Active', value: String(activeListings.length) },
-    { label: 'Interviews', value: String(analytics.interviewsScheduled) },
-    { label: 'Offers Sent', value: String(analytics.offersSent) },
+    { label: 'To Review', value: String(pendingApps.length) },
+    {
+      label: 'Accepted',
+      value: String(backendApplicants.filter((item) => item.status === 'ACCEPTED').length),
+    },
   ];
+  const listingEntitlement = entitlement('COMPANY_ACTIVE_LISTINGS');
+  const listingLimitReached = Boolean(
+    listingEntitlement?.limit != null
+    && listingEntitlement.remaining != null
+    && listingEntitlement.remaining <= 0,
+  );
+  const handleQuickAction = (screen: string) => {
+    if (screen === 'PostInternshipWizard' && listingLimitReached) {
+      navigation.navigate('PremiumPlans', { source: 'listing-limit' });
+      return;
+    }
+    if (screen === 'Insights' && !hasFeature('COMPANY_ADVANCED_ANALYTICS')) {
+      navigation.navigate('PremiumPlans', { source: 'company-analytics' });
+      return;
+    }
+    navigation.navigate(screen);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -132,7 +150,7 @@ export default function EmployerDashboardScreen({ navigation }: any) {
           {quickActions.map((action) => (
             <TouchableOpacity key={action.title} style={[styles.quickActionCard, {
               backgroundColor: action.highlighted ? colors.accent : colors.card,
-            }]} activeOpacity={0.8} onPress={() => navigation.navigate(action.screen)}>
+            }]} activeOpacity={0.8} onPress={() => handleQuickAction(action.screen)}>
               <Ionicons name={action.icon} size={15} color={action.highlighted ? colors.onPrimary : colors.accent} style={{ marginBottom: 10 }} />
               <Text style={[styles.quickActionTitle, {
                 color: action.highlighted ? '#FFFFFF' : colors.title,

@@ -15,7 +15,6 @@ import StudentMonitoringScreen from './StudentMonitoringScreen';
 import PlacementAnalyticsScreen from './PlacementAnalyticsScreen';
 import ReportsScreen from './ReportsScreen';
 import SettingsScreen from './SettingsScreen';
-import { useAppTheme } from "../../src/hooks/useAppTheme";
 
 // ─── TAB ICON DATA ────────────────────────────────────────────────
 // Maps each route name to the Ionicons name shown above its label.

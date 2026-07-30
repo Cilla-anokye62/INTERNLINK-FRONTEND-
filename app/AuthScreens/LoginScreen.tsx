@@ -19,8 +19,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { StackScreenProps } from '@react-navigation/stack';
-import { useAppStore, type UserRole } from '../../src/store/useAppStore';
-import { getAuthErrorMessage, signIn } from '../../src/api';
+import { getAuthErrorMessage, signIn, signInWithGoogle } from '../../src/api';
 import { isValidEmail, nonEmpty } from '../../src/utils/validateCard';
 import type { RootStackParamList } from '../../types/navigation';
 
@@ -34,7 +33,6 @@ export default function LoginScreen({ navigation }: Props) {
   const { colors, theme } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  const storedRole = useAppStore((s) => s.userRole);
   const scrollRef = useRef<ScrollView>(null);
   const fieldY = useRef<Record<string, number>>({});
 
@@ -52,12 +50,13 @@ export default function LoginScreen({ navigation }: Props) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loginRole, setLoginRole] = useState<UserRole>(storedRole || 'student');
   const [showPassword, setShowPassword] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingMethod, setSubmittingMethod] = useState<'password' | 'google' | null>(null);
   const [requestError, setRequestError] = useState('');
+  const [googleError, setGoogleError] = useState('');
+  const isSubmitting = submittingMethod !== null;
 
   const errors = useMemo(() => ({
     email: isValidEmail(email),
@@ -72,22 +71,34 @@ export default function LoginScreen({ navigation }: Props) {
     setTouched({ email: true, password: true });
     if (!isFormValid || isSubmitting) return;
 
-    setIsSubmitting(true);
+    setSubmittingMethod('password');
     setRequestError('');
+    setGoogleError('');
     try {
-      await signIn(loginRole, {
+      await signIn({
         email: email.trim().toLowerCase(),
         password,
       });
     } catch (error) {
       setRequestError(getAuthErrorMessage(error));
     } finally {
-      setIsSubmitting(false);
+      setSubmittingMethod(null);
     }
   };
 
-  const handleGoogleLogin = () => {
-    setRequestError('Google sign-in is not connected yet. Please use email and password.');
+  const handleGoogleLogin = async () => {
+    if (isSubmitting) return;
+    setSubmittingMethod('google');
+    setRequestError('');
+    setGoogleError('');
+    try {
+      const signedIn = await signInWithGoogle();
+      if (!signedIn) setGoogleError('Google sign-in was cancelled.');
+    } catch (error) {
+      setGoogleError(getAuthErrorMessage(error));
+    } finally {
+      setSubmittingMethod(null);
+    }
   };
 
   return (
@@ -115,24 +126,6 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.subtitle}>
               Log in to continue your internship search
             </Text>
-          </View>
-
-          <View style={styles.roleSection}>
-            <Text style={styles.label}>Role</Text>
-            <View style={styles.roleSelector}>
-              {(['student', 'employer', 'university'] as UserRole[]).map((role) => (
-                <TouchableOpacity
-                  key={role}
-                  style={[styles.roleOption, loginRole === role && styles.roleOptionActive]}
-                  onPress={() => setLoginRole(role)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.roleOptionText, loginRole === role && styles.roleOptionTextActive]}>
-                    {role === 'employer' ? 'Employer' : role === 'university' ? 'University' : 'Student'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           </View>
 
           {/* Form */}
@@ -202,7 +195,7 @@ export default function LoginScreen({ navigation }: Props) {
             {/* Forgot Password */}
             <TouchableOpacity
               style={styles.forgotBtn}
-              onPress={() => navigation.navigate('ForgotPassword', { role: loginRole })}
+              onPress={() => navigation.navigate('ForgotPassword')}
             >
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
@@ -218,7 +211,7 @@ export default function LoginScreen({ navigation }: Props) {
             disabled={!isFormValid || isSubmitting}
             activeOpacity={0.85}
           >
-            {isSubmitting
+            {submittingMethod === 'password'
               ? <ActivityIndicator color={colors.buttonText} />
               : <Text style={styles.loginBtnText}>Login  →</Text>}
           </TouchableOpacity>
@@ -233,12 +226,34 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Google Button */}
           <TouchableOpacity
             style={styles.googleBtn}
-            onPress={handleGoogleLogin}
+            onPress={() => void handleGoogleLogin()}
+            disabled={isSubmitting}
             activeOpacity={0.85}
           >
-            <Image source={require('../../assets/google logo.png')} style={styles.googleIcon} />
-            <Text style={styles.googleBtnText}>Continue with Google</Text>
+            {submittingMethod === 'google' ? (
+              <>
+                <ActivityIndicator
+                  size="small"
+                  color={colors.googleBtnText}
+                  style={styles.googleIcon}
+                />
+                <Text style={styles.googleBtnText}>Connecting to Google...</Text>
+              </>
+            ) : (
+              <>
+                <Image source={require('../../assets/google logo.png')} style={styles.googleIcon} />
+                <Text style={styles.googleBtnText}>Continue with Google</Text>
+              </>
+            )}
           </TouchableOpacity>
+          {googleError ? (
+            <Text
+              style={[styles.requestErrorText, styles.googleErrorText]}
+              accessibilityLiveRegion="polite"
+            >
+              {googleError}
+            </Text>
+          ) : null}
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -283,35 +298,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.subtitle,
     textAlign: 'center',
     lineHeight: 20,
-  },
-  roleSection: {
-    marginBottom: 20,
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  roleOption: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.inputBg,
-  },
-  roleOptionActive: {
-    borderColor: colors.iconSelected,
-    backgroundColor: colors.iconCircle,
-  },
-  roleOptionText: {
-    color: colors.subtitle,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  roleOptionTextActive: {
-    color: colors.iconSelected,
   },
   form: {
     marginBottom: height * 0.03,      // relative instead of fixed 24
@@ -438,6 +424,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.googleBtnText,
+  },
+  googleErrorText: {
+    marginTop: -height * 0.025,
+    marginBottom: height * 0.025,
   },
   footer: {
     flexDirection: 'row',

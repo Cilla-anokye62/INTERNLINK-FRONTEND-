@@ -31,6 +31,7 @@ export default function PortfolioLinksScreen({ navigation, route }: any) {
   });
 
   const filledCount = Object.values(links).filter((v) => v.trim().length > 0).length;
+  const portfolioRequired = internship?.portfolioRequired ?? false;
 
   const validateUrl = (url: string): boolean => {
     if (!url.trim()) return true;
@@ -40,9 +41,10 @@ export default function PortfolioLinksScreen({ navigation, route }: any) {
   const handleContinue = () => {
     const invalidFields = Object.entries(links).filter(([_, url]) => url.trim() && !validateUrl(url));
     if (invalidFields.length > 0) return;
+    if (portfolioRequired && filledCount === 0) return;
     navigation.navigate('Availability', {
       internship,
-      resumeId: route.params?.resumeId,
+      resume: route.params?.resume,
       coverLetter: route.params?.coverLetter,
       motivation: route.params?.motivation,
       whyThis: route.params?.whyThis,
@@ -75,7 +77,9 @@ export default function PortfolioLinksScreen({ navigation, route }: any) {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.sectionTitle, { color: colors.title }]}>Portfolio Links</Text>
         <Text style={[styles.sectionSubtitle, { color: colors.subtitle }]}>
-          Add links to your professional profiles. All fields are optional.
+          {portfolioRequired
+            ? 'This employer requires at least one portfolio or professional link.'
+            : 'Add links to your professional profiles. All fields are optional.'}
         </Text>
 
         {PORTFOLIO_FIELDS.map((field) => (
@@ -128,8 +132,12 @@ export default function PortfolioLinksScreen({ navigation, route }: any) {
       {/* Bottom */}
       <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.rowBorder }]}>
         <TouchableOpacity
-          style={[styles.continueBtn, { backgroundColor: colors.accent }]}
+          style={[
+            styles.continueBtn,
+            { backgroundColor: !portfolioRequired || filledCount > 0 ? colors.accent : colors.buttonInactive },
+          ]}
           onPress={handleContinue}
+          disabled={portfolioRequired && filledCount === 0}
           activeOpacity={0.85}
         >
           <Text style={[styles.continueText, { color: colors.onPrimary }]}>Continue</Text>

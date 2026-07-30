@@ -1,22 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Alert, View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
-import { useAppStore } from '../../src/store/useAppStore';
 import { InternshipData } from '../../src/types/application';
+import { bookmarkApi, getAuthErrorMessage } from '../../src/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { height } = Dimensions.get('window');
 
 export default function ApplicationReviewScreen({ navigation, route }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
-  const { toggleSavedInternship, isInternshipSaved } = useAppStore();
   const internship: InternshipData = route.params?.internship;
-  const isSaved = internship ? isInternshipSaved(internship.id) : false;
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSaveForLater = () => {
-    if (internship) toggleSavedInternship(internship.id);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      if (!internship?.backendListingId) return () => {
+        active = false;
+      };
+      bookmarkApi.list()
+        .then((items) => {
+          if (active) {
+            setIsSaved(items.some(
+              (item) => item.listingId === internship.backendListingId,
+            ));
+          }
+        })
+        .catch(() => {
+          // Saving remains available even if the initial bookmark refresh fails.
+        });
+      return () => {
+        active = false;
+      };
+    }, [internship?.backendListingId]),
+  );
+
+  const handleSaveForLater = async () => {
+    if (!internship.backendListingId || saving) return;
+    setSaving(true);
+    try {
+      const shouldSave = !isSaved;
+      await bookmarkApi.setSaved(internship.backendListingId, shouldSave);
+      setIsSaved(shouldSave);
+    } catch (error) {
+      Alert.alert('Unable to update saved internship', getAuthErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!internship) {
@@ -118,7 +152,8 @@ export default function ApplicationReviewScreen({ navigation, route }: any) {
       <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.rowBorder }]}>
         <TouchableOpacity
           style={[styles.saveLaterBtn, { borderColor: isSaved ? colors.accent : colors.inputBorder, backgroundColor: isSaved ? colors.iconCircle : colors.card }]}
-          onPress={handleSaveForLater}
+          onPress={() => void handleSaveForLater()}
+          disabled={saving || !internship.backendListingId}
         >
           <Text style={[styles.saveLaterText, { color: isSaved ? colors.accent : colors.subtitle }]}>{isSaved ? 'Saved ✓' : 'Save for Later'}</Text>
         </TouchableOpacity>
@@ -127,7 +162,7 @@ export default function ApplicationReviewScreen({ navigation, route }: any) {
           onPress={() => navigation.navigate('ResumeSelection', { internship })}
           activeOpacity={0.85}
         >
-          <Text style={[styles.continueText, { color: colors.onPrimary }]}>Continue</Text>
+          <Text style={[styles.continueText, { color: colors.onPrimary }]}>Review & Apply</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

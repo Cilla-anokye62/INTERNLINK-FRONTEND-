@@ -2,6 +2,7 @@ import { useAppStore } from '../store/useAppStore';
 import { authApi } from './authApi';
 import type { UniversityProfileResponse } from './types';
 import { universityApi } from './universityApi';
+import { resolveMediaUrl } from './mediaApi';
 
 export const completeUniversityOnboarding = async (): Promise<UniversityProfileResponse> => {
   await authApi.completeOnboarding();
@@ -16,6 +17,7 @@ export const completeUniversityOnboarding = async (): Promise<UniversityProfileR
   state.updateProfile({
     email: completedProfile.contactEmail,
     phone: completedProfile.phoneNumber ?? '',
+    photoUri: resolveMediaUrl(completedProfile.logoUrl) ?? state.profile.photoUri,
   });
   state.completeOnboarding();
 
