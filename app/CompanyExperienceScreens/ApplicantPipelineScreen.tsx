@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -69,8 +69,10 @@ export default function ApplicantPipelineScreen({ navigation }: any) {
   const [sortBy, setSortBy] = useState<SortOption>('Newest');
   const [showSort, setShowSort] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const loadApplicants = useCallback(async () => {
     setLoadError('');
@@ -92,12 +94,14 @@ export default function ApplicantPipelineScreen({ navigation }: any) {
       setLoadError(getAuthErrorMessage(error));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
+      hasLoadedRef.current = true;
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
+      if (!hasLoadedRef.current) setIsLoading(true);
       void loadApplicants();
     }, [loadApplicants]),
   );
@@ -213,8 +217,11 @@ export default function ApplicantPipelineScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
-            onRefresh={() => void loadApplicants()}
+            refreshing={isRefreshing}
+            onRefresh={() => {
+              setIsRefreshing(true);
+              void loadApplicants();
+            }}
             tintColor={colors.accent}
             colors={[colors.accent]}
           />

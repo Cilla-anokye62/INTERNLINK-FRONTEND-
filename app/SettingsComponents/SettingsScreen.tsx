@@ -287,10 +287,12 @@ export default function SettingsScreen({ navigation, route }: any) {
           </View>
         </TouchableOpacity>
 
-        <SubscriptionStatusCard
-          snapshot={snapshot}
-          onPress={() => navigation.navigate('Subscription')}
-        />
+        <View style={styles.subscriptionBanner}>
+          <SubscriptionStatusCard
+            snapshot={snapshot}
+            onPress={() => navigation.navigate('Subscription')}
+          />
+        </View>
 
         {/* Settings Sections */}
         {visibleSections.map((section) => (
@@ -424,6 +426,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.profileEmail,
   },
   section: {
+    marginBottom: 20,
+  },
+  subscriptionBanner: {
     marginBottom: 20,
   },
   sectionLabel: {

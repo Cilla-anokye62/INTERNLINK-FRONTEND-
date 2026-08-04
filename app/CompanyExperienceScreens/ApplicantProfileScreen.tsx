@@ -226,6 +226,12 @@ export default function ApplicantProfileScreen({ navigation, route }: any) {
           <Text style={styles.dateText}>Applied {new Date(applicant.appliedAt).toLocaleString()}</Text>
         </View>
 
+        {loading ? (
+          <View style={styles.loadingBlock}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : null}
+
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.secondaryButton} onPress={() => void openConversation()}>
             <Text style={styles.secondaryText}>Message applicant</Text>
@@ -319,9 +325,7 @@ export default function ApplicantProfileScreen({ navigation, route }: any) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Submitted documents</Text>
-          {loading ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : documents.length === 0 && (applicant.files?.length ?? 0) === 0 ? (
+          {loading ? null : documents.length === 0 && (applicant.files?.length ?? 0) === 0 ? (
             <Text style={styles.emptyText}>The student has not submitted any application documents.</Text>
           ) : <>
           {applicant.files?.map((file) => (
@@ -351,9 +355,7 @@ export default function ApplicantProfileScreen({ navigation, route }: any) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hiring pipeline</Text>
-          {loading ? (
-            <ActivityIndicator color={colors.accent} />
-          ) : stages.length === 0 ? (
+          {loading ? null : stages.length === 0 ? (
             <Text style={styles.emptyText}>
               This application uses direct accept/reject because no pipeline was configured before the student applied.
             </Text>
@@ -448,6 +450,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: colors.title, fontSize: 17, fontWeight: '700' },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
+  loadingBlock: { alignItems: 'center', paddingVertical: 18 },
   profileCard: { alignItems: 'center', padding: 20, backgroundColor: colors.card, borderRadius: 18, borderWidth: 1, borderColor: colors.inputBorder },
   avatar: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   avatarText: { color: colors.onPrimary, fontSize: 19, fontWeight: '800' },

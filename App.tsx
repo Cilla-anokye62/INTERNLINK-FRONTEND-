@@ -293,6 +293,7 @@ export default function App() {
                   <Stack.Screen name="ActionSuccessful" component={ActionSuccessfulScreen} />
                   <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
                   <Stack.Screen name="EmailPassword" component={EmailPasswordScreen} />
+                  <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                   <Stack.Screen name="ConnectedAccounts" component={ConnectedAccountsScreen} />
                   <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
                   <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} />

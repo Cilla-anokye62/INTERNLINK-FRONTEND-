@@ -30,6 +30,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<UploadableImage | null>(null);
   const setUserName = useAppStore((state) => state.setUserName);
@@ -106,6 +107,7 @@ export default function EditProfileScreen({ navigation }: any) {
       });
       let savedPhotoUri = resolveMediaUrl(updated.logoUrl);
       if (photoFile) {
+        setUploadingPhoto(true);
         const uploaded = await mediaApi.uploadAccountImage(photoFile);
         savedPhotoUri = resolveMediaUrl(uploaded.url);
         setPhotoFile(null);
@@ -116,6 +118,7 @@ export default function EditProfileScreen({ navigation }: any) {
     } catch (error) {
       Alert.alert('Could not save university profile', getAuthErrorMessage(error));
     } finally {
+      setUploadingPhoto(false);
       setSaving(false);
     }
   };
@@ -137,6 +140,7 @@ export default function EditProfileScreen({ navigation }: any) {
             imageUri={photoUri}
             fallbackText={form.name}
             disabled={saving}
+            selecting={uploadingPhoto}
             onSelect={(file, previewUri) => {
               setPhotoFile(file);
               setPhotoUri(previewUri);

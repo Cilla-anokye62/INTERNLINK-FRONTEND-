@@ -55,6 +55,7 @@ export const universityApi = {
     return apiClient.request<string>('/api/universities/reports/placements.csv', {
       method: 'GET',
       headers: { Accept: 'text/csv' },
+      responseType: 'text',
     });
   },
 

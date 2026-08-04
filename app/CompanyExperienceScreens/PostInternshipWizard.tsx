@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Dimensions, Switch, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import { WorkMode } from '../../src/types/application';
-import { ApiError, getAuthErrorMessage, listingApi, mediaApi, type UploadableImage } from '../../src/api';
+import { ApiError, companyApi, getAuthErrorMessage, listingApi, mediaApi, type UploadableImage } from '../../src/api';
 import { useAppStore } from '../../src/store/useAppStore';
 import { useSubscription } from '../../src/context/SubscriptionContext';
 
@@ -14,7 +14,6 @@ const STEPS = ['Basics', 'Details', 'Requirements', 'Compensation', 'Settings', 
 
 const CATEGORIES = ['Engineering', 'Design', 'Data', 'Business', 'Marketing', 'Research'];
 const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Data Science', 'Marketing', 'Operations'];
-const EMPLOYMENT_TYPES = ['Internship', 'Co-op', 'Part-time', 'Full-time'];
 const STUDENT_LEVELS = ['freshman', 'sophomore', 'junior', 'senior', 'graduate'];
 const WORK_MODES: { value: WorkMode; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
   { value: 'remote', label: 'Remote', icon: 'home-outline' },
@@ -51,7 +50,6 @@ export default function PostInternshipWizard({ navigation }: any) {
 
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('');
-  const [employmentType, setEmploymentType] = useState('Internship');
   const [category, setCategory] = useState('');
   const [branch, setBranch] = useState('');
   const [openPositions, setOpenPositions] = useState('1');
@@ -85,6 +83,16 @@ export default function PostInternshipWizard({ navigation }: any) {
   const [portfolioRequired, setPortfolioRequired] = useState(false);
   const [autoScreening, setAutoScreening] = useState(false);
   const [aiMatching, setAiMatching] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void companyApi.getMe().then((profile) => {
+      if (active && profile.headquarters) setBranch((current) => current || profile.headquarters || '');
+    }).catch(() => {
+      // Branch is optional; the wizard remains usable if the profile cannot be loaded.
+    });
+    return () => { active = false; };
+  }, []);
 
   const addSkill = (skill: string, type: 'required' | 'preferred') => {
     if (!skill.trim()) return;
@@ -156,7 +164,6 @@ export default function PostInternshipWizard({ navigation }: any) {
         allowance: isPaid ? monthlyStipend.trim() || 'Paid' : 'Unpaid',
         requiredSkills,
         department: department || undefined,
-        employmentType,
         category: category || undefined,
         branch: branch.trim() || undefined,
         openPositions: pos,
@@ -213,11 +220,14 @@ export default function PostInternshipWizard({ navigation }: any) {
     }
   };
 
-  const SectionLabel = ({ label }: { label: string }) => (
+  const SectionLabel = React.useMemo(() => function SectionLabel({ label }: { label: string }) {
+    return (
     <Text style={[styles.fieldLabel, { color: colors.title }]}>{label}</Text>
-  );
+    );
+  }, [styles, colors]);
 
-  const Input = ({ value, onChangeText, placeholder, multiline, numberOfLines, keyboardType }: any) => (
+  const Input = React.useMemo(() => function Input({ value, onChangeText, placeholder, multiline, numberOfLines, keyboardType }: any) {
+    return (
     <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
       <TextInput
         style={[styles.input, { color: colors.text }, multiline && { minHeight: (numberOfLines || 3) * 22 }]}
@@ -227,9 +237,11 @@ export default function PostInternshipWizard({ navigation }: any) {
         keyboardType={keyboardType}
       />
     </View>
-  );
+    );
+  }, [styles, colors]);
 
-  const ChipSelector = ({ options, selected, onSelect }: { options: string[]; selected: string; onSelect: (v: string) => void }) => (
+  const ChipSelector = React.useMemo(() => function ChipSelector({ options, selected, onSelect }: { options: string[]; selected: string; onSelect: (v: string) => void }) {
+    return (
     <View style={styles.chipsRow}>
       {options.map((opt) => (
         <TouchableOpacity key={opt} style={[styles.chip, {
@@ -240,9 +252,11 @@ export default function PostInternshipWizard({ navigation }: any) {
         </TouchableOpacity>
       ))}
     </View>
-  );
+    );
+  }, [styles, colors]);
 
-  const SkillInput = ({ value, onChange, onAdd, skills, onRemove, placeholder }: any) => (
+  const SkillInput = React.useMemo(() => function SkillInput({ value, onChange, onAdd, skills, onRemove, placeholder }: any) {
+    return (
     <View>
       <View style={[styles.skillInputRow, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
         <TextInput style={[styles.skillInput, { color: colors.text }]} value={value} onChangeText={onChange}
@@ -261,16 +275,19 @@ export default function PostInternshipWizard({ navigation }: any) {
         ))}
       </View>
     </View>
-  );
+    );
+  }, [styles, colors]);
 
-  const ToggleRow = ({ label, value, onValueChange }: { label: string; value: boolean; onValueChange: (v: boolean) => void }) => (
+  const ToggleRow = React.useMemo(() => function ToggleRow({ label, value, onValueChange }: { label: string; value: boolean; onValueChange: (v: boolean) => void }) {
+    return (
     <View style={[styles.toggleRow, { borderBottomColor: colors.rowBorder }]}>
       <Text style={[styles.toggleLabel, { color: colors.title }]}>{label}</Text>
       <Switch value={value} onValueChange={onValueChange}
         trackColor={{ false: colors.switchTrack, true: colors.switchActive }}
         thumbColor={colors.switchThumb} />
     </View>
-  );
+    );
+  }, [styles, colors]);
 
   const renderStep = () => {
     switch (step) {
@@ -280,12 +297,10 @@ export default function PostInternshipWizard({ navigation }: any) {
           <Input value={title} onChangeText={setTitle} placeholder="e.g., Software Engineering Intern" />
           <SectionLabel label="Department" />
           <ChipSelector options={DEPARTMENTS} selected={department} onSelect={setDepartment} />
-          <SectionLabel label="Employment Type" />
-          <ChipSelector options={EMPLOYMENT_TYPES} selected={employmentType} onSelect={setEmploymentType} />
           <SectionLabel label="Category" />
           <ChipSelector options={CATEGORIES} selected={category} onSelect={setCategory} />
-          <SectionLabel label="Company Branch" />
-          <Input value={branch} onChangeText={setBranch} placeholder="e.g., San Francisco HQ" />
+          <SectionLabel label="Company Branch (optional)" />
+          <Input value={branch} onChangeText={setBranch} placeholder="e.g., Accra office or HQ" />
           <SectionLabel label="Open Positions" />
           <Input value={openPositions} onChangeText={(v: string) => setOpenPositions(v.replace(/[^0-9]/g, ''))} placeholder="1" keyboardType="numeric" />
           <SectionLabel label="Internship Image (optional)" />
@@ -421,8 +436,13 @@ export default function PostInternshipWizard({ navigation }: any) {
         </View>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
           {renderStep()}
           <View style={{ height: 100 }} />
         </ScrollView>

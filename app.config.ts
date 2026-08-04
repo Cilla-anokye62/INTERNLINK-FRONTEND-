@@ -22,16 +22,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'EXPO_PUBLIC_EAS_PROJECT_ID is required for preview and production EAS builds.'
       );
     }
-    if (!googleWebClientId) {
-      throw new Error(
-        'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is required for preview and production EAS builds.'
-      );
-    }
-    if (process.env.EAS_BUILD_PLATFORM === 'android' && !androidServicesFile) {
-      throw new Error(
-        'GOOGLE_SERVICES_JSON must point to the Android google-services.json file for an EAS Android build.'
-      );
-    }
   }
 
   const iosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME?.trim();
@@ -52,7 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: config.name,
     slug: config.slug,
     ...(owner ? { owner } : {}),
-    plugins: [...plugins, googlePlugin],
+    plugins: googleWebClientId ? [...plugins, googlePlugin] : plugins,
     android: {
       ...config.android,
       ...(androidServicesFile ? { googleServicesFile: androidServicesFile } : {}),

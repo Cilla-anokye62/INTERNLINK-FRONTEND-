@@ -227,8 +227,9 @@ const CompanyDetailsScreen: React.FC<Props> = ({ navigation }) => {
           <Ionicons name="location-outline" size={16} color={colors.subtitle} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.input}
-            defaultValue={headquarters}
+            value={headquarters}
             onChangeText={(value) => {
+              setHeadquarters(value);
               headquartersDraft.current = value;
             }}
             placeholder="e.g. San Francisco, CA"

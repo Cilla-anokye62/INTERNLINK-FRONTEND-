@@ -35,6 +35,7 @@ export default function StudentEditProfileScreen({ navigation }: any) {
   const updateProfile = useAppStore((state) => state.updateProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [fullName, setFullName] = useState('');
   const [background, setBackground] = useState('');
   const [program, setProgram] = useState('');
@@ -89,6 +90,7 @@ export default function StudentEditProfileScreen({ navigation }: any) {
       const savedBio = updated.background ?? '';
       let savedPhotoUri = resolveMediaUrl(updated.profileImageUrl);
       if (photoFile) {
+        setUploadingPhoto(true);
         const uploaded = await mediaApi.uploadAccountImage(photoFile);
         savedPhotoUri = resolveMediaUrl(uploaded.url);
         setPhotoUri(savedPhotoUri);
@@ -104,6 +106,7 @@ export default function StudentEditProfileScreen({ navigation }: any) {
     } catch (error) {
       Alert.alert('Could not save profile', getAuthErrorMessage(error));
     } finally {
+      setUploadingPhoto(false);
       setSaving(false);
     }
   };
@@ -125,6 +128,7 @@ export default function StudentEditProfileScreen({ navigation }: any) {
             imageUri={photoUri}
             fallbackText={fullName}
             disabled={saving}
+            selecting={uploadingPhoto}
             onSelect={(file, previewUri) => {
               setPhotoFile(file);
               setPhotoUri(previewUri);

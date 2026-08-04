@@ -10,7 +10,8 @@ import {
  Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   getAuthErrorMessage,
@@ -46,10 +47,24 @@ export default function ReportsScreen({ navigation }: any) {
   const [exporting, setExporting] = useState(false);
 
   const copyCsv = async () => {
+    if (exporting) return;
     setExporting(true);
     try {
-      await Clipboard.setStringAsync(await universityApi.placementReportCsv());
-      Alert.alert('Report copied', 'The placement CSV is now on your clipboard.');
+      const csv = await universityApi.placementReportCsv();
+      if (!FileSystem.cacheDirectory) throw new Error('Temporary storage is unavailable on this device.');
+      const fileUri = `${FileSystem.cacheDirectory}internlink-placement-report-${Date.now()}.csv`;
+      await FileSystem.writeAsStringAsync(fileUri, csv, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('Report generated', 'The CSV was generated, but sharing is unavailable on this device.');
+        return;
+      }
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'InternLink placement report',
+        UTI: 'public.comma-separated-values-text',
+      });
     } catch (exportError) {
       Alert.alert('Could not export report', getAuthErrorMessage(exportError));
     } finally {
@@ -176,7 +191,9 @@ export default function ReportsScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity style={styles.exportButton} onPress={() => void copyCsv()} disabled={exporting}>
-              <Ionicons name="copy-outline" size={18} color={colors.onPrimary} />
+              {exporting ? <ActivityIndicator size="small" color={colors.onPrimary} /> : (
+                <Ionicons name="download-outline" size={18} color={colors.onPrimary} />
+              )}
               <Text style={styles.exportText}>{exporting ? 'Preparing report...' : 'Copy placement CSV'}</Text>
             </TouchableOpacity>
           </>

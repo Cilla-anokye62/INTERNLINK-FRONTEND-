@@ -13,13 +13,12 @@ import {
   Dimensions,
   Keyboard,
   TouchableWithoutFeedback,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { StackScreenProps } from '@react-navigation/stack';
-import { getAuthErrorMessage, signIn, signInWithGoogle } from '../../src/api';
+import { getAuthErrorMessage, signIn } from '../../src/api';
 import { isValidEmail, nonEmpty } from '../../src/utils/validateCard';
 import type { RootStackParamList } from '../../types/navigation';
 
@@ -53,9 +52,8 @@ export default function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [submittingMethod, setSubmittingMethod] = useState<'password' | 'google' | null>(null);
+  const [submittingMethod, setSubmittingMethod] = useState<'password' | null>(null);
   const [requestError, setRequestError] = useState('');
-  const [googleError, setGoogleError] = useState('');
   const isSubmitting = submittingMethod !== null;
 
   const errors = useMemo(() => ({
@@ -73,7 +71,6 @@ export default function LoginScreen({ navigation }: Props) {
 
     setSubmittingMethod('password');
     setRequestError('');
-    setGoogleError('');
     try {
       await signIn({
         email: email.trim().toLowerCase(),
@@ -81,21 +78,6 @@ export default function LoginScreen({ navigation }: Props) {
       });
     } catch (error) {
       setRequestError(getAuthErrorMessage(error));
-    } finally {
-      setSubmittingMethod(null);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (isSubmitting) return;
-    setSubmittingMethod('google');
-    setRequestError('');
-    setGoogleError('');
-    try {
-      const signedIn = await signInWithGoogle();
-      if (!signedIn) setGoogleError('Google sign-in was cancelled.');
-    } catch (error) {
-      setGoogleError(getAuthErrorMessage(error));
     } finally {
       setSubmittingMethod(null);
     }
@@ -215,45 +197,6 @@ export default function LoginScreen({ navigation }: Props) {
               ? <ActivityIndicator color={colors.buttonText} />
               : <Text style={styles.loginBtnText}>Login  →</Text>}
           </TouchableOpacity>
-
-          {/* OR Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity
-            style={styles.googleBtn}
-            onPress={() => void handleGoogleLogin()}
-            disabled={isSubmitting}
-            activeOpacity={0.85}
-          >
-            {submittingMethod === 'google' ? (
-              <>
-                <ActivityIndicator
-                  size="small"
-                  color={colors.googleBtnText}
-                  style={styles.googleIcon}
-                />
-                <Text style={styles.googleBtnText}>Connecting to Google...</Text>
-              </>
-            ) : (
-              <>
-                <Image source={require('../../assets/google logo.png')} style={styles.googleIcon} />
-                <Text style={styles.googleBtnText}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-          {googleError ? (
-            <Text
-              style={[styles.requestErrorText, styles.googleErrorText]}
-              accessibilityLiveRegion="polite"
-            >
-              {googleError}
-            </Text>
-          ) : null}
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -382,52 +325,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: '700',
     color: colors.buttonText,
     letterSpacing: 0.5,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: height * 0.025,     // relative instead of fixed 20
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.dividerLine,
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    fontSize: 13,
-    color: colors.dividerText,
-    fontWeight: '500',
-  },
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.googleBtn,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.googleBtnBorder,
-    paddingVertical: 15,
-    marginBottom: height * 0.04,      // relative instead of fixed 32
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-  },
-  googleBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.googleBtnText,
-  },
-  googleErrorText: {
-    marginTop: -height * 0.025,
-    marginBottom: height * 0.025,
   },
   footer: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   listingApi,
   listingToInternshipData,
+  resolveMediaUrl,
   studentApi,
   type ListingResponse,
   type RecommendationResponse,
@@ -32,9 +33,24 @@ export default function HomeDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const userName = useAppStore((state) => state.userName);
+  const profilePhotoUri = useAppStore((state) => state.profile.photoUri);
+  const updateProfile = useAppStore((state) => state.updateProfile);
   const username = userName;
   const [recommendations, setRecommendations] = useState<RecommendationCard[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+  const profileLoadedRef = useRef(false);
+
+  const syncStudentProfile = useCallback(async () => {
+    if (profileLoadedRef.current) return;
+    try {
+      const profile = await studentApi.getMe();
+      updateProfile({ photoUri: resolveMediaUrl(profile.profileImageUrl) });
+    } catch {
+      // The cached profile remains usable if the dashboard refresh cannot reach the API.
+    } finally {
+      profileLoadedRef.current = true;
+    }
+  }, [updateProfile]);
 
   const loadRecommendations = useCallback(async () => {
     try {
@@ -59,9 +75,10 @@ export default function HomeDashboardScreen({ navigation }: any) {
 
   useFocusEffect(
     useCallback(() => {
+      void syncStudentProfile();
       setLoadingRecommendations(true);
       void loadRecommendations();
-    }, [loadRecommendations]),
+    }, [loadRecommendations, syncStudentProfile]),
   );
 
   return (
@@ -72,9 +89,13 @@ export default function HomeDashboardScreen({ navigation }: any) {
       >
         {/* Top bar */}
         <View style={styles.topBar}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
-          </View>
+          {profilePhotoUri ? (
+            <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{username ? username.charAt(0).toUpperCase() : 'U'}</Text>
+            </View>
+          )}
           <View style={styles.greetingBlock}>
             <View style={styles.greetingRow}>
               <Text style={styles.greeting}>Hi{username ? `, ${username}` : ''}</Text>
@@ -209,6 +230,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.onPrimary,
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  avatarImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginRight: 12,
+    backgroundColor: colors.iconCircle,
   },
   greetingBlock: {
     flex: 1,

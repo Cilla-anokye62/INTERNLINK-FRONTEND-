@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -30,7 +30,6 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
   const {
     entitlement,
     hasFeature,
-    refresh: refreshSubscription,
   } = useSubscription();
   const listingEntitlement = entitlement('COMPANY_ACTIVE_LISTINGS');
   const pipelineEnabled = hasFeature('COMPANY_PIPELINE_WORKFLOW');
@@ -43,26 +42,27 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
   const [listings, setListings] = useState<ListingResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const hasLoadedRef = useRef(false);
 
   const loadListings = useCallback(async () => {
     setLoadError('');
     try {
-      const [nextListings] = await Promise.all([
-        listingApi.listOwn(),
-        refreshSubscription(),
-      ]);
+      const nextListings = await listingApi.listOwn();
       setListings(nextListings);
     } catch (error) {
       setLoadError(getAuthErrorMessage(error));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
+      hasLoadedRef.current = true;
     }
-  }, [refreshSubscription]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
+      if (!hasLoadedRef.current) setIsLoading(true);
       void loadListings();
     }, [loadListings]),
   );
@@ -203,9 +203,9 @@ const ListingsScreen: React.FC<Props> = ({ navigation }) => {
         renderItem={renderListing}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshing={isLoading}
+        refreshing={isRefreshing}
         onRefresh={() => {
-          setIsLoading(true);
+          setIsRefreshing(true);
           void loadListings();
         }}
         ListEmptyComponent={(

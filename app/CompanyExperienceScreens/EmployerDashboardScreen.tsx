@@ -16,7 +16,7 @@ export default function EmployerDashboardScreen({ navigation }: any) {
   const { colors } = useAppTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   const userName = useAppStore((state) => state.userName);
-  const { entitlement, hasFeature, refresh: refreshSubscription } = useSubscription();
+  const { entitlement, refresh: refreshSubscription } = useSubscription();
   const [backendListings, setBackendListings] = useState<DashboardListing[]>([]);
   const [backendApplicants, setBackendApplicants] = useState<BackendApplicantResponse[]>([]);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -92,10 +92,6 @@ export default function EmployerDashboardScreen({ navigation }: any) {
   const handleQuickAction = (screen: string) => {
     if (screen === 'PostInternshipWizard' && listingLimitReached) {
       navigation.navigate('PremiumPlans', { source: 'listing-limit' });
-      return;
-    }
-    if (screen === 'Insights' && !hasFeature('COMPANY_ADVANCED_ANALYTICS')) {
-      navigation.navigate('PremiumPlans', { source: 'company-analytics' });
       return;
     }
     navigation.navigate(screen);

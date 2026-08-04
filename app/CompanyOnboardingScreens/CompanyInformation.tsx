@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -61,6 +62,7 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
   const websiteDraft = useRef('');
   const [logoName, setLogoName] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<UploadableImage | null>(null);
+  const [logoPreviewUri, setLogoPreviewUri] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [requestError, setRequestError] = useState('');
   const [loadFailed, setLoadFailed] = useState(false);
@@ -91,6 +93,7 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
         phone: profile.phoneNumber ?? '',
         photoUri: resolveMediaUrl(profile.logoUrl),
       });
+      setLogoPreviewUri(resolveMediaUrl(profile.logoUrl));
       if (profile.logoUrl) setLogoName('Current company logo');
     } catch (error) {
       if (requestId !== profileRequestId.current) return;
@@ -124,6 +127,7 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
           name: asset.name,
           mimeType: asset.mimeType,
         });
+        setLogoPreviewUri(asset.uri);
       }
     } catch {
       Alert.alert('Selection failed', 'Could not pick the file. Please try again.');
@@ -343,7 +347,11 @@ const CompanyInformationScreen: React.FC<Props> = ({ navigation }) => {
               onPress={handleUploadLogo}
               disabled={isBusy}
             >
-              <Ionicons name="cloud-upload-outline" size={18} color={colors.subtitle} style={{ marginRight: 10 }} />
+              {logoPreviewUri ? (
+                <Image source={{ uri: logoPreviewUri }} style={styles.logoPreview} />
+              ) : (
+                <Ionicons name="cloud-upload-outline" size={18} color={colors.subtitle} style={{ marginRight: 10 }} />
+              )}
               <View style={styles.logoTextBlock}>
                 <Text style={styles.logoMainText}>{logoName || 'Choose a company logo'}</Text>
                 <Text style={styles.logoSubText}>PNG, JPEG or WebP · max 5MB</Text>
@@ -428,6 +436,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   loadingText: { color: colors.subtitle, fontSize: 13 },
   logoUploadBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: colors.inputBorder, borderRadius: 12, padding: 12, marginBottom: 24, backgroundColor: colors.card },
   logoTextBlock: { flex: 1 },
+  logoPreview: { width: 42, height: 42, borderRadius: 8, marginRight: 10, backgroundColor: colors.iconCircle },
   logoMainText: { fontSize: 13, fontWeight: '600', color: colors.title },
   logoSubText: { fontSize: 11, color: colors.subtitle, marginTop: 2 },
   uploadBadge: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },

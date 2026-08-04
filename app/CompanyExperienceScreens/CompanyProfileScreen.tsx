@@ -66,7 +66,9 @@ export default function CompanyProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState('');
+  const hasLoadedRef = useRef(false);
   const [form, setForm] = useState<CompanyProfileForm>(EMPTY_COMPANY_PROFILE_FORM);
   const formDraft = useRef<CompanyProfileForm>(EMPTY_COMPANY_PROFILE_FORM);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -106,12 +108,13 @@ export default function CompanyProfileScreen() {
       setError(getAuthErrorMessage(loadError));
     } finally {
       setLoading(false);
+      hasLoadedRef.current = true;
     }
   }, [hydrate]);
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
+      if (!hasLoadedRef.current) setLoading(true);
       void load();
     }, [load]),
   );
@@ -138,6 +141,7 @@ export default function CompanyProfileScreen() {
         workSetup: draft.workSetup,
       });
       if (photoFile) {
+        setUploadingPhoto(true);
         const uploaded = await mediaApi.uploadAccountImage(photoFile);
         updated = { ...updated, logoUrl: uploaded.url };
         setPhotoFile(null);
@@ -147,6 +151,7 @@ export default function CompanyProfileScreen() {
     } catch (saveError) {
       Alert.alert('Could not save company profile', getAuthErrorMessage(saveError));
     } finally {
+      setUploadingPhoto(false);
       setSaving(false);
     }
   };
@@ -232,10 +237,11 @@ export default function CompanyProfileScreen() {
           </>
         ) : profile ? (
           <View style={styles.section}>
-            <ProfilePhotoSelector
-              imageUri={photoUri}
-              fallbackText={form.companyName}
-              disabled={saving}
+              <ProfilePhotoSelector
+                imageUri={photoUri}
+                fallbackText={form.companyName}
+                disabled={saving}
+                selecting={uploadingPhoto}
               onSelect={(file, previewUri) => {
                 setPhotoFile(file);
                 setPhotoUri(previewUri);

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   getAuthErrorMessage,
+  resolveMediaUrl,
   universityApi,
   type CompanyEngagementResponse,
   type PlacementStatisticsResponse,
@@ -71,6 +73,7 @@ export default function UniversityDashboardScreen({ navigation }: any) {
     .slice()
     .sort((a, b) => b.acceptedCount - a.acceptedCount)
     .slice(0, 3);
+  const profilePhotoUri = resolveMediaUrl(profile?.logoUrl);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -86,9 +89,13 @@ export default function UniversityDashboardScreen({ navigation }: any) {
         }
       >
         <View style={styles.header}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{profile?.name.charAt(0).toUpperCase() || 'U'}</Text>
-          </View>
+          {profilePhotoUri ? (
+            <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{profile?.name.charAt(0).toUpperCase() || 'U'}</Text>
+            </View>
+          )}
           <View style={styles.headerText}>
             <Text style={styles.title}>{profile?.name || 'University dashboard'}</Text>
             <Text style={styles.subtitle}>{profile?.city || 'Placement monitoring'}</Text>
@@ -182,6 +189,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   content: { paddingHorizontal: 18, paddingTop: 15, paddingBottom: TAB_BAR_BOTTOM_PADDING },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 11 },
+  avatarImage: { width: 44, height: 44, borderRadius: 22, marginRight: 11, backgroundColor: colors.iconCircle },
   avatarText: { color: colors.onPrimary, fontSize: 17, fontWeight: '800' },
   headerText: { flex: 1 },
   title: { color: colors.title, fontSize: 17, fontWeight: '700' },

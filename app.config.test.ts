@@ -39,17 +39,14 @@ describe('release Expo configuration', () => {
     expect(() => buildConfig(context)).toThrow('EXPO_PUBLIC_API_BASE_URL');
   });
 
-  it('accepts a complete Android release configuration', () => {
+  it('accepts a release configuration without optional Google sign-in', () => {
     process.env.INTERNLINK_RELEASE_BUILD = 'true';
     process.env.EXPO_PUBLIC_API_BASE_URL = 'https://api.internlink.example';
-    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = 'client.apps.googleusercontent.com';
     process.env.EXPO_PUBLIC_EAS_PROJECT_ID = '00000000-0000-0000-0000-000000000000';
-    process.env.GOOGLE_SERVICES_JSON = './google-services.json';
-    process.env.EAS_BUILD_PLATFORM = 'android';
 
     const result = buildConfig(context);
 
-    expect(result.android?.googleServicesFile).toBe('./google-services.json');
     expect(result.extra?.eas?.projectId).toBe('00000000-0000-0000-0000-000000000000');
+    expect(result.plugins).not.toContain('@react-native-google-signin/google-signin');
   });
 });

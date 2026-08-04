@@ -41,14 +41,16 @@ export type ApiRequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown;
   requiresAuth?: boolean;
   timeoutMs?: number;
+  responseType?: 'json' | 'text';
 };
 
 export interface ApiClient {
   request<T>(path: string, options?: ApiRequestOptions): Promise<T>;
 }
 
-const parseResponse = async (response: Response): Promise<unknown> => {
+const parseResponse = async (response: Response, responseType?: 'json' | 'text'): Promise<unknown> => {
   if (response.status === 204) return undefined;
+  if (responseType === 'text') return response.text();
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json')) return response.json();
   const text = await response.text();
@@ -75,6 +77,7 @@ export const createApiClient = ({
         headers: requestHeaders,
         requiresAuth = true,
         timeoutMs = coldStartRequest ? initialTimeoutMs : defaultTimeoutMs,
+        responseType,
         signal: callerSignal,
         ...requestInit
       } = options;
@@ -92,7 +95,7 @@ export const createApiClient = ({
         const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
         const executeRequest = async (tokenOverride?: string | null) => {
           const headers = new Headers(requestHeaders);
-          headers.set('Accept', 'application/json');
+          if (!headers.has('Accept')) headers.set('Accept', 'application/json');
           if (body !== undefined && !isFormData) headers.set('Content-Type', 'application/json');
 
           if (requiresAuth) {
@@ -135,7 +138,7 @@ export const createApiClient = ({
           const refreshedAccessToken = await refreshAccessToken();
           if (refreshedAccessToken) response = await executeRequest(refreshedAccessToken);
         }
-        const responseBody = await parseResponse(response);
+        const responseBody = await parseResponse(response, responseType);
 
         if (!response.ok) {
           const errorBody = responseBody && typeof responseBody === 'object'
